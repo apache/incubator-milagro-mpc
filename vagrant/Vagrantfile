@@ -1,0 +1,31 @@
+ # -*- mode: ruby -*-
+
+# vi: set ft=ruby :
+
+boxes = [
+    {
+        :name => "libmpc",
+        :eth1 => "10.0.1.10",
+        :mem => "4096",
+        :cpu => "6"
+    },
+]
+
+Vagrant.configure(2) do |config|
+
+  config.vm.box = "ubuntu/bionic64"
+  config.vm.provision :shell, path: "bootstrap.sh"
+
+  boxes.each do |opts|
+    config.vm.define opts[:name] do |config|
+      config.vm.hostname = opts[:name]
+
+      config.vm.provider "virtualbox" do |v|
+        v.customize ["modifyvm", :id, "--memory", opts[:mem]]
+        v.customize ["modifyvm", :id, "--cpus", opts[:cpu]]
+      end
+
+      config.vm.network :private_network, ip: opts[:eth1]
+    end
+  end
+end 

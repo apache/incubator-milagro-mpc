@@ -1,0 +1,12 @@
+build
+incubator-milagro-crypto-c
+
+**/*~
+**/*bak
+
+vagrant/.vagrant
+target
+vagrant/repo
+
+log.txt
+coverage

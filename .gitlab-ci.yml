@@ -1,0 +1,23 @@
+stages:
+  - test
+  - coverage
+
+test:
+  stage: test
+  tags:
+  - shell
+  script:
+  - echo "Build and test docker image"
+  - docker build -t $CI_PROJECT_NAME .
+  - docker run --cap-add SYS_PTRACE --rm $CI_PROJECT_NAME 
+
+coverage:
+  stage: coverage
+  tags:
+  - shell
+  script:
+  - echo "Generate coverage figures"
+  - docker build -t $CI_PROJECT_NAME .
+  - docker run --rm $CI_PROJECT_NAME ./scripts/coverage.sh 
+  coverage: '/lines......: (\d+.\d+%)/'
+

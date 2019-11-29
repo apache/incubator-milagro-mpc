@@ -1,0 +1,113 @@
+/*
+  This file contains NO source code, just some documentation for doxygen to parse.
+*/
+
+/*!
+  \mainpage MPC
+
+libmpc uses the <a href="https://github.com/apache/incubator-milagro-crypto-c">AMCL</a>
+library
+
+  \section license License
+
+TODO
+
+  \section platforms Platforms
+
+  The software can be compiled and installed for these operating systems;
+
+<ul type="disc">
+  <li>\ref linux</li>
+</ul>
+
+
+  \section downloads Downloads
+
+  The source code is available from here;
+
+  git clone git@gitlab.com:qredo/libmpc.git
+
+  \section installonmainpage Installation
+ 
+  These are the instructions for building on \ref linux
+*/
+
+
+/*!
+  \page linux Linux 
+
+<h2>Software dependencies</h2>
+
+CMake is required to build the library and can usually be installed from
+the operating system package manager.
+
+<ul type="disc">
+  <li>sudo apt install cmake</li>
+</ul>
+
+If not, then you can download it from www.cmake.org
+
+In order to build the documentation <a href="http://www.doxygen.nl/">doxygen</a> is required.
+
+<h3>AMCL</h3>
+
+<a href="https://github.com/apache/incubator-milagro-crypto-c">AMCL</a> is used to provide
+the large finite field functionality.
+
+Build and install the AMCL library
+
+<ul type="disc">
+  <li>git clone git@github.com:apache/incubator-milagro-crypto-c.git</li>
+  <li>cd incubator-milagro-crypto-c</li>
+  <li>mkdir target</li>
+  <li>cd target</li>
+  <li>cmake -D CMAKE_BUILD_TYPE=Debug -D BUILD_SHARED_LIBS=ON -D AMCL_CHUNK=64 -D AMCL_CURVE="BLS381,SECP256K1" -D AMCL_RSA="" -D BUILD_PAILLIER=ON -D BUILD_PYTHON=OFF -D BUILD_BLS=ON -D BUILD_WCC=OFF -D BUILD_MPIN=OFF -D BUILD_X509=OFF -D CMAKE_INSTALL_PREFIX=/usr/local ..</li>
+  <li>make</li>
+  <li>make test</li>
+  <li>sudo make install</li>
+</ul>
+
+<h2>Compiling</h2>
+
+<ul type="disc">
+  <li>mkdir build</li>
+  <li>cd build</li>
+  <li>cmake ..</li>
+  <li>make</li>
+  <li>make test</li>
+  <li>make doc</li>
+  <li>sudo make install</li>
+</ul>
+
+<p>The build can be configured by setting flags on the command line i.e.</p>
+
+<ul type="disc">
+  <li>cmake -D CMAKE_INSTALL_PREFIX=/usr/local</li>
+</ul>
+
+<p>list available CMake options</p>
+
+<ul type="disc">
+  <li>cmake -LH</li>
+</ul>
+
+<h2>Uninstall software</h2>
+
+<ul type="disc">
+  <li>sudo make uninstall</li>
+</ul>
+
+<h2>Building an installer</h2>
+
+<p>After having built the libraries you can build a binary installer and a source distribution by running this command</p>
+
+<ul type="disc">
+  <li>make package</li>
+</ul>
+
+*/
+
+
+
+
+

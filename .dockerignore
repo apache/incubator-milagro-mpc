@@ -1,0 +1,7 @@
+.git
+.cache
+build
+vagrant
+target
+coverage
+incubator-milagro-crypto-c
