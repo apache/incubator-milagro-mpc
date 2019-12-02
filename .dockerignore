@@ -1,5 +1,10 @@
 .git
 .cache
+
+**/*~
+**/*bak
+model/sec256k1/__pycache__/
+
 build
 vagrant
 target

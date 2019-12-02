@@ -6,8 +6,8 @@ sys.path.append('../')
 import json
 from Crypto.Util import number
 
-from sec256k1.mpc import Player
-import sec256k1.mpc as mpc
+from sec256k1.mpc_v1 import Player
+import sec256k1.mpc_v1 as mpc
 import sec256k1.curve as curve
 import sec256k1.big as big
 import sec256k1.ecp as ecp

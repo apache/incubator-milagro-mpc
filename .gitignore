@@ -3,6 +3,7 @@ incubator-milagro-crypto-c
 
 **/*~
 **/*bak
+model/sec256k1/__pycache__/
 
 vagrant/.vagrant
 target
