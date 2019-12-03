@@ -154,7 +154,7 @@ int test(csprng *RNG)
     printf("BETAGOLDEN: ");
     OCT_output(&BETAGOLDEN);
 
-    rc = MPC_MTA_CLIENT1(NULL, &N, &G, &A, &CA, &R);
+    rc = MPC_MTA_CLIENT1(RNG, &N, &G, &A, &CA, &R);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_MTA_CLIENT1 rc: %d\n", rc);
@@ -172,7 +172,7 @@ int test(csprng *RNG)
         exit(EXIT_FAILURE);
     }
 
-    rc = MPC_MTA_SERVER(NULL,  &N, &G, &B, &CA, &Z, &R, &CB, &BETA);
+    rc = MPC_MTA_SERVER(RNG,  &N, &G, &B, &CA, &Z, &R, &CB, &BETA);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_MTA_SERVER rc: %d\n", rc);

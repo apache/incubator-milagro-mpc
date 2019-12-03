@@ -118,7 +118,7 @@ endif()
 if(BUILD_TESTS)
   message(STATUS "Build tests")
   add_subdirectory(test/smoke)
-  #add_subdirectory(test/unit)  
+  add_subdirectory(test/unit)  
 endif()
 
 if(BUILD_BENCHMARK)

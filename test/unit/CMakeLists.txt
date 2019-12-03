@@ -37,6 +37,6 @@ function(amcl_test name source dependencies expected_response)
   )
 endfunction()
 
-amcl_test(test_mpc test_mpc.c mpc "SUCCESS" "mpc/DECRYPT.txt")
+amcl_test(test_mta test_mta.c mpc "SUCCESS" "mpc/MTA.txt")
 
 
