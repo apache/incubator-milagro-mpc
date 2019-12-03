@@ -118,7 +118,34 @@ int MPC_MTA_CLIENT1(csprng *RNG, octet* N, octet* G, octet* A, octet* CA, octet*
 int MPC_MTA_CLIENT2(octet* N, octet* L, octet* M, octet* CB, octet* ALPHA)
 {
     int rc;
-    rc = PAILLIER_DECRYPT(N, L, M, CB, ALPHA);
+
+    BIG_512_60 q[FFLEN_4096];
+    BIG_512_60 alpha[FFLEN_4096];
+    
+    char co[FS_4096];
+    octet CO = {0,sizeof(co),co};
+    
+    char t[FS_2048];
+    octet T = {0,sizeof(t),t};
+
+    // Curve order
+    OCT_fromHex(&CO,curve_order_hex);
+    FF_4096_zero(q, FFLEN_4096);
+    FF_4096_fromOctet(q,&CO,HFLEN_4096);
+    
+    rc = PAILLIER_DECRYPT(N, L, M, CB, &T);
+    if (rc)
+    {
+        return rc;
+    }
+
+    FF_4096_zero(alpha, FFLEN_4096);
+    FF_4096_fromOctet(alpha,&T,HFLEN_4096);
+
+    // alpha = alpha mod q
+    FF_4096_mod(alpha, q, FFLEN_4096);
+    FF_4096_toOctet(ALPHA, alpha, HFLEN_4096);
+    
     return rc;
 }
 

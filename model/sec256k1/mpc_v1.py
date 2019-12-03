@@ -62,7 +62,7 @@ class Share:
             
         ca, r = paillier.encrypt(self.n, self.g, self.a, self.r)
         
-        return ca, r
+        return ca, self.r
 
     def client2(self, cb):
         """Decrypt the response for the other party."""
@@ -93,9 +93,9 @@ class Share:
         cb = paillier.add(t, cz, n)
 
         # beta = -z
-        self.beta = big.modsub(curve.r, z, curve.r)
+        self.beta = big.modsub(curve.r, self.z, curve.r)
 
-        return cb, r, z
+        return cb, self.r, self.z
 
     def sum(self):
         """Sum component parts of product
@@ -131,6 +131,8 @@ class Player:
         """Initializes the instance."""        
         self.name = name
 
+        self.p = p
+        self.q = q        
         self.n, self.g, self.l, self.m = paillier.keys(p,q)
 
         if sk:
@@ -174,7 +176,7 @@ class Player:
         
     def __repr__(self):
         return {'name':self.name, 'n':self.n}
-
+    
     def __str__(self):
         Gamma = self.Gamma.toBytes(False).hex()
         PK = self.pk.toBytes(False).hex()

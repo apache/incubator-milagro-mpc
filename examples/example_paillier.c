@@ -42,7 +42,7 @@ char* CT_hex = "19c8b725dbd74b7dcaf72bd9ff2cd207b47cb1095393685906171af9e2f2959e
 
 char* R_hex = "18c5947fda2edea04c1f87c207e0bab17aff5f77ac21d04cb194631efd1f7256dc37de9473fc86009df36206974859c09023ac8179b02aacea8d89a01f4de161db955d450cef55ce959897636973b952371e349778e67c61ef6fae5f73fd728d423a594b6a76d5faca97d59d6ae40c53f3bd42dfccc93183e355422ba7af308a87d32c0352d478156275f98bc74e9ed4f2c7a9853c9f35b996fafe765b56c7f2e83771c6b676b75436e5c1697b838b3908aee92001cbccf3bf6cfb7aaea27a358a12cfe1ddde886b975ae14517e5912eba3ff9792e46403a998edd371020bbc5fbd6a705e669383303030ef79653ce16e13122233c626bb101ee8dd27bf4ff86";
 
-int test(csprng *RNG)
+int main()
 {
     int rc;
 
@@ -51,9 +51,6 @@ int test(csprng *RNG)
 
     char pt[FS_2048];
     octet PT = {0,sizeof(pt),pt};
-
-    char r[FS_2048];
-    octet R = {0,sizeof(r),r};
 
     char ngolden[FS_2048] = {0};
     octet NGOLDEN = {0,sizeof(ngolden),ngolden};
@@ -143,24 +140,3 @@ int test(csprng *RNG)
 }
 
 
-int main()
-{
-    char* seedHex = "78d0fb6705ce77dee47d03eb5b9c5d30";
-    char seed[16] = {0};
-    octet SEED = {sizeof(seed),sizeof(seed),seed};
-
-    // CSPRNG
-    csprng RNG;
-
-    // fake random source
-    OCT_fromHex(&SEED,seedHex);
-    printf("SEED: ");
-    OCT_output(&SEED);
-
-    // initialise strong RNG
-    CREATE_CSPRNG(&RNG,&SEED);
-
-    test(&RNG);
-
-    KILL_CSPRNG(&RNG);
-}
