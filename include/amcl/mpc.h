@@ -33,6 +33,15 @@ extern "C" {
 #endif
 
 
+/*! \brief Truncates an octet string
+ *
+ *  Add the top x->len bytes of y to x
+ *
+ *  @param  y       Output octet
+ *  @param  x       Input octet
+ *  @return         Returns 0 or else error code
+ */
+void OCT_truncate(octet *y,octet *x);
 
 /** \brief ECDSA Signature
  *

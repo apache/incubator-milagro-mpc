@@ -70,8 +70,8 @@ def genVector(test_no):
     vector['G'] = hex(alice.g)[2:].zfill(512)
     vector['L'] = hex(alice.l)[2:].zfill(512)
     vector['M'] = hex(alice.m)[2:].zfill(512)        
-    vector['A'] = hex(alice.k)[2:].zfill(512)
-    vector['B'] = hex(bob.gamma)[2:].zfill(512)
+    vector['A'] = hex(alice.k)[2:].zfill(64)
+    vector['B'] = hex(bob.gamma)[2:].zfill(64)
 
     # vector['s = alice.k * bob.gamma'] = hex(expected)[2:].zfill(512)}\n")
     
@@ -82,11 +82,11 @@ def genVector(test_no):
     cb, r2, z = bob.kgamma.server(alice.n, alice.g, ca, z)
     vector['CB'] = hex(cb)[2:].zfill(1024)
     vector['R2'] = hex(r2)[2:].zfill(512)
-    vector['Z'] = hex(z)[2:].zfill(512)         
-    vector['BETA'] = hex(bob.kgamma.beta)[2:].zfill(512)
+    vector['Z'] = hex(z)[2:].zfill(64)         
+    vector['BETA'] = hex(bob.kgamma.beta)[2:].zfill(64)
 
     alice.kgamma.client2(cb)
-    vector['ALPHA'] = hex(alice.kgamma.alpha)[2:].zfill(512)
+    vector['ALPHA'] = hex(alice.kgamma.alpha)[2:].zfill(64)
 
     expected = alice.k * bob.gamma % curve.r        
     got = ( alice.kgamma.alpha + bob.kgamma.beta ) % curve.r
@@ -108,11 +108,6 @@ if __name__ == '__main__':
 
     # Write to JSON file
     json.dump(vectors, open("MTA.json", "w"))
-
-    #for vector in vectors:
-    #    for key, val in vector.items():
-    #        print(f"{key} = {val},")
-    #    print(f"RESULT = 0,\n") 
 
     # Write vectors to text file 
     with open("MTA.txt", "w") as f:

@@ -97,6 +97,21 @@ if __name__ == "__main__":
     print(f"got {hex(got)}")
     assert got == expected, f"expected {hex(expected)} got {hex(got)}"
 
+    ### kgamma = (alice.k + bob.k)(alice.gamma + bob.gamma)
+
+    k = (alice.k + bob.k) % curve.r
+    gamma = (alice.gamma + bob.gamma) % curve.r
+    expected = k * gamma % curve.r
+
+    got = ( alice.kgamma.sum() + bob.kgamma.sum() ) % curve.r 
+
+    print(f"expected {hex(expected)}")    
+    print(f"got {hex(got)}")
+    assert got == expected, f"expected {hex(expected)} got {hex(got)}"
+
+    kgamma = got
+
+    
     ### alice.k * bob.w ###
     
     print(f"k {hex(alice.k)}")
@@ -141,19 +156,6 @@ if __name__ == "__main__":
     print(f"got {hex(got)}")
     assert got == expected, f"expected {hex(expected)} got {hex(got)}"
     
-    ### kgamma = (alice.k + bob.k)(alice.gamma + bob.gamma)
-
-    k = (alice.k + bob.k) % curve.r
-    gamma = (alice.gamma + bob.gamma) % curve.r
-    expected = k * gamma % curve.r
-
-    got = ( alice.kgamma.sum() + bob.kgamma.sum() ) % curve.r 
-
-    print(f"expected {hex(expected)}")    
-    print(f"got {hex(got)}")
-    assert got == expected, f"expected {hex(expected)} got {hex(got)}"
-
-    kgamma = got
 
     ### kw = (alice.k + bob.k)(alice.w + bob.w)
 
