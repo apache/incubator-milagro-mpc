@@ -174,7 +174,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    
+
     rc = MPC_MTA_SERVER(NULL,  &N, &G, &B, &CA, &Z, &R, &CB, &BETA);
     if (rc)
     {
@@ -193,7 +193,7 @@ int main()
     printf("ZOUT: ");
     OCT_output(&Z);
     printf("\n");
-    
+
     rc = OCT_comp(&BETAGOLDEN,&BETA);
     if(!rc)
     {
@@ -211,7 +211,7 @@ int main()
     printf("ALPHAGOLDEN: ");
     OCT_output(&ALPHAGOLDEN);
     printf("\n");
-    
+
     rc = MPC_MTA_CLIENT2(&N, &L, &M, &CB, &ALPHA);
     if (rc)
     {

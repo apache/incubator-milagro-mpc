@@ -17,9 +17,7 @@ specific language governing permissions and limitations
 under the License.
 */
 
-/*
-   Example of using MtA
- */
+// Multiplicative to Additive smoke test
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -89,7 +89,7 @@ int MPC_ECDSA_SIGN(int sha, octet *K, octet *SK, octet *M, octet *R, octet *S)
     BIG_256_56_fromBytes(k,K->val);
     BIG_256_56_mod(k,q);
 
-    // k^{-1}
+    // invk = k^{-1}
     BIG_256_56_invmodp(invk,k,q);
 
     // rx, ry = k^{-1}.G
@@ -110,6 +110,7 @@ int MPC_ECDSA_SIGN(int sha, octet *K, octet *SK, octet *M, octet *R, octet *S)
 
     // s = z + r.sk mod q
     BIG_256_56_add(s,z,s);
+    //BIG_256_56_mod(s,q);
 
     // s = k(z + r.sk) mod q
     BIG_256_56_modmul(s,k,s,q);
@@ -126,6 +127,7 @@ int MPC_ECDSA_SIGN(int sha, octet *K, octet *SK, octet *M, octet *R, octet *S)
 
     return 0;
 }
+
 
 // Client MTA first pass
 int MPC_MTA_CLIENT1(csprng *RNG, octet* N, octet* G, octet* A, octet* CA, octet* R)
@@ -182,7 +184,7 @@ int MPC_MTA_CLIENT2(octet* N, octet* L, octet* M, octet* CB, octet* ALPHA)
     ALPHA->len = EGS_SECP256K1;
     ALPHA1.len = FS_4096 - EGS_SECP256K1;
     OCT_truncate(ALPHA,&ALPHA1);
-    
+
     return rc;
 }
 
@@ -228,7 +230,7 @@ int MPC_MTA_SERVER(csprng *RNG, octet* N, octet* G, octet* B, octet* CA, octet* 
     {
         char z1[FS_4096];
         octet Z1 = {0,sizeof(z1),z1};
-	OCT_clear(&Z1);
+        OCT_clear(&Z1);
         Z1.len = FS_4096 - EGS_SECP256K1;
         ZO->len = EGS_SECP256K1;
         OCT_joctet(&Z1,ZO);
@@ -280,3 +282,168 @@ int MPC_MTA_SERVER(csprng *RNG, octet* N, octet* G, octet* B, octet* CA, octet* 
 
     return rc;
 }
+
+/* sum = a1.b1 + alpha1 + beta1 + alpha2 + beta2 =  */
+int MPC_SUM(octet *A, octet *B, octet *ALPHA1, octet *BETA1, octet *ALPHA2, octet *BETA2, octet *SUM)
+{
+    BIG_256_56 a;
+    BIG_256_56 b;
+    BIG_256_56 alpha1;
+    BIG_256_56 alpha2;
+    BIG_256_56 beta1;
+    BIG_256_56 beta2;
+    BIG_256_56 sum;
+    BIG_256_56 q;
+
+    // Check that both values are NULL
+    if ( ( (ALPHA2==NULL) && (BETA2!=NULL) ) || ( (ALPHA2!=NULL) && (BETA2==NULL) ) )
+    {
+        return 1;
+    }
+
+    // Curve order
+    BIG_256_56_rcopy(q,CURVE_Order_SECP256K1);
+
+    // Load values
+    BIG_256_56_fromBytes(a,A->val);
+    BIG_256_56_fromBytes(b,B->val);
+    BIG_256_56_fromBytes(alpha1,ALPHA1->val);
+    BIG_256_56_fromBytes(beta1,BETA1->val);
+    if (ALPHA2!=NULL)
+    {
+        BIG_256_56_fromBytes(alpha2,ALPHA2->val);
+        BIG_256_56_fromBytes(beta2,BETA2->val);
+    }
+
+    // sum = a.b mod q
+    BIG_256_56_modmul(sum,a,b,q);
+
+    // sum = sum + alpha1  + beta1 + alpha2 + beta2
+    BIG_256_56_add(sum,sum,alpha1);
+    BIG_256_56_add(sum,sum,beta1);
+    if (ALPHA2!=NULL)
+    {
+        BIG_256_56_add(sum,sum,alpha2);
+        BIG_256_56_add(sum,sum,beta2);
+    }
+
+    // sum = sum mod q
+    BIG_256_56_mod(sum,q);
+
+    // Output result
+    SUM->len=EGS_SECP256K1;
+    BIG_256_56_toBytes(SUM->val,sum);
+
+    return 0;
+}
+
+
+/* Calculate the inverse of kgamma */
+int MPC_INVKGAMMA(octet *KGAMMA1, octet *KGAMMA2, octet *KGAMMA3, octet *INVKGAMMA)
+{
+    BIG_256_56 kgamma1;
+    BIG_256_56 kgamma2;
+    BIG_256_56 kgamma3;
+    BIG_256_56 kgamma;
+    BIG_256_56 invkgamma;
+    BIG_256_56 q;
+
+    // Curve order
+    BIG_256_56_rcopy(q,CURVE_Order_SECP256K1);
+
+    // Load values
+    BIG_256_56_fromBytes(kgamma1,KGAMMA1->val);
+    BIG_256_56_fromBytes(kgamma2,KGAMMA2->val);
+    if (KGAMMA3!=NULL)
+    {
+        BIG_256_56_fromBytes(kgamma3,KGAMMA3->val);
+    }
+
+    // kgamma = kgamma1  + kgamma2 + kgamma3
+    BIG_256_56_zero(kgamma);
+    BIG_256_56_add(kgamma,kgamma,kgamma1);
+    BIG_256_56_add(kgamma,kgamma,kgamma2);
+    if (KGAMMA3!=NULL)
+    {
+        BIG_256_56_add(kgamma,kgamma,kgamma3);
+    }
+
+    // kgamma = kgamma mod q
+    BIG_256_56_mod(kgamma,q);
+
+    // invkgamma = kgamma^{-1}
+    BIG_256_56_invmodp(invkgamma,kgamma,q);
+
+    // Output result
+    INVKGAMMA->len=EGS_SECP256K1;
+    BIG_256_56_toBytes(INVKGAMMA->val,invkgamma);
+
+    return 0;
+}
+
+
+/* Calculate the r conponent of the signature */
+int MPC_R(octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *GAMMAPT3, octet *R)
+{
+    BIG_256_56 invkgamma;
+    BIG_256_56 q;
+    BIG_256_56 rx;
+    BIG_256_56 r;
+
+    ECP_SECP256K1 gammapt1;
+    ECP_SECP256K1 gammapt2;
+    ECP_SECP256K1 gammapt3;
+
+    // Curve order
+    BIG_256_56_rcopy(q,CURVE_Order_SECP256K1);
+
+    // Load values
+    BIG_256_56_fromBytes(invkgamma,INVKGAMMA->val);
+    if (!ECP_SECP256K1_fromOctet(&gammapt1,GAMMAPT1))
+    {
+        return 1;
+    }
+    if (!ECP_SECP256K1_fromOctet(&gammapt2,GAMMAPT2))
+    {
+        return 1;
+    }
+
+    if (GAMMAPT3!=NULL)
+    {
+        if (!ECP_SECP256K1_fromOctet(&gammapt3,GAMMAPT3))
+        {
+            return 1;
+        }
+    }
+
+    ECP_SECP256K1_output(&gammapt1);
+    ECP_SECP256K1_output(&gammapt2);
+
+    //  gammapt1  + gammapt2 + gammapt3
+    ECP_SECP256K1_add(&gammapt1,&gammapt2);
+    if (GAMMAPT3!=NULL)
+    {
+        ECP_SECP256K1_add(&gammapt1,&gammapt3);
+    }
+
+    ECP_SECP256K1_output(&gammapt1);
+
+    // rx, ry = k^{-1}.G
+    ECP_SECP256K1_mul(&gammapt1,invkgamma);
+    ECP_SECP256K1_get(rx,rx,&gammapt1);
+
+    // r = rx mod q
+    BIG_256_56_copy(r,rx);
+    BIG_256_56_mod(r,q);
+    if (BIG_256_56_iszilch(r))
+    {
+        return 1;
+    }
+
+    // Output result
+    R->len=EGS_SECP256K1;
+    BIG_256_56_toBytes(R->val,r);
+
+    return 0;
+}
+
