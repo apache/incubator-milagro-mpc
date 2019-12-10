@@ -55,12 +55,7 @@ class Share:
         """Encrypt the a value."""
         # ca = E_A(a)
 
-        if r is None:
-            self.r = big.rand(curve.r)
-        else:
-            self.r = r
-            
-        ca, r = paillier.encrypt(self.n, self.g, self.a, self.r)
+        ca, self.r = paillier.encrypt(self.n, self.g, self.a, r)
         
         return ca, self.r
 
@@ -78,16 +73,11 @@ class Share:
         else:
             self.z = z
 
-        if r is None:
-            self.r = big.rand(curve.r)
-        else:
-            self.r = r
-            
         # t = E_A(ab)    
         t = paillier.mult(ca, self.b, n)
 
         # cz = E_A(z)
-        cz, r = paillier.encrypt(n, g, self.z, self.r)
+        cz, self.r = paillier.encrypt(n, g, self.z, r)
 
         # cb  = E_A(ab + z)
         cb = paillier.add(t, cz, n)

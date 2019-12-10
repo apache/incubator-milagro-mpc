@@ -120,6 +120,59 @@ int MPC_MTA_CLIENT2(octet* N, octet* L, octet* M, octet* CB, octet* ALPHA);
  */
 int MPC_MTA_SERVER(csprng *RNG, octet* N, octet* G, octet* B, octet* CA, octet* Z, octet* R, octet* CB, octet* BETA);
 
+/** \brief Sum of secret shares
+ *
+ *  Sum of secret shares
+ *
+ *  <ol>
+ *  <li> \f$ sum  = a.b + \alpha{}1 + \beta{}1 + \alpha{}2 + \beta{}2 \text{ }\mathrm{mod}\text{ }q \f$
+ *  </ol>
+ *
+ *  @param A                  A1 value
+ *  @param B                  B1 value
+ *  @param ALPHA1             Additive share of A1.B2
+ *  @param BETA1              Additive share of A2.B1
+ *  @param ALPHA2             Additive share of A1.B3
+ *  @param BETA2              Additive share of A3.B1
+ *  @param SUM                The sum of all values
+ *  @return                   Returns 0 or else error code
+ */
+int MPC_SUM(octet *A, octet *B, octet *ALPHA1, octet *BETA1, octet *ALPHA2, octet *BETA2, octet *SUM);
+
+/** \brief Calculate the inverse of the sum of kgamma values
+ *
+ *  Calculate the inverse of the sum of kgamma values
+ *
+ *  <ol>
+ *  <li> \f$ invkgamma = (kgamma1 + kgamma2 + kgamma3)^{-1} \text{ }\mathrm{mod}\text{ }q \f$
+ *  </ol>
+ *
+ *  @param KGAMMA1            Actor 1 additive share
+ *  @param KGAMMA2            Actor 2 additive share
+ *  @param KGAMMA3            Actor 3 additive share
+ *  @param INVKGAMMA          Inverse of the sum of the additive shares
+ *  @return                   Returns 0 or else error code
+ */
+int MPC_INVKGAMMA(octet *KGAMMA1, octet *KGAMMA2, octet *KGAMMA3, octet *INVKGAMMA);
+
+/** \brief R component
+ *
+ *  Generate the ECDSA signature R component
+ *
+ *  <ol>
+ *  <li> \f$ r_x, r_y = k^{-1}G \f$ where G is the group generator
+ *  <li> \f$ r = rx \text{ }\mathrm{mod}\text{ }q \f$
+ *  </ol>
+ *
+ *  @param                    Inverse of k times gamma
+ *  @param                    Actor 1 gamma point
+ *  @param                    Actor 2 gamma point
+ *  @param                    Actor 3 gamma point
+ *  @param                    R component of the signature
+ *  @return                   Returns 0 or else error code
+ */
+int MPC_R(octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *GAMMAPT3, octet *R);
+
 #ifdef __cplusplus
 }
 #endif
