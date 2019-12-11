@@ -517,7 +517,6 @@ int test(csprng *RNG)
         printf("ECDSA succeeded\n");
     }
 
-
     printf("SUCCESS\n");
     exit(EXIT_SUCCESS);
 }

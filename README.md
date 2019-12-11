@@ -1,4 +1,4 @@
-# libmpc - Paillier Crypto library
+# libmpc - MPC Crypto library
 
 [![Build Status](https://travis-ci.com/qredo/libmpc.svg?token=7HZyp2nWewcVHbgDxjjg&branch=master)](https://travis-ci.com/qredo/libmpc)
 [![Coverage Status](https://coveralls.io/repos/github/qredo/libmpc/badge.svg?branch=master)](https://coveralls.io/github/qredo/libmpc?branch=master)

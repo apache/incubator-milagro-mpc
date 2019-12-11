@@ -27,21 +27,6 @@
 
 #define LINE_LEN 2000
 
-void read_OCTET(octet* OCT, char* string)
-{
-    int len = strlen(string);
-    char buff[len];
-    memcpy(buff,string,len);
-    char *end = strchr(buff,',');
-    if (end == NULL)
-    {
-        printf("ERROR unexpected test vector %s\n",string);
-        exit(EXIT_FAILURE);
-    }
-    end[0] = '\0';
-    OCT_fromHex(OCT,buff);
-}
-
 int main(int argc, char** argv)
 {
     if (argc != 2)
