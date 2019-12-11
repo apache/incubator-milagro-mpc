@@ -183,6 +183,17 @@ int MPC_INVKGAMMA(octet *KGAMMA1, octet *KGAMMA2, octet *KGAMMA3, octet *INVKGAM
  */
 int MPC_R(octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *GAMMAPT3, octet *R);
 
+/** \brief Hash the message value
+ *
+ *  Hash the message value
+ *
+ *  @param  sha               Hash type
+ *  @param  M                 Message to be hashed
+ *  @param  HM                Hash value
+ *  @return                   Returns 0 or else error code
+ */
+int MPC_HASH(int sha, octet *M, octet *HM);
+
 /** \brief S component
  *
  *  Generate the ECDSA signature S component
@@ -193,15 +204,14 @@ int MPC_R(octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *GAMMAPT3, o
  *  <li> \f$ s = (k * h(m)) + sigma * r) \text{ }\mathrm{mod}\text{ }q \f$
  *  </ol>
  *
- *  @param  sha               Hash type
- *  @param  M                 Message to be signed
+ *  @param  HM                Hash of the message to be signed
  *  @param  R                 R component input
  *  @param  K                 Nonce value
  *  @param  SIGMA             Additive share of k.w
  *  @param  S                 S component output
  *  @return                   Returns 0 or else error code
  */
-int MPC_S(int sha, octet *M, octet *R, octet *K, octet *SIGMA, octet *S);
+int MPC_S(octet *HM, octet *R, octet *K, octet *SIGMA, octet *S);
 
 /** \brief Sum of s components
  *

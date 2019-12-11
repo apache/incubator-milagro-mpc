@@ -172,6 +172,9 @@ int test(csprng *RNG)
     char m[2000];
     octet M = {0,sizeof(m),m};
 
+    char hm[32];
+    octet HM = {0,sizeof(hm),hm};
+
     printf("Generating Paillier key pair one\n");
     rc = PAILLIER_KEY_PAIR(RNG, &P1, &Q1, &N1, &G1, &L1, &M1);
     if (rc)
@@ -454,8 +457,16 @@ int test(csprng *RNG)
     OCT_output(&SUM2);
     printf("\n");
 
+    // Calculate the message hash
+    rc = MPC_HASH(HASH_TYPE_SECP256K1, &M, &HM);
+    if (rc)
+    {
+        fprintf(stderr, "FAILURE MPC_HASH rc: %d\n", rc);
+        exit(EXIT_FAILURE);
+    }
+
     // Calculate the S1 signature component
-    rc = MPC_S(HASH_TYPE_SECP256K1, &M, &SIG_R, &K1, &SUM1, &SIG_S1);
+    rc = MPC_S(&HM, &SIG_R, &K1, &SUM1, &SIG_S1);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_S rc: %d\n", rc);
@@ -467,7 +478,7 @@ int test(csprng *RNG)
     printf("\n");
 
     // Calculate the S2 signature component
-    rc = MPC_S(HASH_TYPE_SECP256K1, &M, &SIG_R, &K2, &SUM2, &SIG_S2);
+    rc = MPC_S(&HM, &SIG_R, &K2, &SUM2, &SIG_S2);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_S rc: %d\n", rc);

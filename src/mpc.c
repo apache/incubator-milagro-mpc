@@ -458,12 +458,30 @@ int MPC_R(octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *GAMMAPT3, o
     return 0;
 }
 
-// Calculate the s component of the signature
-int MPC_S(int sha, octet *M, octet *R, octet *K, octet *SIGMA, octet *S)
+// Hash the message
+int MPC_HASH(int sha, octet *M, octet *HM)
 {
     char h[128];
     octet H = {0,sizeof(h),h};
 
+    BIG_256_56 z;
+
+    // z = hash(M)
+    ehashit(sha,M,-1,NULL,&H,sha);
+    int hlen=H.len;
+    if (H.len>MODBYTES_256_56) hlen=MODBYTES_256_56;
+    BIG_256_56_fromBytesLen(z,H.val,hlen);
+
+    // Output result
+    HM->len=MODBYTES_256_56;
+    BIG_256_56_toBytes(HM->val,z);
+
+    return 0;
+}
+
+// Calculate the s component of the signature
+int MPC_S(octet *HM, octet *R, octet *K, octet *SIGMA, octet *S)
+{
     BIG_256_56 q;
     BIG_256_56 k;
     BIG_256_56 z;
@@ -477,15 +495,10 @@ int MPC_S(int sha, octet *M, octet *R, octet *K, octet *SIGMA, octet *S)
     BIG_256_56_rcopy(q,CURVE_Order_SECP256K1);
 
     // Load values
+    BIG_256_56_fromBytes(z,HM->val);
     BIG_256_56_fromBytes(r,R->val);
     BIG_256_56_fromBytes(k,K->val);
     BIG_256_56_fromBytes(sigma,SIGMA->val);
-
-    // z = hash(M)
-    ehashit(sha,M,-1,NULL,&H,sha);
-    int hlen=H.len;
-    if (H.len>MODBYTES_256_56) hlen=MODBYTES_256_56;
-    BIG_256_56_fromBytesLen(z,H.val,hlen);
 
     // kz = k.z mod q
     BIG_256_56_modmul(kz,k,z,q);

@@ -177,6 +177,9 @@ int main(int argc, char** argv)
     octet M = {0,sizeof(m),m};
     const char* Mline = "M = ";
 
+    char hm[32];
+    octet HM = {0,sizeof(hm),hm};
+
     fp = fopen(argv[1], "r");
     if (fp == NULL)
     {
@@ -526,8 +529,16 @@ int main(int argc, char** argv)
                 exit(EXIT_FAILURE);
             }
 
+            // Calculate the message hash
+            rc = MPC_HASH(HASH_TYPE_SECP256K1, &M, &HM);
+            if (rc)
+            {
+                fprintf(stderr, "FAILURE MPC_HASH rc: %d\n", rc);
+                exit(EXIT_FAILURE);
+            }
+
             // Calculate the S1 signature component
-            rc = MPC_S(HASH_TYPE_SECP256K1, &M, &SIG_R, &K1, &SUM1, &SIG_S1);
+            rc = MPC_S(&HM, &SIG_R, &K1, &SUM1, &SIG_S1);
             if (rc)
             {
                 fprintf(stderr, "FAILURE MPC_S rc: %d\n", rc);
@@ -535,7 +546,7 @@ int main(int argc, char** argv)
             }
 
             // Calculate the S2 signature component
-            rc = MPC_S(HASH_TYPE_SECP256K1, &M, &SIG_R, &K2, &SUM2, &SIG_S2);
+            rc = MPC_S(&HM, &SIG_R, &K2, &SUM2, &SIG_S2);
             if (rc)
             {
                 fprintf(stderr, "FAILURE MPC_S rc: %d\n", rc);
