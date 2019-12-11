@@ -517,7 +517,7 @@ int test(csprng *RNG)
     OCT_output(&PK);
     printf("\n");
 
-    rc = ECP_SECP256K1_VP_DSA(HASH_TYPE_SECP256K1,&PK,&M,&SIG_R,&SIG_S);
+    rc = MPC_ECDSA_VERIFY(&HM,&PK,&SIG_R,&SIG_S);
     if (rc!=0)
     {
         fprintf(stderr, "ERROR ECP_SECP256K1_VP_DSA rc: %d\n", rc);

@@ -143,6 +143,63 @@ int MPC_ECDSA_SIGN(int sha, octet *K, octet *SK, octet *M, octet *R, octet *S)
     return 0;
 }
 
+/* IEEE1363 ECDSA Signature Verification. Signature R and S on M is verified using public key, PK */
+int MPC_ECDSA_VERIFY(octet *HM, octet *PK, octet *R,octet *S)
+{
+    int res=0;
+    BIG_256_56 q;
+    BIG_256_56 z;
+    BIG_256_56 c;
+    BIG_256_56 d;
+    BIG_256_56 h2;
+
+    ECP_SECP256K1 G;
+    ECP_SECP256K1 WP;
+    int valid;
+
+    // Curve order
+    BIG_256_56_rcopy(q,CURVE_Order_SECP256K1);
+
+    ECP_SECP256K1_generator(&G);
+
+    // Load values
+    OCT_shl(R,R->len-MODBYTES_256_56);
+    OCT_shl(S,S->len-MODBYTES_256_56);
+    BIG_256_56_fromBytes(c,R->val);
+    BIG_256_56_fromBytes(d,S->val);
+    BIG_256_56_fromBytes(z,HM->val);
+
+    if (BIG_256_56_iszilch(c) || BIG_256_56_comp(c,q)>=0 || BIG_256_56_iszilch(d) || BIG_256_56_comp(d,q)>=0)
+    {
+        res=ECDH_INVALID;
+    }
+
+    if (res==0)
+    {
+        BIG_256_56_invmodp(d,d,q);
+        BIG_256_56_modmul(z,z,d,q);
+        BIG_256_56_modmul(h2,c,d,q);
+
+        valid=ECP_SECP256K1_fromOctet(&WP,PK);
+
+        if (!valid) res=ECDH_ERROR;
+        else
+        {
+            ECP_SECP256K1_mul2(&WP,&G,h2,z);
+
+            if (ECP_SECP256K1_isinf(&WP)) res=ECDH_INVALID;
+            else
+            {
+                ECP_SECP256K1_get(d,d,&WP);
+                BIG_256_56_mod(d,q);
+                if (BIG_256_56_comp(d,c)!=0) res=ECDH_INVALID;
+            }
+        }
+    }
+
+    return res;
+}
+
 
 // Client MTA first pass
 int MPC_MTA_CLIENT1(csprng *RNG, octet* N, octet* G, octet* A, octet* CA, octet* R)

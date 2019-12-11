@@ -53,7 +53,7 @@ void read_OCTET(octet* y, char* x);
 */
 void OCT_truncate(octet *y,octet *x);
 
-/** \brief ECDSA Signature
+/** \brief ECDSA Sign message
  *
  *  Generate the ECDSA signature on message, M, with outputs (R,S)
  *
@@ -73,6 +73,19 @@ void OCT_truncate(octet *y,octet *x);
  *  @param D component of the signature
  */
 int MPC_ECDSA_SIGN(int sha, octet *K, octet *SK, octet *M, octet *R, octet *S);
+
+/** \brief ECDSA Verify signature
+ *
+ *  Verify the signature (R,S) on a message
+ *
+ *  @param  HM               Hash of the message
+ *  @param  PK               Public key
+ *  @param  R                R component of signature
+ *  @param  S                S component of signature
+ *  @return                  Returns 0 or else error code
+ */
+int MPC_ECDSA_VERIFY(octet *HM,octet *PK, octet *R,octet *S);
+
 
 /*! \brief Client MTA first pass
  *
