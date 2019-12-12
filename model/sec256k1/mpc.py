@@ -1,4 +1,3 @@
-import math
 import hashlib
 import sec256k1.curve as curve
 import sec256k1.ecdh as ecdh

@@ -23,7 +23,7 @@ if __name__ == "__main__":
         sk1 = "00000000000000000000000000000000248ea4e0ce968bdd1febd48e2d246f7268070eb468eca0c1e911cc1642bd8041"
         k1 = 0x2
         gamma1 = 0x5
-        
+
         p2 = 0xc227a6d88ef469ceb323bcd95a18ab41d9cde9b349c093e7273e7d05f1636c517a21890f22785d45aeeb892da40a69267d3e2f1bd7e0f164cb23306402122512ed70d1cbb20c470d0c03a54adc47abfcc9eadff2ba175bb29aea70464f31f7804a8fc9c9fed60c505e11c594c9415fc96e1b44a3e5f437772bbce91e063827bf
         q2 = 0xe729b4e468f6076ad00dc9af0b820158be147727f4ead55b4d6268647d53c8f65e92338af9b24b819de20244e404800f659ce8595a8020ba941cf116b30ee31b0dc6367721714e511abae6157b3de5241ffd28ad309a70b9c316b5a40571808b85db4e00d82d80da4e7b5b6b37b10fd5c2c3815b7429f6eabddcd284d927352f
         sk2 = "000000000000000000000000000000000aec8feb32fd8bbb4526b6d5af6681519e195874ada7474255c89926efe53291"
@@ -32,88 +32,87 @@ if __name__ == "__main__":
 
         r = 0x18c5947fda2edea04c1f87c207e0bab17aff5f77ac21d04cb194631efd1f7256dc37de9473fc86009df36206974859c09023ac8179b02aacea8d89a01f4de161db955d450cef55ce959897636973b952371e349778e67c61ef6fae5f73fd728d423a594b6a76d5faca97d59d6ae40c53f3bd42dfccc93183e355422ba7af308a87d32c0352d478156275f98bc74e9ed4f2c7a9853c9f35b996fafe765b56c7f2e83771c6b676b75436e5c1697b838b3908aee92001cbccf3bf6cfb7aaea27a358a12cfe1ddde886b975ae14517e5912eba3ff9792e46403a998edd371020bbc5fbd6a705e669383303030ef79653ce16e13122233c626bb101ee8dd27bf4ff86
         z = 0x4
-        
+
     else:
         p1 = number.getStrongPrime(1024)
         q1 = number.getStrongPrime(1024)
         sk1 = None
         k1 = None
         gamma1 = None
-        
+
         p2 = number.getStrongPrime(1024)
         q2 = number.getStrongPrime(1024)
         sk2 = None
         k2 = None
         gamma2 = None
-        
+
         r = None
         z = None
-        
+
     alice = Player('Alice', p1, q1, sk1, k1, gamma1)
     bob = Player('Bob', p2, q2, sk2, k2, gamma2)
 
     #Player.how_many()
 
     ### alice.k * bob.gamma ###
-    
+
     print(f"alice.k: {hex(alice.k)[2:].zfill(512)}\n")
     print(f"bob.gamma {hex(bob.gamma)[2:].zfill(512)}\n")
 
     expected = alice.k * bob.gamma % curve.r
     print(f"s = alice.k * bob.gamma = {hex(expected)[2:].zfill(512)}\n")
-    
+
     ca, r = alice.kgamma.client1(r)
     print(f"alice ca {hex(ca)[2:].zfill(1024)}\n")
-    print(f"alice r {hex(r)[2:].zfill(512)}\n")     
+    print(f"alice r {hex(r)[2:].zfill(512)}\n")
 
     cb, r, z = bob.kgamma.server(alice.n, alice.g, ca, z, r)
     print(f"bob cb {hex(cb)[2:].zfill(1024)}\n")
     print(f"bob r {hex(r)[2:].zfill(512)}\n")
-    print(f"bob z {hex(z)[2:].zfill(512)}\n")         
+    print(f"bob z {hex(z)[2:].zfill(512)}\n")
     print(f"bob.kgamma.beta {hex(bob.kgamma.beta)[2:].zfill(512)}\n")
-    
+
     alice.kgamma.client2(cb)
     print(f"alice.kgamma.alpha {hex(alice.kgamma.alpha)[2:].zfill(512)}\n")
 
     got = ( alice.kgamma.alpha + bob.kgamma.beta ) % curve.r
 
-    print(f"expected {hex(expected)}")    
+    print(f"expected {hex(expected)}")
     print(f"got {hex(got)}")
     assert got == expected, f"expected {hex(expected)} got {hex(got)}"
 
     ### bob.k * alice.gamma ###
-    
+
     print(f"k {hex(bob.k)}")
     print(f"gamma {hex(alice.gamma)}")
 
     expected = bob.k * alice.gamma % curve.r
-    
+
     ca, r = bob.kgamma.client1(r)
 
     cb, r, z = alice.kgamma.server(bob.n, bob.g, ca, z, r)
     print(f"alice.kgamma.beta {alice.kgamma.beta}")
-    
+
     bob.kgamma.client2(cb)
     print(f"bob.kgamma.alpha {bob.kgamma.alpha}")
 
     got = ( bob.kgamma.alpha + alice.kgamma.beta ) % curve.r
 
-    print(f"expected {hex(expected)}")    
+    print(f"expected {hex(expected)}")
     print(f"got {hex(got)}")
     assert got == expected, f"expected {hex(expected)} got {hex(got)}"
 
     ### kgamma = (alice.k + bob.k)(alice.gamma + bob.gamma)
 
     #print(alice)
-    #print(bob)        
-    
+    #print(bob)
+
     k = (alice.k + bob.k) % curve.r
     gamma = (alice.gamma + bob.gamma) % curve.r
     expected = k * gamma % curve.r
 
-    got = ( alice.kgamma.sum() + bob.kgamma.sum() ) % curve.r 
+    got = ( alice.kgamma.sum() + bob.kgamma.sum() ) % curve.r
 
     print(f"kgamma expected {expected} {hex(expected)}")
-    print(f"kgamma got {got} {hex(got)}")        
+    print(f"kgamma got {got} {hex(got)}")
     assert got == expected, f"expected {hex(expected)} got {hex(got)}"
-

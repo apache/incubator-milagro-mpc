@@ -19,15 +19,12 @@ def from_bytes(B):
     return int.from_bytes(B, byteorder='big')
 
 # extract i-th bit
-
-
 def bit(k, i):
     if i == 0:
         return k & 1
     return ((k >> i) & 1)
+
 # gcd
-
-
 def gcd(x, y):
     a = x
     b = y
@@ -36,8 +33,6 @@ def gcd(x, y):
     return a
 
 # inverse mod prime p
-
-
 def invmodp(a, p):
     n = p
     x = a % n
@@ -62,8 +57,6 @@ def invmodp(a, p):
     return a
 
 # Modular arithmetic
-
-
 def modmul(a1, b1, p):
 
     a = a1 % p
@@ -118,17 +111,18 @@ def sqrtmodp(a, p):
 
 
 # chinese remainder theorem
+def crt(rp, rq, p, q):
+    n = p*q
 
+    c = invmodp(p, q)
 
-def crt(rp, p, rq, q):
-    c = inverse(p, q)
-    t = modmult(c, rq - rp, q)
-    return t * p + rp
+    t = modmul(c, rq - rp, n)
+    t = modmul(t, p, n)
+
+    return modadd(t, rp, n)
 
 # find jacobi symbol for (x/p). Only defined for
 # positive x and p, p odd. Otherwise returns 0
-
-
 def jacobi(a, p):
     if a < 1 or p < 2 or p % 2 == 0:
         return 0

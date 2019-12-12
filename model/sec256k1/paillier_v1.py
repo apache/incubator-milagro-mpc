@@ -5,23 +5,19 @@ DEBUG=False
 def keys(p, q):
     n = p * q
     g = n + 1
+    l = (p-1) * (q-1)
+    m = big.invmodp(l, n)
 
-    lp = p-1
-    lq = q-1
-
-    mp = (pow(g, lp, p*p) - 1) // p
-    mp = big.invmodp(mp, p)
-
-    mq = (pow(g, lq, q*q) - 1) // q
-    mq = big.invmodp(mq, q)
-
-    return n, g, lp, lq, mp, mq
+    return n, g, l, m
 
 def encrypt(n, g, pt, r=None):
     n2 = n*n
 
     if r is None:
-        r = big.rand(n2)
+        r = big.rand(n)
+
+    if DEBUG:
+        print("r {}".format(hex(r)))
 
     rn = pow(r, n, n2)
     gpt = pow(g, pt, n2)
@@ -29,24 +25,17 @@ def encrypt(n, g, pt, r=None):
 
     return ct, r
 
-def decrypt(p, q, lp, lq, mp, mq, ct):
-    p2 = p*p 
-    ctp = (pow(ct, lp, p2) - 1) // p
-    ptp = big.modmul(ctp, mp, p)
-
-    q2 = q*q 
-    ctq = (pow(ct, lq, q2) - 1) // q
-    ptq = big.modmul(ctq, mq, q)
-
-    pt = big.crt(ptp, ptq, p, q)
+def decrypt(n, l, m, ct):
+    n2 = n*n
+    ctl = pow(ct, l, n2) - 1
+    ctln = ctl // n
+    pt = big.modmul(ctln, m, n)
 
     if DEBUG:
-        print("decrypt q2 {}\n".format(hex(p2)))
-        print("decrypt p2 {}\n".format(hex(q2)))
-        print("decrypt ctp {}\n".format(hex(ctp)))
-        print("decrypt ctq {}\n".format(hex(ctq)))
-        print("decrypt ptp {}\n".format(hex(ptp)))
-        print("decrypt ptq {}\n".format(hex(ptq)))
+        print("decrypt n2 {}\n".format(hex(n2)))
+        print("decrypt ctl {}\n".format(hex(ctl)))
+        print("decrypt n {}\n".format(hex(n)))
+        print("decrypt ctln {}\n".format(hex(ctln)))
         print("decrypt pt {}\n".format(hex(pt)))
 
     return pt

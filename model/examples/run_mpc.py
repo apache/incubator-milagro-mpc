@@ -76,12 +76,16 @@ if __name__ == "__main__":
         p = number.getStrongPrime(1024)
         q = number.getStrongPrime(1024)
 
-        n,g,l,m = paillier.keys(p,q)
+        n,g,lp,lq,mp,mq = paillier.keys(p,q)
 
-        player["n"] = n
-        player["g"] = g
-        player["l"] = l
-        player["m"] = m
+        player["p"]  = p
+        player["q"]  = q
+        player["n"]  = n
+        player["g"]  = g
+        player["lp"] = lp
+        player["mp"] = mp
+        player["lq"] = lq
+        player["mq"] = mq
 
     ## Setup ECDSA secrets and public keys
     for player in all_players:
@@ -161,7 +165,7 @@ if __name__ == "__main__":
 
             beta, cj = mta.receive(player_i["n"], player_i["g"], curve.r, player_j["gamma"], ci)
 
-            alpha = mta.complete(player_i["n"], player_i["l"], player_i["m"], curve.r, cj)
+            alpha = mta.complete(player_i["p"],player_i["q"], player_i["lp"], player_i["mp"], player_i["lq"], player_i["mq"], curve.r, cj)
 
             player_i["alpha"][j] = alpha
             player_j["beta"][i] = beta
@@ -185,7 +189,7 @@ if __name__ == "__main__":
 
             nu, cj = mta.receive(player_i["n"], player_i["g"], curve.r, player_j["w"], ci)
 
-            mu = mta.complete(player_i["n"], player_i["l"], player_i["m"], curve.r, cj)
+            mu = mta.complete(player_i["p"],player_i["q"], player_i["lp"], player_i["mp"], player_i["lq"], player_i["mq"], curve.r, cj)
 
             player_i["mu"][j] = mu
             player_j["nu"][i] = nu

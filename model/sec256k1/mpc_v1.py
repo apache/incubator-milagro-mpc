@@ -2,7 +2,7 @@
 
 import hashlib
 
-import sec256k1.paillier as paillier
+import sec256k1.paillier_v1 as paillier
 import sec256k1.ecdh as ecdh
 import sec256k1.big as big
 import sec256k1.curve as curve
