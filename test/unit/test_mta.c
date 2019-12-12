@@ -27,21 +27,6 @@
 
 #define LINE_LEN 2000
 
-void read_OCTET(octet* OCT, char* string)
-{
-    int len = strlen(string);
-    char buff[len];
-    memcpy(buff,string,len);
-    char *end = strchr(buff,',');
-    if (end == NULL)
-    {
-        printf("ERROR unexpected test vector %s\n",string);
-        exit(EXIT_FAILURE);
-    }
-    end[0] = '\0';
-    OCT_fromHex(OCT,buff);
-}
-
 int main(int argc, char** argv)
 {
     if (argc != 2)
@@ -72,7 +57,7 @@ int main(int argc, char** argv)
     char g[FS_2048]= {0};
     octet G = {0,sizeof(g),g};
     const char* Gline = "G = ";
-    
+
     char l[FS_2048] = {0};
     octet L = {0,sizeof(l),l};
     const char* Lline = "L = ";
@@ -114,21 +99,21 @@ int main(int argc, char** argv)
     char cbgolden[FS_4096]= {0};
     octet CBGOLDEN = {0,sizeof(cbgolden),cbgolden};
     const char* CBline = "CB = ";
-    
+
     char alpha[FS_2048]= {0};
     octet ALPHA = {0,sizeof(alpha),alpha};
 
     char alphagolden[FS_2048]= {0};
     octet ALPHAGOLDEN = {0,sizeof(alphagolden),alphagolden};
     const char* ALPHAline = "ALPHA = ";
-    
+
     char beta[FS_2048]= {0};
     octet BETA = {0,sizeof(beta),beta};
 
     char betagolden[FS_2048]= {0};
     octet BETAGOLDEN = {0,sizeof(betagolden),betagolden};
     const char* BETAline = "BETA = ";
-    
+
     fp = fopen(argv[1], "r");
     if (fp == NULL)
     {
@@ -170,7 +155,7 @@ int main(int argc, char** argv)
             OCT_output(&G);
 #endif
         }
-	
+
         // Read L
         if (!strncmp(line,Lline, strlen(Lline)))
         {
@@ -254,7 +239,7 @@ int main(int argc, char** argv)
             OCT_output(&R2);
 #endif
         }
-	
+
         // Read CAGOLDEN
         if (!strncmp(line,CAline, strlen(CAline)))
         {
@@ -337,7 +322,7 @@ int main(int argc, char** argv)
             rc = !(OCT_comp(&CA,&CAGOLDEN));
             if(rc != result)
             {
-                fprintf(stderr, "FAILURE Test %d CA != CAGOLDEN \n", testNo);	      
+                fprintf(stderr, "FAILURE Test %d CA != CAGOLDEN \n", testNo);
                 fclose(fp);
                 exit(EXIT_FAILURE);
             }
@@ -356,7 +341,7 @@ int main(int argc, char** argv)
             printf("\n");
             printf("BETA: ");
             OCT_output(&BETA);
-            printf("\n");	    
+            printf("\n");
 #endif
 
             // OCT_comp return 1 for equal
@@ -395,7 +380,7 @@ int main(int argc, char** argv)
             rc = !(OCT_comp(&ALPHA,&ALPHAGOLDEN));
             if(rc != result)
             {
-                fprintf(stderr, "FAILURE Test %d ALPHA != ALPHAGOLDEN \n", testNo);	      
+                fprintf(stderr, "FAILURE Test %d ALPHA != ALPHAGOLDEN \n", testNo);
                 fclose(fp);
                 exit(EXIT_FAILURE);
             }
