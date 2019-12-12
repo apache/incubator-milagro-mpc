@@ -5,6 +5,7 @@ incubator-milagro-crypto-c
 **/*bak
 
 model/sec256k1/__pycache__/
+model/sec256k1/*.pyc
 model/examples/game.json
 model/vectors/*/__pycache__
 model/vectors/*/*.txt

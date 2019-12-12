@@ -1,4 +1,5 @@
 import sec256k1.paillier as paillier
+import sec256k1.curve as curve
 import sec256k1.big as big
 
 DEBUG = False
@@ -42,12 +43,12 @@ def receive(n,g,q,b,ca,beta=None,r=None):
     return beta, cb
 
 # Step 3 of the MtA protocol, without ZK check
-def complete(n,l,m,q,cb):
+def complete(p,q,lp,mp,lq,mq,n,cb):
     # TODO ZK check cb = E(b), b < K
     # TODO if MtAwC ZK check knowledge of b, beta
 
-    alpha = paillier.decrypt(n,l,m,cb)
-    alpha = alpha % q
+    alpha = paillier.decrypt(p,q,lp,lq,mp,mq,cb)
+    alpha = alpha % n
 
     if DEBUG:
         print("alpha {}".format(hex(alpha)))
