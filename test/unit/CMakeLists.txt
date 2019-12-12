@@ -39,5 +39,6 @@ endfunction()
 
 amcl_test(test_mta test_mta.c mpc "SUCCESS" "mpc/MTA.txt")
 amcl_test(test_r test_r.c mpc "SUCCESS" "mpc/R.txt")
+amcl_test(test_s test_s.c mpc "SUCCESS" "mpc/S.txt")
 
 

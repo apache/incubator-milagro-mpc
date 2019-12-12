@@ -69,13 +69,13 @@ int main(int argc, char** argv)
     octet M1 = {0,sizeof(m1),m1};
     const char* M1line = "M1 = ";
 
-    char a1[FS_2048]= {0};
-    octet A1 = {0,sizeof(a1),a1};
-    const char* A1line = "A1 = ";
+    char k1[FS_2048]= {0};
+    octet K1 = {0,sizeof(k1),k1};
+    const char* K1line = "K1 = ";
 
-    char b1[FS_2048]= {0};
-    octet B1 = {0,sizeof(b1),b1};
-    const char* B1line = "B1 = ";
+    char w1[FS_2048]= {0};
+    octet W1 = {0,sizeof(w1),w1};
+    const char* W1line = "W1 = ";
 
     char r21[FS_2048]= {0};
     octet R21 = {0,sizeof(r21),r21};
@@ -106,13 +106,13 @@ int main(int argc, char** argv)
     octet M2 = {0,sizeof(m2),m2};
     const char* M2line = "M2 = ";
 
-    char a2[FS_2048]= {0};
-    octet A2 = {0,sizeof(a2),a2};
-    const char* A2line = "A2 = ";
+    char k2[FS_2048]= {0};
+    octet K2 = {0,sizeof(k2),k2};
+    const char* K2line = "K2 = ";
 
-    char b2[FS_2048]= {0};
-    octet B2 = {0,sizeof(b2),b2};
-    const char* B2line = "B2 = ";
+    char w2[FS_2048]= {0};
+    octet W2 = {0,sizeof(w2),w2};
+    const char* W2line = "W2 = ";
 
     char r22[FS_2048]= {0};
     octet R22 = {0,sizeof(r22),r22};
@@ -125,18 +125,6 @@ int main(int argc, char** argv)
     char z12[FS_2048]= {0};
     octet Z12 = {0,sizeof(z12),z12};
     const char* Z12line = "Z12 = ";
-
-    char gammapt1[2*EFS_SECP256K1+1];
-    octet GAMMAPT1 = {0,sizeof(gammapt1),gammapt1};
-    const char* GAMMAPT1line = "GAMMAPT1 = ";
-
-    char gammapt2[2*EFS_SECP256K1+1];
-    octet GAMMAPT2 = {0,sizeof(gammapt2),gammapt2};
-    const char* GAMMAPT2line = "GAMMAPT2 = ";
-
-    char sig_rgolden[EGS_SECP256K1];
-    octet SIG_RGOLDEN = {0,sizeof(sig_rgolden),sig_rgolden};
-    const char* SIG_Rline = "SIG_R = ";
 
     char alpha1[EGS_SECP256K1];
     octet ALPHA1 = {0,sizeof(alpha1),alpha1};
@@ -156,12 +144,6 @@ int main(int argc, char** argv)
     char sum2[EGS_SECP256K1];
     octet SUM2 = {0,sizeof(sum2),sum2};
 
-    char invkgamma[EGS_SECP256K1];
-    octet INVKGAMMA = {0,sizeof(invkgamma),invkgamma};
-
-    char sig_r[EGS_SECP256K1];
-    octet SIG_R = {0,sizeof(sig_r),sig_r};
-
     char ca11[FS_4096];
     octet CA11 = {0,sizeof(ca11),ca11};
 
@@ -173,6 +155,30 @@ int main(int argc, char** argv)
 
     char cb12[FS_4096];
     octet CB12 = {0,sizeof(cb12),cb12};
+
+    char sig_r[EGS_SECP256K1];
+    octet SIG_R = {0,sizeof(sig_r),sig_r};
+    const char* SIG_Rline = "SIG_R = ";
+
+    char sig_sgolden[EGS_SECP256K1];
+    octet SIG_SGOLDEN = {0,sizeof(sig_sgolden),sig_sgolden};
+    const char* SIG_Sline = "SIG_S = ";
+
+    char sig_s1[EGS_SECP256K1];
+    octet SIG_S1 = {0,sizeof(sig_s1),sig_s1};
+
+    char sig_s2[EGS_SECP256K1];
+    octet SIG_S2 = {0,sizeof(sig_s2),sig_s2};
+
+    char sig_s[EGS_SECP256K1];
+    octet SIG_S = {0,sizeof(sig_s),sig_s};
+
+    char m[2000];
+    octet M = {0,sizeof(m),m};
+    const char* Mline = "M = ";
+
+    char hm[32];
+    octet HM = {0,sizeof(hm),hm};
 
     fp = fopen(argv[1], "r");
     if (fp == NULL)
@@ -240,27 +246,27 @@ int main(int argc, char** argv)
 #endif
         }
 
-        // Read A1
-        if (!strncmp(line,A1line, strlen(A1line)))
+        // Read K1
+        if (!strncmp(line,K1line, strlen(K1line)))
         {
-            len = strlen(A1line);
+            len = strlen(K1line);
             linePtr = line + len;
-            read_OCTET(&A1,linePtr);
+            read_OCTET(&K1,linePtr);
 #ifdef DEBUG
-            printf("A1 = ");
-            OCT_output(&A1);
+            printf("K1 = ");
+            OCT_output(&K1);
 #endif
         }
 
-        // Read B1
-        if (!strncmp(line,B1line, strlen(B1line)))
+        // Read W1
+        if (!strncmp(line,W1line, strlen(W1line)))
         {
-            len = strlen(B1line);
+            len = strlen(W1line);
             linePtr = line + len;
-            read_OCTET(&B1,linePtr);
+            read_OCTET(&W1,linePtr);
 #ifdef DEBUG
-            printf("B1 = ");
-            OCT_output(&B1);
+            printf("W1 = ");
+            OCT_output(&W1);
 #endif
         }
 
@@ -348,27 +354,27 @@ int main(int argc, char** argv)
 #endif
         }
 
-        // Read A2
-        if (!strncmp(line,A2line, strlen(A2line)))
+        // Read K2
+        if (!strncmp(line,K2line, strlen(K2line)))
         {
-            len = strlen(A2line);
+            len = strlen(K2line);
             linePtr = line + len;
-            read_OCTET(&A2,linePtr);
+            read_OCTET(&K2,linePtr);
 #ifdef DEBUG
-            printf("A2 = ");
-            OCT_output(&A2);
+            printf("K2 = ");
+            OCT_output(&K2);
 #endif
         }
 
-        // Read B2
-        if (!strncmp(line,B2line, strlen(B2line)))
+        // Read W2
+        if (!strncmp(line,W2line, strlen(W2line)))
         {
-            len = strlen(B2line);
+            len = strlen(W2line);
             linePtr = line + len;
-            read_OCTET(&B2,linePtr);
+            read_OCTET(&W2,linePtr);
 #ifdef DEBUG
-            printf("B2 = ");
-            OCT_output(&B2);
+            printf("W2 = ");
+            OCT_output(&W2);
 #endif
         }
 
@@ -408,39 +414,39 @@ int main(int argc, char** argv)
 #endif
         }
 
-        // Read GAMMAPT1
-        if (!strncmp(line,GAMMAPT1line, strlen(GAMMAPT1line)))
-        {
-            len = strlen(GAMMAPT1line);
-            linePtr = line + len;
-            read_OCTET(&GAMMAPT1,linePtr);
-#ifdef DEBUG
-            printf("GAMMAPT1 = ");
-            OCT_output(&GAMMAPT1);
-#endif
-        }
-
-        // Read GAMMAPT2
-        if (!strncmp(line,GAMMAPT2line, strlen(GAMMAPT2line)))
-        {
-            len = strlen(GAMMAPT2line);
-            linePtr = line + len;
-            read_OCTET(&GAMMAPT2,linePtr);
-#ifdef DEBUG
-            printf("GAMMAPT2 = ");
-            OCT_output(&GAMMAPT2);
-#endif
-        }
-
         // Read SIG_R
         if (!strncmp(line,SIG_Rline, strlen(SIG_Rline)))
         {
             len = strlen(SIG_Rline);
             linePtr = line + len;
-            read_OCTET(&SIG_RGOLDEN,linePtr);
+            read_OCTET(&SIG_R,linePtr);
 #ifdef DEBUG
-            printf("SIG_RGOLDEN = ");
-            OCT_output(&SIG_RGOLDEN);
+            printf("SIG_R = ");
+            OCT_output(&SIG_R);
+#endif
+        }
+
+        // Read SIG_S
+        if (!strncmp(line,SIG_Sline, strlen(SIG_Sline)))
+        {
+            len = strlen(SIG_Sline);
+            linePtr = line + len;
+            read_OCTET(&SIG_SGOLDEN,linePtr);
+#ifdef DEBUG
+            printf("SIG_SGOLDEN = ");
+            OCT_output(&SIG_SGOLDEN);
+#endif
+        }
+
+        // Read M
+        if (!strncmp(line,Mline, strlen(Mline)))
+        {
+            len = strlen(Mline);
+            linePtr = line + len;
+            read_OCTET(&M,linePtr);
+#ifdef DEBUG
+            printf("M = ");
+            OCT_output(&M);
 #endif
         }
 
@@ -460,8 +466,8 @@ int main(int argc, char** argv)
         {
             applyVector=0;
 
-            // ALPHA1 + BETA2 = A1 * B2
-            int rc = MPC_MTA_CLIENT1(NULL, &N1, &G1, &A1, &CA11, &R11);
+            // ALPHA1 + BETA2 = K1 * W2
+            int rc = MPC_MTA_CLIENT1(NULL, &N1, &G1, &K1, &CA11, &R11);
             if (rc)
             {
                 fprintf(stderr, "FAILURE MPC_MTA_CLIENT1 Test %d rc: %d\n", testNo, rc);
@@ -469,7 +475,7 @@ int main(int argc, char** argv)
                 exit(EXIT_FAILURE);
             }
 
-            rc = MPC_MTA_SERVER(NULL,  &N1, &G1, &B2, &CA11, &Z12, &R12, &CB12, &BETA2);
+            rc = MPC_MTA_SERVER(NULL,  &N1, &G1, &W2, &CA11, &Z12, &R12, &CB12, &BETA2);
             if (rc)
             {
                 fprintf(stderr, "FAILURE MPC_MTA_SERVER Test %d rc: %d\n", testNo, rc);
@@ -485,15 +491,15 @@ int main(int argc, char** argv)
                 exit(EXIT_FAILURE);
             }
 
-            // ALPHA2 + BETA1 = A2 * B1
-            rc = MPC_MTA_CLIENT1(NULL, &N2, &G2, &A2, &CA22, &R22);
+            // ALPHA2 + BETA1 = K2 * W1
+            rc = MPC_MTA_CLIENT1(NULL, &N2, &G2, &K2, &CA22, &R22);
             if (rc)
             {
                 fprintf(stderr, "FAILURE MPC_MTA_CLIENT1 rc: %d\n", rc);
                 exit(EXIT_FAILURE);
             }
 
-            rc = MPC_MTA_SERVER(NULL,  &N2, &G2, &B1, &CA22, &Z21, &R21, &CB21, &BETA1);
+            rc = MPC_MTA_SERVER(NULL,  &N2, &G2, &W1, &CA22, &Z21, &R21, &CB21, &BETA1);
             if (rc)
             {
                 fprintf(stderr, "FAILURE MPC_MTA_SERVER rc: %d\n", rc);
@@ -507,49 +513,65 @@ int main(int argc, char** argv)
                 exit(EXIT_FAILURE);
             }
 
-            // sum = A1.B1 + alpha1  + beta1
-            rc = MPC_SUM_MTA(&A1, &B1, &ALPHA1, &BETA1, NULL, NULL, &SUM1);
+            // sum = K1.W1 + alpha1  + beta1
+            rc = MPC_SUM_MTA(&K1, &W1, &ALPHA1, &BETA1, NULL, NULL, &SUM1);
             if (rc)
             {
                 fprintf(stderr, "FAILURE MPC_SUM_MTA rc: %d\n", rc);
                 exit(EXIT_FAILURE);
             }
 
-            // sum = A2.B2 + alpha2  + beta2
-            rc = MPC_SUM_MTA(&A2, &B2, &ALPHA2, &BETA2, NULL, NULL, &SUM2);
+            // sum = K2.W2 + alpha2  + beta2
+            rc = MPC_SUM_MTA(&K2, &W2, &ALPHA2, &BETA2, NULL, NULL, &SUM2);
             if (rc)
             {
                 fprintf(stderr, "FAILURE MPC_SUM_MTA rc: %d\n", rc);
                 exit(EXIT_FAILURE);
             }
 
-            // Calculate the inverse of kgamma
-            rc = MPC_INVKGAMMA(&SUM1, &SUM2, NULL, &INVKGAMMA);
+            // Calculate the message hash
+            rc = MPC_HASH(HASH_TYPE_SECP256K1, &M, &HM);
             if (rc)
             {
-                fprintf(stderr, "FAILURE MPC_INVKGAMMA rc: %d\n", rc);
+                fprintf(stderr, "FAILURE MPC_HASH rc: %d\n", rc);
                 exit(EXIT_FAILURE);
             }
 
-            // Calculate the R signature component
-            rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, NULL, &SIG_R);
+            // Calculate the S1 signature component
+            rc = MPC_S(&HM, &SIG_R, &K1, &SUM1, &SIG_S1);
             if (rc)
             {
-                fprintf(stderr, "FAILURE MPC_R rc: %d\n", rc);
+                fprintf(stderr, "FAILURE MPC_S rc: %d\n", rc);
+                exit(EXIT_FAILURE);
+            }
+
+            // Calculate the S2 signature component
+            rc = MPC_S(&HM, &SIG_R, &K2, &SUM2, &SIG_S2);
+            if (rc)
+            {
+                fprintf(stderr, "FAILURE MPC_S rc: %d\n", rc);
+                exit(EXIT_FAILURE);
+            }
+
+            // Sum S signature component
+            rc = MPC_SUM_S(&SIG_S1, &SIG_S2, NULL, &SIG_S);
+            if (rc)
+            {
+                fprintf(stderr, "FAILURE MPC_SUM_S rc: %d\n", rc);
                 exit(EXIT_FAILURE);
             }
 
 #ifdef DEBUG
-            printf("SIG_R: ");
-            OCT_output(&SIG_R);
+            printf("SIG_S: ");
+            OCT_output(&SIG_S);
             printf("\n");
 #endif
 
             // OCT_comp return 1 for equal
-            rc = !(OCT_comp(&SIG_R,&SIG_RGOLDEN));
+            rc = !(OCT_comp(&SIG_S,&SIG_SGOLDEN));
             if(rc != result)
             {
-                fprintf(stderr, "FAILURE SIG_R != SIG_RGOLDEN rc: %d\n", rc);
+                fprintf(stderr, "FAILURE SIG_S != SIG_SGOLDEN rc: %d\n", rc);
                 exit(EXIT_FAILURE);
             }
 

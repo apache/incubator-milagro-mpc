@@ -459,10 +459,10 @@ int main()
     }
 
     // sum = A1.B1 + alpha1  + beta1
-    rc = MPC_SUM(&A1, &B1, &ALPHA1, &BETA1, NULL, NULL, &SUM1);
+    rc = MPC_SUM_MTA(&A1, &B1, &ALPHA1, &BETA1, NULL, NULL, &SUM1);
     if (rc)
     {
-        fprintf(stderr, "FAILURE MPC_SUM rc: %d\n", rc);
+        fprintf(stderr, "FAILURE MPC_SUM_MTA rc: %d\n", rc);
         exit(EXIT_FAILURE);
     }
 
@@ -478,10 +478,10 @@ int main()
     }
 
     // sum = A2.B2 + alpha2  + beta2
-    rc = MPC_SUM(&A2, &B2, &ALPHA2, &BETA2, NULL, NULL, &SUM2);
+    rc = MPC_SUM_MTA(&A2, &B2, &ALPHA2, &BETA2, NULL, NULL, &SUM2);
     if (rc)
     {
-        fprintf(stderr, "FAILURE MPC_SUM rc: %d\n", rc);
+        fprintf(stderr, "FAILURE MPC_SUM_MTA rc: %d\n", rc);
         exit(EXIT_FAILURE);
     }
 
