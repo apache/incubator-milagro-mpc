@@ -5,7 +5,8 @@ import sec256k1.ecp as ecp
 import sec256k1.curve as curve
 import sec256k1.schnorr as schnorr
 
-def genSchnorrVector(test_no, x=None, r=None,c=None):
+
+def genSchnorrVector(test_no, x=None, r=None, c=None):
     """Generate a single test vector
 
         Use parameters to generate a single test vector
@@ -38,23 +39,24 @@ def genSchnorrVector(test_no, x=None, r=None,c=None):
     if c is None:
         c = schnorr.challenge()
 
-    p = schnorr.prove(r,c,x)
+    p = schnorr.prove(r, c, x)
 
-    assert schnorr.verify(V,C,c,p), "inconsistent test vector"
+    assert schnorr.verify(V, C, c, p), "inconsistent test vector"
 
     vector = {
-        "TEST" : test_no,
-        "X"    : hex(x)[2:].zfill(64),
-        "V"    : "{}".format(V),
-        "R"    : hex(r)[2:].zfill(64),
-        "CO"   : "{}".format(C),
-        "CH"   : hex(c)[2:].zfill(64),
-        "P"    : hex(p)[2:].zfill(64),
+        "TEST": test_no,
+        "X": hex(x)[2:].zfill(64),
+        "V": "{}".format(V),
+        "R": hex(r)[2:].zfill(64),
+        "CO": "{}".format(C),
+        "CH": hex(c)[2:].zfill(64),
+        "P": hex(p)[2:].zfill(64),
     }
 
     return vector
 
-def genDoubleSchnorrVector(test_no, R=None, s=None, l=None, a=None, b=None,c=None):
+
+def genDoubleSchnorrVector(test_no, R=None, s=None, l=None, a=None, b=None, c=None):
     """Generate a single test vector
 
         Use parameters to generate a single test vector
@@ -91,27 +93,27 @@ def genDoubleSchnorrVector(test_no, R=None, s=None, l=None, a=None, b=None,c=Non
     V = ecp.ECp.mul(R, s, ecp.generator(), l)
 
     # ZK proof
-    a,b, C = schnorr.d_commit(R,a,b)
+    a, b, C = schnorr.d_commit(R, a, b)
 
     if c is None:
         c = schnorr.d_challenge()
 
-    t,u = schnorr.d_prove(a,b,c,s,l)
+    t, u = schnorr.d_prove(a, b, c, s, l)
 
-    assert schnorr.d_verify(R,V,C,c,t,u), "inconsistent test vector"
+    assert schnorr.d_verify(R, V, C, c, t, u), "inconsistent test vector"
 
     vector = {
-        "TEST" : test_no,
-        "R"    : "{}".format(R),
-        "S"    : hex(s)[2:].zfill(64),
-        "L"    : hex(l)[2:].zfill(64),
-        "V"    : "{}".format(V),
-        "A"    : hex(a)[2:].zfill(64),
-        "B"    : hex(b)[2:].zfill(64),
-        "CO"   : "{}".format(C),
-        "CH"   : hex(c)[2:].zfill(64),
-        "T"    : hex(t)[2:].zfill(64),
-        "U"    : hex(u)[2:].zfill(64),
+        "TEST": test_no,
+        "R": "{}".format(R),
+        "S": hex(s)[2:].zfill(64),
+        "L": hex(l)[2:].zfill(64),
+        "V": "{}".format(V),
+        "A": hex(a)[2:].zfill(64),
+        "B": hex(b)[2:].zfill(64),
+        "CO": "{}".format(C),
+        "CH": hex(c)[2:].zfill(64),
+        "T": hex(t)[2:].zfill(64),
+        "U": hex(u)[2:].zfill(64),
     }
 
     return vector

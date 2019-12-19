@@ -13,8 +13,6 @@ import json
 import argparse
 from genVector import genSchnorrVector
 
-from Crypto.Util import number
-
 vector_fields = {
     "commit": ["TEST", "R", "CO"],
     "prove": ["TEST", "R", "CH", "X", "P"],

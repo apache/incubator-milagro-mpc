@@ -17,11 +17,12 @@ from Crypto.PublicKey import RSA
 if len(sys.argv) == 2:
     nVec = int(sys.argv[1])
 else:
-    print (
+    print(
         "Usage: genVectors.py [nVec]")
     sys.exit(1)
 
-print ("Generate nVec = {}".format(nVec))
+print("Generate nVec = {}".format(nVec))
+
 
 def genVector(test_no, p, q):
     """Generate a single test vector
@@ -46,7 +47,7 @@ def genVector(test_no, p, q):
 
     vector['TEST'] = test_no
 
-    n, g, lp, lq, mp, mq = paillier.keys(p,q)
+    n, g, lp, lq, mp, mq = paillier.keys(p, q)
     vector['N'] = hex(n)[2:].zfill(512)
 
     pt1 = random.randint(1, n)
@@ -58,7 +59,7 @@ def genVector(test_no, p, q):
     print("pt2 {}".format(pt2))
     vector['PLAINTEXT2'] = hex(pt2)[2:].zfill(512)
 
-    ct = paillier.mult(ct1,pt2,n)
+    ct = paillier.mult(ct1, pt2, n)
     vector['CIPHERTEXT'] = hex(ct)[2:].zfill(1024)
 
     pt = paillier.decrypt(p, q, lp, lq, mp, mq, ct)
@@ -69,6 +70,7 @@ def genVector(test_no, p, q):
     assert pt12 == pt, "pt12 != pt"
 
     return vector
+
 
 if __name__ == '__main__':
     # List of test vectors
@@ -81,7 +83,7 @@ if __name__ == '__main__':
         q = rsa_key.q
         vector = genVector(i, p, q)
         vectors.append(vector)
-        print("i ",i)
+        print("i ", i)
 
     # Write to JSON file
     json.dump(vectors, open("MULT.json", "w"))

@@ -1,12 +1,12 @@
-#!/usr/bin/env python3
+#! /usr/bin/env python3
 
 import sys
 sys.path.append("../")
 
-import argparse
 import sec256k1.shamir as shamir
 
-def genVector(test_no, t,n, secret=None, check=True):
+
+def genVector(test_no, t, n, secret=None, check=True):
     """Generate a single test vector
 
         Use parameters to generate a single test vector
@@ -33,12 +33,13 @@ def genVector(test_no, t,n, secret=None, check=True):
     # Check shares consistency
     if check:
         for share in shares:
-            (x,y) = share
+            (x, y) = share
 
-            assert shamir.verify_share(checks, share), "inconsistent share ({}, {})".format(x, hex(y)[2:].zfill(64))
+            assert shamir.verify_share(
+                checks, share), "inconsistent share ({}, {})".format(x, hex(y)[2:].zfill(64))
 
     x_s, y_s = zip(*shares)
-    coef = shamir.lagrange_interpolate1(0, x_s[:t])
+    coef = shamir.lagrange_interpolate1(x_s[:t])
     secret2, m = shamir.lagrange_interpolate2(coef, y_s[:t])
 
     # Check secret consistency

@@ -17,11 +17,12 @@ from Crypto.PublicKey import RSA
 if len(sys.argv) == 2:
     nVec = int(sys.argv[1])
 else:
-    print (
+    print(
         "Usage: genVectors.py [nVec]")
     sys.exit(1)
 
-print ("Generate nVec = {}".format(nVec))
+print("Generate nVec = {}".format(nVec))
+
 
 def genVector(test_no, p, q):
     """Generate a single test vector
@@ -49,7 +50,7 @@ def genVector(test_no, p, q):
     vector['P'] = hex(p)[2:].zfill(256)
     vector['Q'] = hex(q)[2:].zfill(256)
 
-    n, g, lp, lq, mp, mq = paillier.keys(p,q)
+    n, g, lp, lq, mp, mq = paillier.keys(p, q)
     vector['N'] = hex(n)[2:].zfill(512)
     vector['G'] = hex(g)[2:].zfill(512)
     vector['LP'] = hex(lp)[2:].zfill(256)
@@ -58,6 +59,7 @@ def genVector(test_no, p, q):
     vector['MQ'] = hex(mq)[2:].zfill(256)
 
     return vector
+
 
 if __name__ == '__main__':
     # List of test vectors

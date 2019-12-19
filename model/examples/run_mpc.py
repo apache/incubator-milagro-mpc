@@ -6,7 +6,6 @@ sys.path.append('../')
 import json
 import argparse
 
-import math
 import sec256k1.curve as curve
 import sec256k1.ecdh as ecdh
 import sec256k1.ecp as ecp
@@ -17,8 +16,6 @@ import sec256k1.mta as mta
 import sec256k1.mpc as mpc
 
 from Crypto.Util import number
-
-import hashlib
 
 def prettyvalue(value):
     if isinstance(value, int):
@@ -34,7 +31,8 @@ def prettyvalue(value):
     else:
         return "{}".format(value)
 
-def dumpgame(players, m,r,s):
+
+def dumpgame(players, m, r, s):
     prettyplayers = []
 
     for player in players:
@@ -48,35 +46,38 @@ def dumpgame(players, m,r,s):
     game = {
         "players": prettyplayers,
         "message": m.decode('utf-8'),
-        "signature": [hex(r)[2:].zfill(64),hex(s)[2:].zfill(64)],
+        "signature": [hex(r)[2:].zfill(64), hex(s)[2:].zfill(64)],
     }
 
     json.dump(game, open("game.json", "w"), indent=2)
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-n', dest='n', type=int, help='n value for the (t,n) MPC', default=2)
-    parser.add_argument('-t', dest='t', type=int, help='t value for the (t,n) MPC', default=2)
+    parser.add_argument('-n', dest='n', type=int, default=2,
+        help='n value for the (t,n) MPC')
+    parser.add_argument('-t', dest='t', type=int, default=2,
+        help='t value for the (t,n) MPC')
 
     args = parser.parse_args()
 
     nPlayers = args.n
     t = args.t
 
-    print("MPC players = {}, threshold = {}".format(nPlayers,t))
+    print("MPC players = {}, threshold = {}".format(nPlayers, t))
 
     # Players set
     all_players = [{} for i in range(nPlayers)]
 
-    ### Key Setup
+    # Key Setup
 
-    ## Setup Paillier keys for participants
+    # Setup Paillier keys for participants
     for player in all_players:
         p = number.getStrongPrime(1024)
         q = number.getStrongPrime(1024)
 
-        n,g,lp,lq,mp,mq = paillier.keys(p,q)
+        n, g, lp, lq, mp, mq = paillier.keys(p, q)
 
         player["p"]  = p
         player["q"]  = q
@@ -87,16 +88,17 @@ if __name__ == "__main__":
         player["lq"] = lq
         player["mq"] = mq
 
-    ## Setup ECDSA secrets and public keys
+    # Setup ECDSA secrets and public keys
     for player in all_players:
-        player["w_shares"] = [(0,0) for i in range(nPlayers)]
+        player["w_shares"] = [(0, 0) for i in range(nPlayers)]
         player["w_checks"] = [[] for i in range(nPlayers)]
 
     for i, player in enumerate(all_players):
         u = big.rand(curve.r)
 
         # VSS of u
-        u, shares, checks = shamir.make_shares(t,nPlayers, check=True, secret=u)
+        u, shares, checks = shamir.make_shares(
+            t, nPlayers, check=True, secret=u)
 
         # Transmit shares and checks to all other players.
         #
@@ -108,12 +110,16 @@ if __name__ == "__main__":
     # Each player checks the consistency of all its shares and adds them
     for i, player in enumerate(all_players):
         for j in range(nPlayers):
-            ok = shamir.verify_share(player["w_checks"][j], player["w_shares"][j])
+            ok = shamir.verify_share(
+                player["w_checks"][j],
+                player["w_shares"][j])
 
-            (x,_) = player["w_shares"][j]
+            (x, _) = player["w_shares"][j]
 
-            assert x == i+1, "share {} is for the wrong player {} (want {})".format(j,x,i+1)
-            assert ok, "inconsistent share {} for player {}".format(j,i)
+            assert x == i + \
+                1, "share {} is for the wrong player {} (want {})".format(
+                    j, x, i + 1)
+            assert ok, "inconsistent share {} for player {}".format(j, i)
 
         (_, y_shares) = zip(*player["w_shares"])
         player["w_shamir"] = mpc.combine_fp_shares(y_shares)
@@ -137,15 +143,16 @@ if __name__ == "__main__":
     ## Convert the players (t,n) Shamir shares to (t,t) additive shares
     x_s = []
     for player in players:
-        (x,_) =player["w_shares"][0]
+        (x, _) = player["w_shares"][0]
         x_s.append(x)
 
     for i, player in enumerate(players):
-        player["w"] = shamir.convert_to_additive_share(x_s, i, player["w_shamir"])
+        player["w"] = shamir.convert_to_additive_share(
+            x_s, i, player["w_shamir"])
 
     ## Generate random gamma_i, k_i
     for player in players:
-        k,g,G = mpc.initiate()
+        k, g, G = mpc.initiate()
 
         player["gamma"] = g
         player["Gamma"] = G
@@ -157,15 +164,24 @@ if __name__ == "__main__":
         player["beta"] = [0 for i in range(t)]
 
     for i, player_i in enumerate(players):
-        ci = mta.initiate(player_i["n"], player_i["g"], player_i["k"])
+        ci, _ = mta.initiate(player_i["n"], player_i["g"], player_i["k"])
 
         for j, player_j in enumerate(players):
             if i == j:
                 continue
 
-            beta, cj = mta.receive(player_i["n"], player_i["g"], curve.r, player_j["gamma"], ci)
+            cj, beta, _, _ = mta.receive(
+                player_i["n"], player_i["g"], curve.r, player_j["gamma"], ci)
 
-            alpha = mta.complete(player_i["p"],player_i["q"], player_i["lp"], player_i["mp"], player_i["lq"], player_i["mq"], curve.r, cj)
+            alpha = mta.complete(
+                player_i["p"],
+                player_i["q"],
+                player_i["lp"],
+                player_i["mp"],
+                player_i["lq"],
+                player_i["mq"],
+                curve.r,
+                cj)
 
             player_i["alpha"][j] = alpha
             player_j["beta"][i] = beta
@@ -173,7 +189,8 @@ if __name__ == "__main__":
     # Combine additive shares
     for i, player in enumerate(players):
         shares = player["alpha"] + player["beta"]
-        player["delta"] = mpc.combine_fp_shares(shares, initial_value=player["k"] * player["gamma"])
+        player["delta"] = mpc.combine_fp_shares(
+            shares, initial_value=player["k"] * player["gamma"])
 
     ## Run MtA instances for kw
     for player in players:
@@ -181,15 +198,24 @@ if __name__ == "__main__":
         player["nu"] = [0 for i in range(t)]
 
     for i, player_i in enumerate(players):
-        ci = mta.initiate(player_i["n"], player_i["g"], player_i["k"])
+        ci, _ = mta.initiate(player_i["n"], player_i["g"], player_i["k"])
 
         for j, player_j in enumerate(players):
             if i == j:
                 continue
 
-            nu, cj = mta.receive(player_i["n"], player_i["g"], curve.r, player_j["w"], ci)
+            cj, nu, _, _ = mta.receive(
+                player_i["n"], player_i["g"], curve.r, player_j["w"], ci)
 
-            mu = mta.complete(player_i["p"],player_i["q"], player_i["lp"], player_i["mp"], player_i["lq"], player_i["mq"], curve.r, cj)
+            mu = mta.complete(
+                player_i["p"],
+                player_i["q"],
+                player_i["lp"],
+                player_i["mp"],
+                player_i["lq"],
+                player_i["mq"],
+                curve.r,
+                cj)
 
             player_i["mu"][j] = mu
             player_j["nu"][i] = nu
@@ -197,7 +223,8 @@ if __name__ == "__main__":
     # Combine additive shares
     for i, player in enumerate(players):
         shares = player["mu"] + player["nu"]
-        player["sigma"] = mpc.combine_fp_shares(shares, initial_value=player["k"] * player["w"])
+        player["sigma"] = mpc.combine_fp_shares(
+            shares, initial_value=player["k"] * player["w"])
 
     ## Broadcast Gamma_i, delta_i and reconstruct R, r [seoarately for each player]
     deltas = [player["delta"] for player in players]
@@ -207,7 +234,8 @@ if __name__ == "__main__":
 
     ## Compute signature shares
     for player in players:
-        player["s"] = mpc.make_signature_share(M,player["k"],r,player["sigma"])
+        player["s"] = mpc.make_signature_share(
+            M, player["k"], r, player["sigma"])
 
     ## Prove knowledge of the correct s_i
     for player in players:
@@ -228,9 +256,9 @@ if __name__ == "__main__":
 
     # Remove (the supposed) R^s from the exponent of V [separately for each player]
     m = mpc.hashit(M)
-    negm = big.modsub(curve.r,m,curve.r)
+    negm = big.modsub(curve.r, m, curve.r)
 
-    negr = big.modsub(curve.r,r,curve.r)
+    negr = big.modsub(curve.r, r, curve.r)
 
     V.add(negm * ecp.generator())
     V.add(negr * PK)
@@ -259,13 +287,13 @@ if __name__ == "__main__":
         s = sneg
 
     # Dump game for inspection
-    dumpgame(all_players, M,r,s)
+    dumpgame(all_players, M, r, s)
 
     # Verify signature
     P = PK.toBytes(compress=True)
     C = big.to_bytes(r)
     D = big.to_bytes(s)
 
-    assert ecdh.ECP_SvDSA(P,M,C,D), "invalid signature"
+    assert ecdh.ECP_SvDSA(P, M, C, D), "invalid signature"
 
     print("Done!")

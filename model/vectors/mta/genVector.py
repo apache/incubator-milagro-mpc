@@ -1,10 +1,12 @@
-import random
+import sys
+sys.path.append("../../")
 
 import sec256k1.mta as mta
 import sec256k1.paillier as paillier
 import sec256k1.big as big
 
-def genVector(test_no, p,q, ps, a=None,b=None,r1=None,r2=None, beta_in=None):
+
+def genVector(test_no, p, q, ps, a=None, b=None, r1=None, r2=None, beta_in=None):
     """Generate a single test vector
 
         Use parameters to generate a single test vector
@@ -32,7 +34,7 @@ def genVector(test_no, p,q, ps, a=None,b=None,r1=None,r2=None, beta_in=None):
 
     vector = {}
 
-    n, g, l, m = paillier.keys(p,q)
+    n, g, lp, lq, mp, mq = paillier.keys(p, q)
 
     if a is None:
         a = big.rand(ps)
@@ -40,39 +42,34 @@ def genVector(test_no, p,q, ps, a=None,b=None,r1=None,r2=None, beta_in=None):
     if b is None:
         b = big.rand(ps)
 
-    if r1 is None:
-        r1 = big.rand(n)
-
-    if r2 is None:
-        r2 = big.rand(n)
-
-    if beta_in is None:
-        beta_in = big.rand(ps)
-
-    ca = mta.initiate(n,g,a,r=r1)
-    beta, cb = mta.receive(n,g,ps,b,ca,beta=beta_in,r=r2)
-    alpha = mta.complete(n,l,m,ps,cb)
+    ca, r1 = mta.initiate(n, g, a)
+    cb, beta, beta_in, r2 = mta.receive(n, g, ps, b, ca, beta1=beta_in, r=r2)
+    alpha = mta.complete(p, q, lp, mp, lq, mq, ps, cb)
 
     # Form test vector
     vector["TEST"] = test_no
-    vector["N"]  = hex(n)[2:].zfill(512)
-    vector["G"]  = hex(g)[2:].zfill(512)
-    vector["L"]  = hex(l)[2:].zfill(512)
-    vector["M"]  = hex(m)[2:].zfill(512)
-    vector["A"]  = hex(a)[2:].zfill(128)
-    vector["B"]  = hex(b)[2:].zfill(128)
+    vector['P'] = hex(p)[2:].zfill(256)
+    vector['Q'] = hex(q)[2:].zfill(256)
+    vector['N'] = hex(n)[2:].zfill(512)
+    vector['G'] = hex(g)[2:].zfill(512)
+    vector['LP'] = hex(lp)[2:].zfill(256)
+    vector['LQ'] = hex(lq)[2:].zfill(256)
+    vector['MP'] = hex(mp)[2:].zfill(256)
+    vector['MQ'] = hex(mq)[2:].zfill(256)
+    vector["A"] = hex(a)[2:].zfill(128)
+    vector["B"] = hex(b)[2:].zfill(128)
     vector["PS"] = hex(ps)[2:].zfill(128)
     vector["R1"] = hex(r1)[2:].zfill(512)
     vector["R2"] = hex(r2)[2:].zfill(512)
     vector["CA"] = hex(ca)[2:].zfill(512)
     vector["CB"] = hex(cb)[2:].zfill(512)
     vector["BETA_IN"] = hex(beta_in)[2:].zfill(128)
-    vector["ALPHA"]   = hex(alpha)[2:].zfill(128)
-    vector["BETA"]    = hex(beta)[2:].zfill(128)
+    vector["ALPHA"] = hex(alpha)[2:].zfill(128)
+    vector["BETA"] = hex(beta)[2:].zfill(128)
 
     # Check consistency of test vector
-    x  = big.modmul(a,b,ps)
-    x1 = big.modadd(alpha,beta,ps)
+    x = big.modmul(a, b, ps)
+    x1 = big.modadd(alpha, beta, ps)
 
     assert x == x1, "x!=x1"
 

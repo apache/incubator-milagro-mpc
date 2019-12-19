@@ -34,16 +34,23 @@ def bc_generator(p, P):
     return pow(x,2,P)
 
 
-def bc_setup(k):
+def bc_setup(k, P=None, Q=None):
     '''
         Setup the bit commitment scheme. k is the desired
         length for the RSA modulus.
         It assumes 4|k
     '''
 
-    # Generate p and q safe primes
-    p, P = big.generate_safe_prime(k//2)
-    q, Q = big.generate_safe_prime(k//2)
+    # Generate p and Q safe primes if necessary.
+    if P == None:
+        p, P = big.generate_safe_prime(k//2)
+    else:
+        p = (P-1)//2
+
+    if Q == None:
+        q, Q = big.generate_safe_prime(k//2)
+    else:
+        q = (Q-1)//2
 
     # Find a generator of Gpq in Z/PQZ using the CRT
     # on generators of Gp, Gq in Z/PZ and Z/QZ
@@ -58,8 +65,6 @@ def bc_setup(k):
 
     alpha = big.rand(pq)
     beta  = big.rand(pq)
-
-    phi = (p-1)*(q-1)
 
     ialpha = big.invmodp(alpha, pq)
     while ialpha == 0:

@@ -3,7 +3,6 @@
 import sys
 sys.path.append('../')
 import sec256k1.paillier as paillier
-import sec256k1.big as big
 
 if __name__ == "__main__":
 
@@ -11,7 +10,7 @@ if __name__ == "__main__":
     p = 0x94f689d07ba20cf7c7ca7ccbed22ae6b40c426db74eaee4ce0ced2b6f52a5e136663f5f1ef379cdbb0c4fdd6e4074d6cff21082d4803d43d89e42fd8dfa82b135aa31a8844ffea25f255f956cbc1b9d8631d01baf1010d028a190b94ce40f3b72897e8196df19edf1ff62e6556f2701d52cef1442e3301db7608ecbdcca703db
     q = 0x9a9ad73f246df853e129c589925fdad9df05606a61081e62e72be4fb33f6e5ec492cc734f28bfb71fbe2ba9a11e4c02e2c0d103a5cbb0a9d6402c07de63b1b995dd72ac8f29825d66923a088b421fb4d52b0b855d2f5dde2be9b0ca0cee6f7a94e5566735fe6cff1fcad3199602f88528d19aa8d0263adff8f5053c38254a2a3
 
-    n, g, lp, lq, mp, mq = paillier.keys(p,q)
+    n, g, lp, lq, mp, mq = paillier.keys(p, q)
     print("n  {}".format(hex(n)[2:].zfill(256)))
     print("g  {}".format(hex(g)[2:].zfill(256)))
     print("lp {}".format(hex(lp)[2:].zfill(128)))
@@ -50,7 +49,7 @@ if __name__ == "__main__":
     print("pt2 {}".format(pt2))
 
     # Homomorphic addition of plaintexts
-    ct3 = paillier.add(ct1,ct2,n)
+    ct3 = paillier.add(ct1, ct2, n)
     print("ct3 {}".format(hex(ct3)[2:].zfill(512)))
 
     # decrypt ciphertext 3
@@ -63,7 +62,7 @@ if __name__ == "__main__":
     assert pt12 == pt3, "pt12 != pt3"
 
     # ct4 = ct1 * pt2
-    ct4 = paillier.mult(ct1,pt2,n)
+    ct4 = paillier.mult(ct1, pt2, n)
     print("ct4 {}".format(hex(ct4)[2:].zfill(512)))
 
     # decrypt ciphertext 4

@@ -1,24 +1,26 @@
 import sec256k1.big as big
 
-DEBUG=False
+DEBUG = False
+
 
 def keys(p, q):
     n = p * q
     g = n + 1
 
-    lp = p-1
-    lq = q-1
+    lp = p - 1
+    lq = q - 1
 
-    mp = (pow(g, lp, p*p) - 1) // p
+    mp = (pow(g, lp, p * p) - 1) // p
     mp = big.invmodp(mp, p)
 
-    mq = (pow(g, lq, q*q) - 1) // q
+    mq = (pow(g, lq, q * q) - 1) // q
     mq = big.invmodp(mq, q)
 
     return n, g, lp, lq, mp, mq
 
+
 def encrypt(n, g, pt, r=None):
-    n2 = n*n
+    n2 = n * n
 
     if r is None:
         r = big.rand(n2)
@@ -29,12 +31,13 @@ def encrypt(n, g, pt, r=None):
 
     return ct, r
 
+
 def decrypt(p, q, lp, lq, mp, mq, ct):
-    p2 = p*p 
+    p2 = p * p
     ctp = (pow(ct, lp, p2) - 1) // p
     ptp = big.modmul(ctp, mp, p)
 
-    q2 = q*q 
+    q2 = q * q
     ctq = (pow(ct, lq, q2) - 1) // q
     ptq = big.modmul(ctq, mq, q)
 
@@ -51,7 +54,8 @@ def decrypt(p, q, lp, lq, mp, mq, ct):
 
     return pt
 
-def add(a,b,n):
+
+def add(a, b, n):
     n2 = n * n
     c = a * b
     d = c % n2
@@ -66,7 +70,8 @@ def add(a,b,n):
 
     return d
 
-def mult(a,b,n):
+
+def mult(a, b, n):
     n2 = n * n
     c = pow(a, b, n2)
 

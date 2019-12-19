@@ -18,13 +18,16 @@ def to_bytes(b):
 def from_bytes(B):
     return int.from_bytes(B, byteorder='big')
 
-# extract i-th bit
+
 def bit(k, i):
+    '''
+        Extract i-th bit
+    '''
     if i == 0:
         return k & 1
     return ((k >> i) & 1)
 
-# gcd
+
 def gcd(x, y):
     a = x
     b = y
@@ -32,31 +35,103 @@ def gcd(x, y):
         a, b = b, a % b
     return a
 
-# inverse mod prime p
-def invmodp(a, p):
+
+def jacobi(a, p):
+    '''
+        Find Jacobi symbol for (x/p).
+        Only defined for positive x and positive odd p.
+        Otherwise returns 0
+    '''
+    if a < 1 or p < 2 or p % 2 == 0:
+        return 0
     n = p
     x = a % n
-    if x == 0:
-        return x
-    kn = n
-    if x < 0:
-        x += n
-    if gcd(x, n) != 1:
-        return 0
-    a = 1
-    la = 0
-    while x > 1:
-        q, r = divmod(n, x)
-        t = la - a * q
-        la = a
-        a = t
+    m = 0
+    while n > 1:
+        if x == 0:
+            return 0
+        n8 = n % 8
+        k = 0
+        while x % 2 == 0:
+            k += 1
+            x //= 2
+        if k % 2 == 1:
+            m += (n8 * n8 - 1) // 8
+        m += (n8 - 1) * (x % 4 - 1) // 4
+        t = n
+        t %= x
         n = x
-        x = r
-    if a < 0:
-        a += kn
-    return a
+        x = t
+        m %= 2
+    if m == 0:
+        return 1
+    else:
+        return -1
 
-# Modular arithmetic
+
+def isprime(p):
+    '''
+        Rabin Miller primality test
+    '''
+    sp = 4849845  # 3*5*.. *19
+
+    if gcd(p, sp) != 1:
+        return False
+
+    d = p - 1
+    r = 0
+    while bit(d, 0) == 0:
+        d = d >> 1
+        r = r + 1
+
+    for _ in range(10):
+        g = rand(p - 1)
+        x = pow(g, d, p)
+
+        if x == 1 or x == p - 1:
+            continue
+
+        cont = False
+        for _ in range(r - 1):
+            x = x ^ 2 % p
+
+            if x == p - 1:
+                cont = True
+                break
+
+        if cont:
+            continue
+
+        return False
+
+    return True
+
+
+def rand(m):
+    return random.SystemRandom().randint(2, m - 1)
+
+
+def generate_safe_prime(k):
+    '''
+        Generate safe prime P = 2p+1 for q prime.
+        k is the desired length for P
+    '''
+
+    p = rand(1<<k-1)
+
+    while p%4 != 3:
+        p = p + 1
+
+    P = 2 * p + 1
+    while not (isprime(p) and isprime(P)):
+        p = p + 4
+        P = P + 8
+
+    return p, P
+
+## Modular arithmetic ##
+
+
 def modmul(a1, b1, p):
 
     a = a1 % p
@@ -89,10 +164,12 @@ def moddiv(a, b, p):
         return modmul(a, i, p)
     return 0
 
-# modular square root. Fails spectacularly if p!=3 mod 4
-
 
 def sqrtmodp(a, p):
+    '''
+        Modular Square Root.
+        Fails spectacularly if p != 3 mod 4
+    '''
     if p % 4 == 3:
         return pow(a, (p + 1) // 4, p)
 
@@ -110,9 +187,39 @@ def sqrtmodp(a, p):
     return 0
 
 
-# chinese remainder theorem
+def invmodp(a, p):
+    '''
+        Modular inverse mod p
+    '''
+    n = p
+    x = a % n
+    if x == 0:
+        return x
+    kn = n
+    if x < 0:
+        x += n
+    if gcd(x, n) != 1:
+        return 0
+    a = 1
+    la = 0
+    while x > 1:
+        q, r = divmod(n, x)
+        t = la - a * q
+        la = a
+        a = t
+        n = x
+        x = r
+    if a < 0:
+        a += kn
+    return a
+
+
 def crt(rp, rq, p, q):
-    n = p*q
+    '''
+        Combine rp and rq using the Chinese Remainder Theorem.
+        It assumes p and q are coprime
+    '''
+    n = p * q
 
     c = invmodp(p, q)
 
@@ -120,36 +227,3 @@ def crt(rp, rq, p, q):
     t = modmul(t, p, n)
 
     return modadd(t, rp, n)
-
-# find jacobi symbol for (x/p). Only defined for
-# positive x and p, p odd. Otherwise returns 0
-def jacobi(a, p):
-    if a < 1 or p < 2 or p % 2 == 0:
-        return 0
-    n = p
-    x = a % n
-    m = 0
-    while n > 1:
-        if x == 0:
-            return 0
-        n8 = n % 8
-        k = 0
-        while x % 2 == 0:
-            k += 1
-            x //= 2
-        if k % 2 == 1:
-            m += (n8 * n8 - 1) // 8
-        m += (n8 - 1) * (x % 4 - 1) // 4
-        t = n
-        t %= x
-        n = x
-        x = t
-        m %= 2
-    if m == 0:
-        return 1
-    else:
-        return -1
-
-
-def rand(m):
-    return random.SystemRandom().randint(2, m - 1)
