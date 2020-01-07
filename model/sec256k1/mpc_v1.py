@@ -8,6 +8,7 @@ import sec256k1.big as big
 import sec256k1.curve as curve
 import sec256k1.ecp as ecp
 
+
 def hash(M):
     """ Hash message to SHA256."""
     h = hashlib.new(curve.SHA)
@@ -39,24 +40,24 @@ class Share:
     nshares = 0
 
     def __init__(self, n, g, l, m, a, b):
-        """Initializes the instance."""        
+        """Initializes the instance."""
         self.n = n
         self.g = g
         self.l = l
         self.m = m
-        self.a = a        
+        self.a = a
         self.b = b
         self.z = 0
-        self.r = 0        
+        self.r = 0
         self.alpha = 0
-        self.beta = 0        
+        self.beta = 0
 
     def client1(self, r=None):
         """Encrypt the a value."""
         # ca = E_A(a)
 
         ca, self.r = paillier.encrypt(self.n, self.g, self.a, r)
-        
+
         return ca, self.r
 
     def client2(self, cb):
@@ -73,7 +74,7 @@ class Share:
         else:
             self.z = z
 
-        # t = E_A(ab)    
+        # t = E_A(ab)
         t = paillier.mult(ca, self.b, n)
 
         # cz = E_A(z)
@@ -92,12 +93,12 @@ class Share:
 
            sum = a.b + alpha + beta
         """
-        sum = ( (self.a * self.b) + self.alpha + self.beta) % curve.r
-        
+        sum = ((self.a * self.b) + self.alpha + self.beta) % curve.r
+
         return sum
-    
+
     def __repr__(self):
-        return {'a':self.a, 'b':self.b}
+        return {'a': self.a, 'b': self.b}
 
     def __str__(self):
         return f"z={hex(self.z)[2:].zfill(512)},\nr={hex(self.r)[2:].zfill(512)},\na={hex(self.a)[2:].zfill(512)},\nb={hex(self.b)[2:].zfill(512)},\nalpha={hex(self.alpha)[2:].zfill(512)},\nbeta={hex(self.beta)[2:].zfill(512)}"
@@ -106,8 +107,7 @@ class Share:
     def how_many(cls):
         """Prints number of shares"""
         print("{} shares".format(cls.nshares))
-    
-    
+
 
 class Player:
     """Represents an actor in the MPC protocol.
@@ -118,25 +118,25 @@ class Player:
     nplayers = 0
 
     def __init__(self, name, p, q, sk=None, k=None, gamma=None):
-        """Initializes the instance."""        
+        """Initializes the instance."""
         self.name = name
 
         self.p = p
-        self.q = q        
-        self.n, self.g, self.l, self.m = paillier.keys(p,q)
+        self.q = q
+        self.n, self.g, self.l, self.m = paillier.keys(p, q)
 
         if sk:
             sk = bytes.fromhex(sk)
         W, PK = ecdh.ECP_KeyPairGenerate(sk)
         self.w = big.from_bytes(W) % curve.r
         self.pk = ecp.ECp()
-        self.pk.fromBytes(PK)       
-        
+        self.pk.fromBytes(PK)
+
         if k is None:
             self.k = big.rand(curve.r)
         else:
             self.k = k
-            
+
         if gamma is None:
             self.gamma = big.rand(curve.r)
         else:
@@ -161,22 +161,18 @@ class Player:
         """
         km = self.k * m % curve.r
         sigma = self.kw.sum()
-        rsigma = r * sigma  % curve.r
-        return (km + rsigma) %  curve.r
-        
+        rsigma = r * sigma % curve.r
+        return (km + rsigma) % curve.r
+
     def __repr__(self):
-        return {'name':self.name, 'n':self.n}
-    
+        return {'name': self.name, 'n': self.n}
+
     def __str__(self):
         Gamma = self.Gamma.toBytes(False).hex()
         PK = self.pk.toBytes(False).hex()
-        return f"\n{self.name} start:\n\nPaillier:\nn={hex(self.n)},\ng={hex(self.g)},\nl={hex(self.l)},\nm={hex(self.m)},\n\nECDSA:\nsk={hex(self.w)},\npk={PK},\n\nGamma={Gamma},\n\nkgamma:\n{self.kgamma},\n\nkw:\n{self.kw}\n\n{self.name} end:"    
-    
+        return f"\n{self.name} start:\n\nPaillier:\nn={hex(self.n)},\ng={hex(self.g)},\nl={hex(self.l)},\nm={hex(self.m)},\n\nECDSA:\nsk={hex(self.w)},\npk={PK},\n\nGamma={Gamma},\n\nkgamma:\n{self.kgamma},\n\nkw:\n{self.kw}\n\n{self.name} end:"
 
     @classmethod
     def how_many(cls):
         """Prints number of players"""
         print("{} players".format(cls.nplayers))
-
-
-

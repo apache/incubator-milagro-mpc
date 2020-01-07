@@ -7,18 +7,18 @@
     """
 
 import sys
-sys.path.append("../../")
-
 import json
-from genVector import genVector
-
 from Crypto.Util import number
+from genVector import genVector
 
 vector_fields = [
     "TEST",
-    "N",
-    "L",
-    "M",
+    "P",
+    "Q",
+    "LP",
+    "LQ",
+    "MP",
+    "MQ",
     "PS",
     "CB",
     "ALPHA",
@@ -28,10 +28,10 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         nVec = int(sys.argv[1])
     else:
-        print ("Usage: genINITIATE.py [nVec]")
+        print("Usage: genINITIATE.py [nVec]")
         sys.exit(1)
 
-    print ("Generate nVec = {}".format(nVec))
+    print("Generate nVec = {}".format(nVec))
 
     vectors = []
 
@@ -43,7 +43,7 @@ if __name__ == '__main__':
         # Generate random prime for multiplicative shares
         ps = number.getStrongPrime(512)
 
-        vector = genVector(i,p,q,ps)
+        vector = genVector(i, p, q, ps)
 
         # Prune test vector
         vector = {k: vector[k] for k in vector_fields}

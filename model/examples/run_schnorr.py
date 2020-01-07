@@ -11,8 +11,7 @@ import sec256k1.schnorr as schnorr
 DETERMINISTIC = True
 
 if __name__ == "__main__":
-    ## Single DLOG knowledge proof
-    print
+    # Single DLOG knowledge proof
 
     # Generate DLOG
     if DETERMINISTIC:
@@ -48,16 +47,16 @@ if __name__ == "__main__":
     print("[Bob] Challenge {}\n".format(hex(c)[2:].zfill(64)))
 
     # Proof
-    p = schnorr.prove(r,c,x)
+    p = schnorr.prove(r, c, x)
 
     print("[Alice] Prove {}\n".format(hex(p)[2:].zfill(64)))
 
     # Verification
-    ok = schnorr.verify(V,C,c,p)
+    ok = schnorr.verify(V, C, c, p)
 
     print("[Bob] Verify: {}\n".format(ok))
 
-    ## Double DLOG knowledge proof
+    # Double DLOG knowledge proof
 
     # Generate double DLOG
     #
@@ -96,7 +95,7 @@ if __name__ == "__main__":
         b = 0x346d1ebf943a83323ad9fede6721b5dcc8352d8fc4ec170a7bc70def4a872bff
 
     # C is the commitment, a and b are kept secret
-    a,b,C = schnorr.d_commit(R,a,b)
+    a, b, C = schnorr.d_commit(R, a, b)
 
     print("[Alice] Commit")
     print("\ta {}".format(hex(a)[2:].zfill(64)))
@@ -112,11 +111,12 @@ if __name__ == "__main__":
     print("[Bob] Challenge {}\n".format(hex(c)[2:].zfill(64)))
 
     # Proof
-    t,u = schnorr.d_prove(a,b,c,s,l)
+    t, u = schnorr.d_prove(a, b, c, s, l)
 
-    print("[Alice] Prove\n\tt {}\n\tu {}\n".format(hex(t)[2:].zfill(64), hex(u)[2:].zfill(64)))
+    print("[Alice] Prove\n\tt {}\n\tu {}\n".format(
+        hex(t)[2:].zfill(64), hex(u)[2:].zfill(64)))
 
     # Verification
-    ok = schnorr.d_verify(R,V,C,c,t,u)
+    ok = schnorr.d_verify(R, V, C, c, t, u)
 
     print("[Bob] Verify: {}".format(ok))

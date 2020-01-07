@@ -17,11 +17,12 @@ from Crypto.PublicKey import RSA
 if len(sys.argv) == 2:
     nVec = int(sys.argv[1])
 else:
-    print (
+    print(
         "Usage: genVectors.py [nVec]")
     sys.exit(1)
 
-print ("Generate nVec = {}".format(nVec))
+print("Generate nVec = {}".format(nVec))
+
 
 def genVector(test_no, p, q, pt, rin):
     """Generate a single test vector
@@ -48,7 +49,7 @@ def genVector(test_no, p, q, pt, rin):
 
     vector['TEST'] = test_no
 
-    n, g, lp, lq, mp, mq = paillier.keys(p,q)
+    n, g, lp, lq, mp, mq = paillier.keys(p, q)
     vector['P'] = hex(p)[2:].zfill(256)
     vector['Q'] = hex(q)[2:].zfill(256)
     vector['N'] = hex(n)[2:].zfill(512)
@@ -57,18 +58,19 @@ def genVector(test_no, p, q, pt, rin):
     vector['MP'] = hex(mp)[2:].zfill(256)
     vector['MQ'] = hex(mq)[2:].zfill(256)
 
-    if pt==None:
+    if pt == None:
         pt = random.randint(1, n)
 
     ct, _ = paillier.encrypt(n, g, pt, rin)
     pt2 = paillier.decrypt(p, q, lp, lq, mp, mq, ct)
 
     vector['CIPHERTEXT'] = hex(ct)[2:].zfill(1024)
-    vector['PLAINTEXT']  = hex(pt2)[2:].zfill(512)
+    vector['PLAINTEXT'] = hex(pt2)[2:].zfill(512)
 
     assert pt2 == pt, "pt2 != pt"
 
     return vector
+
 
 if __name__ == '__main__':
 

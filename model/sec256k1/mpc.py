@@ -6,6 +6,7 @@ import sec256k1.big as big
 import sec256k1.paillier as paillier
 import sec256k1.mta as mta
 
+
 def hashit(M):
     h = hashlib.new(curve.SHA)
     h.update(M)
@@ -20,6 +21,7 @@ def hashit(M):
 
     return big.from_bytes(B)
 
+
 def initiate(k=None, g=None):
     if k is None:
         k = big.rand(curve.r)
@@ -29,7 +31,8 @@ def initiate(k=None, g=None):
 
     G = g * ecp.generator()
 
-    return k,g,G
+    return k, g, G
+
 
 def combine_fp_shares(shares, initial_value=0):
     '''Combine additive shares in F_(curve.r)
@@ -42,6 +45,7 @@ def combine_fp_shares(shares, initial_value=0):
         c = c + share
 
     return c % curve.r
+
 
 def combine_ecp_shares(shares, initial_value=None):
     '''Combine  additive shares in EC(Fp)
@@ -58,7 +62,8 @@ def combine_ecp_shares(shares, initial_value=None):
 
     return c
 
-def reconciliate_r(deltas,Gammas):
+
+def reconciliate_r(deltas, Gammas):
     kg = combine_fp_shares(deltas)
     invkg = big.invmodp(kg, curve.r)
 
@@ -69,6 +74,7 @@ def reconciliate_r(deltas,Gammas):
 
     return r, R
 
-def make_signature_share(M,k,r,s):
+
+def make_signature_share(M, k, r, s):
     m = hashit(M)
     return (k * m + r * s) % curve.r

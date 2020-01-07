@@ -1,9 +1,8 @@
-#!/usr/bin/env python3
+#! /usr/bin/env python3
 
 import sys
 sys.path.append('../')
 
-import json
 from Crypto.Util import number
 
 from sec256k1.mpc_v1 import Player
@@ -62,7 +61,8 @@ if __name__ == "__main__":
         f.write(f"char* M1_hex = \"{hex(alice.m)[2:].zfill(512)}\";\n\n")
         f.write(f"char* SK1_hex = \"{hex(alice.w)[2:].zfill(64)}\";\n\n")
         f.write(f"char* K1_hex = \"{hex(alice.k)[2:].zfill(64)}\";\n\n")
-        f.write(f"char* GAMMA1_hex = \"{hex(alice.gamma)[2:].zfill(64)}\";\n\n")
+        f.write(
+            f"char* GAMMA1_hex = \"{hex(alice.gamma)[2:].zfill(64)}\";\n\n")
         f.write(f"char* N2_hex = \"{hex(bob.n)[2:].zfill(512)}\";\n\n")
         f.write(f"char* G2_hex = \"{hex(bob.g)[2:].zfill(512)}\";\n\n")
         f.write(f"char* L2_hex = \"{hex(bob.l)[2:].zfill(512)}\";\n\n")
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     alice.kgamma.client2(cb)
     print(f"alice.kgamma.alpha {hex(alice.kgamma.alpha)[2:].zfill(64)}\n\n")
 
-    got = ( alice.kgamma.alpha + bob.kgamma.beta ) % curve.r
+    got = (alice.kgamma.alpha + bob.kgamma.beta) % curve.r
 
     #print(f"expected {hex(expected)}")
     #print(f"got {hex(got)}")
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     bob.kgamma.client2(cb)
     print(f"bob.kgamma.alpha {hex(bob.kgamma.alpha)[2:].zfill(64)}\n\n")
 
-    got = ( bob.kgamma.alpha + alice.kgamma.beta ) % curve.r
+    got = (bob.kgamma.alpha + alice.kgamma.beta) % curve.r
 
     #print(f"expected {hex(expected)}")
     #print(f"got {hex(got)}")
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     gamma = (alice.gamma + bob.gamma) % curve.r
     expected = k * gamma % curve.r
 
-    got = ( alice.kgamma.sum() + bob.kgamma.sum() ) % curve.r
+    got = (alice.kgamma.sum() + bob.kgamma.sum()) % curve.r
 
     print(f"alice.kgamma.sum {hex(alice.kgamma.sum())[2:].zfill(64)}")
     print(f"bob.kgamma.sum {hex(bob.kgamma.sum())[2:].zfill(64)}")
@@ -132,8 +132,10 @@ if __name__ == "__main__":
     kgamma = got
 
     with open("MPC.txt", "a") as f:
-        f.write(f"char* KGAMMA1_hex = \"{hex(alice.kgamma.sum())[2:].zfill(64)}\";\n\n")
-        f.write(f"char* KGAMMA2_hex = \"{hex(bob.kgamma.sum())[2:].zfill(64)}\";\n\n")
+        f.write(
+            f"char* KGAMMA1_hex = \"{hex(alice.kgamma.sum())[2:].zfill(64)}\";\n\n")
+        f.write(
+            f"char* KGAMMA2_hex = \"{hex(bob.kgamma.sum())[2:].zfill(64)}\";\n\n")
         f.write(f"char* KGAMMA_hex = \"{hex(got)[2:].zfill(64)}\";\n\n")
 
     ### alice.k * bob.w ###
@@ -151,7 +153,7 @@ if __name__ == "__main__":
     alice.kw.client2(cb)
     print(f"alice.kw.alpha {hex(alice.kw.alpha)[2:].zfill(64)}\n\n")
 
-    got = ( alice.kw.alpha + bob.kw.beta ) % curve.r
+    got = (alice.kw.alpha + bob.kw.beta) % curve.r
 
     #print(f"expected {hex(expected)}")
     #print(f"got {hex(got)}")
@@ -174,12 +176,11 @@ if __name__ == "__main__":
     bob.kw.client2(cb)
     print(f"bob.kw.alpha {hex(bob.kw.alpha)[2:].zfill(64)}\n\n")
 
-    got = ( bob.kw.alpha + alice.kw.beta ) % curve.r
+    got = (bob.kw.alpha + alice.kw.beta) % curve.r
 
     #print(f"expected {hex(expected)}")
     #print(f"got {hex(got)}")
     assert got == expected, f"expected {hex(expected)} got {hex(got)}"
-
 
     ### kw = (alice.k + bob.k)(alice.w + bob.w)
 
@@ -189,7 +190,7 @@ if __name__ == "__main__":
 
     print(f"alice.kw.sum {hex(alice.kw.sum())[2:].zfill(64)}")
     print(f"bob.kw.sum {hex(bob.kw.sum())[2:].zfill(64)}")
-    got = ( alice.kw.sum() + bob.kw.sum() ) % curve.r
+    got = (alice.kw.sum() + bob.kw.sum()) % curve.r
     print(f"kw {hex(got)[2:].zfill(64)}\n\n")
 
     #print(f"expected {hex(expected)}")
@@ -233,7 +234,8 @@ if __name__ == "__main__":
     assert R == expected, f"expected {expected} got {R}"
 
     with open("MPC.txt", "a") as f:
-        f.write(f"char* INVKGAMMA_hex = \"{hex(invkgamma)[2:].zfill(64)}\";\n\n")
+        f.write(
+            f"char* INVKGAMMA_hex = \"{hex(invkgamma)[2:].zfill(64)}\";\n\n")
         f.write(f"char* GAMMAPT1_hex = \"{aliceGamma}\";\n\n")
         f.write(f"char* BOBPT1_hex = \"{bobGamma}\";\n\n")
         f.write(f"char* RPT_hex = \"{RPT}\";\n\n")
@@ -247,7 +249,7 @@ if __name__ == "__main__":
 
     print(f"alice.s {hex(alice.s(m,r))}")
     print(f"bob.s {hex(bob.s(m,r))}")
-    s = ( alice.s(m,r) + bob.s(m,r) ) % curve.r
+    s = (alice.s(m, r) + bob.s(m, r)) % curve.r
 
     k = (alice.k + bob.k) % curve.r
     sk = (alice.w + bob.w) % curve.r
