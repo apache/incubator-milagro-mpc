@@ -22,7 +22,7 @@ sudo apt-get install -y gcc g++ git cmake doxygen autoconf automake libtool curl
 Build and install the AMCL library
 
 ```sh
-git clone https://github.com/apache/incubator-milagro-crypto-c.git -b issue51
+git clone https://github.com/apache/incubator-milagro-crypto-c.git 
 cd incubator-milagro-crypto-c
 git checkout 6b56b35f65469932debc755abc682caa7a3d029b
 mkdir build
@@ -31,6 +31,30 @@ cmake -D CMAKE_BUILD_TYPE=Debug -D BUILD_SHARED_LIBS=ON -D AMCL_CHUNK=64 -D AMCL
 make
 make test
 sudo make install
+```
+
+### golang
+
+There is a golang wrapper in the ./go directory
+
+```
+wget https://dl.google.com/go/go1.13.linux-amd64.tar.gz
+tar -xzf go1.13.linux-amd64.tar.gz
+sudo cp -r go /usr/local
+export GOROOT=/usr/local/go
+export PATH=$PATH:$GOROOT/bin
+echo 'GOROOT=/usr/local/go' >> ${HOME}/.bashrc
+echo 'export PATH=$PATH:$GOROOT/bin' >> ${HOME}/.bashrc
+```
+
+#### configure GO
+
+```
+mkdir -p ${HOME}/go/bin 
+mkdir -p ${HOME}/go/pkg 
+mkdir -p ${HOME}/go/src 
+echo 'export GOPATH=${HOME}/go' >> ${HOME}/.bashrc 
+echo 'export PATH=$GOPATH/bin:$PATH' >> ${HOME}/.bashrc
 ```
 
 ## Compiling

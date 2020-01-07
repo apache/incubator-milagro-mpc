@@ -37,8 +37,22 @@ RUN apt-get update && \
     apt-get install -y gcc g++ git cmake doxygen autoconf automake libtool curl make unzip wget libssl-dev xsltproc lcov emacs && \
     apt-get clean
 
+# install golang
+RUN cd /tmp && \
+    wget https://dl.google.com/go/go1.13.linux-amd64.tar.gz && \
+    tar -xzf go1.13.linux-amd64.tar.gz && \
+    cp -r go /usr/local && \
+    echo 'export PATH=$PATH:/usr/local/go/bin' >> /root/.bashrc
+
+# configure GO
+RUN mkdir -p /root/go/bin && \
+    mkdir -p /root/go/pkg && \
+    mkdir -p /root/go/src && \
+    echo 'export GOPATH=/root/go' >> /root/.bashrc && \
+    echo 'export PATH=$GOPATH/bin:$PATH' >> /root/.bashrc
+
 # install AMCL
-RUN git clone https://github.com/apache/incubator-milagro-crypto-c.git -b issue51 && \
+RUN git clone https://github.com/apache/incubator-milagro-crypto-c.git && \
     cd incubator-milagro-crypto-c && \
     git checkout 6b56b35f65469932debc755abc682caa7a3d029b && \
     mkdir build && \
