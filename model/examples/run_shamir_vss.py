@@ -18,19 +18,27 @@ if __name__ == '__main__':
 
     print("Example ({},{}) secret sharing\n".format(t,n))
 
-    ## Run Shamir without checks
-    print("Run SSS")
+    ## Run Shamir with checks
+    print("\nRun VSS")
 
     # Make secret shares
-    secret1, shares, _ = shamir.make_shares(t, n)
+    secret1, shares, checks = shamir.make_shares(t, n, check=True)
 
-    print("Shared secret {}\n".format(hex(secret1)[2:].zfill(64)))
+    print("Shared secret {}".format(hex(secret1)[2:].zfill(64)))
 
     print("Secret shares\n")
     for share in shares:
         x,y = share
-        print("\t({}, {})".format(x, hex(y)[2:].zfill(64)))
+        print("\t{} {}".format(x, hex(y)[2:].zfill(64)))
     print("")
+
+    # Check shares consistency
+    for share in shares:
+        (x,y) = share
+
+        assert shamir.verify_share(checks, share), "inconsistent share ({}, {})".format(x, hex(y)[2:].zfill(64))
+
+    print("All shares consistent\n")
 
     # Select t shares and reconcile secret
     x_s, y_s = zip(*shares[:t])
@@ -50,4 +58,3 @@ if __name__ == '__main__':
     print("Recovered secret {}".format(hex(secret2)[2:].zfill(64)))
 
     assert secret1 == secret2, "secret1 != secret2"
-

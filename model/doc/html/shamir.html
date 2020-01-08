@@ -1,0 +1,167 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>shamir Module &#8212; libmpc 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Introduction" href="intro.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-sec256k1.shamir">
+<span id="shamir-module"></span><h1>shamir Module<a class="headerlink" href="#module-sec256k1.shamir" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="sec256k1.shamir.convert_to_additive_share">
+<code class="sig-prename descclassname">sec256k1.shamir.</code><code class="sig-name descname">convert_to_additive_share</code><span class="sig-paren">(</span><em class="sig-param">x_shares</em>, <em class="sig-param">i</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sec256k1/shamir.html#convert_to_additive_share"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sec256k1.shamir.convert_to_additive_share" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert to additive shares</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}y(x_j)=f(x_{j})\prod _{\begin{smallmatrix}m\,=\,0\\m\,\neq \,j\end{smallmatrix}}^{k-1}{\frac {x_{m}}{x_{m}-x_{j}}}\end{split}\]</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sec256k1.shamir.eval">
+<code class="sig-prename descclassname">sec256k1.shamir.</code><code class="sig-name descname">eval</code><span class="sig-paren">(</span><em class="sig-param">poly</em>, <em class="sig-param">i</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sec256k1/shamir.html#eval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sec256k1.shamir.eval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the value f(i) where</p>
+<div class="math notranslate nohighlight">
+\[f(x) = a_0 + a_1x + a_2x^2 ... a_{k-1}x^{k-1}\]</div>
+<p>and the free term is the secret</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sec256k1.shamir.lagrange_interpolate1">
+<code class="sig-prename descclassname">sec256k1.shamir.</code><code class="sig-name descname">lagrange_interpolate1</code><span class="sig-paren">(</span><em class="sig-param">x_s</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sec256k1/shamir.html#lagrange_interpolate1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sec256k1.shamir.lagrange_interpolate1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the coefficients for multiplication</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}c(x_j)=\prod _{\begin{smallmatrix}m\,=\,0\\m\,\neq \,j\end{smallmatrix}}^{k-1}{\frac {x_{m}}{x_{m}-x_{j}}}\end{split}\]</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sec256k1.shamir.lagrange_interpolate2">
+<code class="sig-prename descclassname">sec256k1.shamir.</code><code class="sig-name descname">lagrange_interpolate2</code><span class="sig-paren">(</span><em class="sig-param">coef</em>, <em class="sig-param">y_s</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sec256k1/shamir.html#lagrange_interpolate2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sec256k1.shamir.lagrange_interpolate2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the secret</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}secret &amp;=\sum _{j=0}^{k-1}f(x_{j})\prod _{\begin{smallmatrix}m\,=\,0\\m\,\neq \,j\end{smallmatrix}}^{k-1}{\frac {x_{m}}{x_{m}-x_{j}}} \\
+       &amp;=\sum _{j=0}^{k-1}f(x_{j})c(x_j)\end{split}\]</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sec256k1.shamir.make_shares">
+<code class="sig-prename descclassname">sec256k1.shamir.</code><code class="sig-name descname">make_shares</code><span class="sig-paren">(</span><em class="sig-param">k</em>, <em class="sig-param">n</em>, <em class="sig-param">check=False</em>, <em class="sig-param">secret=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sec256k1/shamir.html#make_shares"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sec256k1.shamir.make_shares" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates shares (i, f(i)) and checks - v(x)</p>
+<div class="math notranslate nohighlight">
+\[v(x)=a_0G + a_1Gx + a_2Gx^2 ... a_{k-1}xG^{k-1}\]</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sec256k1.shamir.product">
+<code class="sig-prename descclassname">sec256k1.shamir.</code><code class="sig-name descname">product</code><span class="sig-paren">(</span><em class="sig-param">vals</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sec256k1/shamir.html#product"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sec256k1.shamir.product" title="Permalink to this definition">¶</a></dt>
+<dd><p>product of inputs</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sec256k1.shamir.verify_share">
+<code class="sig-prename descclassname">sec256k1.shamir.</code><code class="sig-name descname">verify_share</code><span class="sig-paren">(</span><em class="sig-param">checks</em>, <em class="sig-param">share</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sec256k1/shamir.html#verify_share"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sec256k1.shamir.verify_share" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify a share with the distributed checks</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}f(i)G &amp;= v(i) \\
+      &amp;= a_0G + a_1Gi + a_2Gi^2 ... a_{k-1}Gi^{k-1} \\
+      &amp;= (a_0 + a_1i + a_2i^2 ... a_{k-1}i^{k-1})G \end{split}\]</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">libmpc</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html#general-notes">General notes</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">shamir Module</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="intro.html" title="previous chapter">Introduction</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Kealan and Sam.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/shamir.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

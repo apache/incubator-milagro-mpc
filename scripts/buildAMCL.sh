@@ -11,7 +11,7 @@
 
 CURRENTDIR=${PWD}
 
-git clone https://github.com/apache/incubator-milagro-crypto-c.git -b issue51
+git clone https://github.com/apache/incubator-milagro-crypto-c.git
 cd incubator-milagro-crypto-c
 git checkout 6b56b35f65469932debc755abc682caa7a3d029b
 mkdir build
