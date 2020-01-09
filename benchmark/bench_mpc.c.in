@@ -211,7 +211,7 @@ int main()
     do
     {
 
-        MPC_MTA_SERVER(NULL,  &N, &G, &B, &CA, &Z, &R, &CB, &BETA);
+        MPC_MTA_SERVER(NULL, &N, &G, &B, &CA, &Z, &R, &CB, &BETA);
         iterations++;
         elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
     }

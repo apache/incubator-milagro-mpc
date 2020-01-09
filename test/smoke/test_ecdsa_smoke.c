@@ -314,7 +314,7 @@ int test(csprng *RNG)
     printf("\n");
 
     // sum = K1.GAMMA1 + alpha1  + beta1
-    rc = MPC_SUM_MTA(&K1, &GAMMA1, &ALPHA1, &BETA1, NULL, NULL, &SUM1);
+    rc = MPC_SUM_MTA(&K1, &GAMMA1, &ALPHA1, &BETA1, &SUM1);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_SUM_MTA rc: %d\n", rc);
@@ -326,7 +326,7 @@ int test(csprng *RNG)
     printf("\n");
 
     // sum = K2.GAMMA2 + alpha2  + beta2
-    rc = MPC_SUM_MTA(&K2, &GAMMA2, &ALPHA2, &BETA2, NULL, NULL, &SUM2);
+    rc = MPC_SUM_MTA(&K2, &GAMMA2, &ALPHA2, &BETA2, &SUM2);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_SUM_MTA rc: %d\n", rc);
@@ -338,7 +338,7 @@ int test(csprng *RNG)
     printf("\n");
 
     // Calculate the inverse of kgamma
-    rc = MPC_INVKGAMMA(&SUM1, &SUM2, NULL, &INVKGAMMA);
+    rc = MPC_INVKGAMMA(&SUM1, &SUM2, &INVKGAMMA);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_INVKGAMMA rc: %d\n", rc);
@@ -350,7 +350,7 @@ int test(csprng *RNG)
     printf("\n");
 
     // Calculate the R signature component
-    rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, NULL, &SIG_R);
+    rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, &SIG_R);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_R rc: %d\n", rc);
@@ -434,7 +434,7 @@ int test(csprng *RNG)
     printf("\n");
 
     // sum = K1.W1 + alpha1  + beta1
-    rc = MPC_SUM_MTA(&K1, &W1, &ALPHA1, &BETA1, NULL, NULL, &SUM1);
+    rc = MPC_SUM_MTA(&K1, &W1, &ALPHA1, &BETA1, &SUM1);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_SUM_MTA rc: %d\n", rc);
@@ -446,7 +446,7 @@ int test(csprng *RNG)
     printf("\n");
 
     // sum = K2.W2 + alpha2  + beta2
-    rc = MPC_SUM_MTA(&K2, &W2, &ALPHA2, &BETA2, NULL, NULL, &SUM2);
+    rc = MPC_SUM_MTA(&K2, &W2, &ALPHA2, &BETA2, &SUM2);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_SUM_MTA rc: %d\n", rc);
@@ -490,7 +490,7 @@ int test(csprng *RNG)
     printf("\n");
 
     // Sum S signature component
-    rc = MPC_SUM_S(&SIG_S1, &SIG_S2, NULL, &SIG_S);
+    rc = MPC_SUM_S(&SIG_S1, &SIG_S2, &SIG_S);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_SUM_S rc: %d\n", rc);
@@ -506,7 +506,7 @@ int test(csprng *RNG)
     printf("\n");
 
     // Sum ECDSA public keys
-    rc = MPC_SUM_PK(&PK1, &PK2, NULL, &PK);
+    rc = MPC_SUM_PK(&PK1, &PK2, &PK);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_SUM_PK rc: %d\n", rc);

@@ -236,7 +236,7 @@ int main()
 
     char sum1[EGS_SECP256K1];
 
-    rc = mpc_api_sum_mta(k1, gamma1, alpha1, beta1, NULL, NULL, sum1);
+    rc = mpc_api_sum_mta(k1, gamma1, alpha1, beta1, sum1);
     if (rc!=0)
     {
         fprintf(stderr, "ERROR mpc_api_sum_mta rc: %d\n", rc);

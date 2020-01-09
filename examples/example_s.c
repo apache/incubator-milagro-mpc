@@ -509,7 +509,7 @@ int main()
     }
 
     // sum = K1.W1 + alpha1  + beta1
-    rc = MPC_SUM_MTA(&K1, &W1, &ALPHA1, &BETA1, NULL, NULL, &SUM1);
+    rc = MPC_SUM_MTA(&K1, &W1, &ALPHA1, &BETA1, &SUM1);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_SUM_MTA rc: %d\n", rc);
@@ -528,7 +528,7 @@ int main()
     }
 
     // sum = K2.W2 + alpha2  + beta2
-    rc = MPC_SUM_MTA(&K2, &W2, &ALPHA2, &BETA2, NULL, NULL, &SUM2);
+    rc = MPC_SUM_MTA(&K2, &W2, &ALPHA2, &BETA2, &SUM2);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_SUM_MTA rc: %d\n", rc);
@@ -593,7 +593,7 @@ int main()
     }
 
     // Sum S signature component
-    rc = MPC_SUM_S(&SIG_S1, &SIG_S2, NULL, &SIG_S);
+    rc = MPC_SUM_S(&SIG_S1, &SIG_S2, &SIG_S);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_SUM_S rc: %d\n", rc);
