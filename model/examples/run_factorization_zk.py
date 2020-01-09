@@ -22,9 +22,10 @@ if __name__ == "__main__":
     N    = p * q
     phiN = (p-1) * (q-1)
 
-    print("ZK proof of knowledge of factoring of N = {}".format(hex(N)[2:].zfill(fact.nlen//4)))
-    print("P = {}".format(hex(p)[2:].zfill(fact.nlen//8)))
-    print("Q = {}".format(hex(q)[2:].zfill(fact.nlen//8)))
+    print("ZK proof of knowledge of factoring")
+    print("\tP = {}".format(hex(p)[2:].zfill(fact.nlen//8)))
+    print("\tQ = {}".format(hex(q)[2:].zfill(fact.nlen//8)))
+    print("\tN = {}".format(hex(N)[2:].zfill(fact.nlen//4)))
     print("")
 
     # ZK proof setup (once for each n, can be reused)
@@ -49,7 +50,7 @@ if __name__ == "__main__":
     r = None
     if DETERMINISTIC:
         r = 0x01
-    
+
     e,y = fact.nizk_prove(N,phiN,Zi,r=r)
 
     print("\tE = {}".format(hex(e)[2:].zfill(fact.B//4)))

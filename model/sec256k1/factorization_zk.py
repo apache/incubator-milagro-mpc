@@ -18,31 +18,57 @@ DEBUG = False
 # nlen = 1024
 # A = 1 << nlen
 # B = 80
-# # C = 1 << 42
 # K = 3
 
 # H_param = 'sha256'
 # Hprime_param = 'sha1'
 
-# Parameters for n ~ 4096 bit
+# Parameters for n ~ 4096 bit estimated using
+# the script in parameters/factorization_zk.py
 
 nlen = 4096
 A = 1 << nlen
 B = 128
-# C = 1 << 128
 K = 2
 
 H_param = 'sha256'
 Hprime_param = 'sha256'
 
 def nizk_setup(N):
+    """ Randomly choose the generators z_i
+
+    Args::
+
+        N: public integer to prove the factorization
+
+    Returns::
+
+        Zi: randomly chosen generators
+    """
+
     # TODO It might be possible to use h(n,i) to generate the
     # Zi, but I'm not sure it does not affect K or the non
-    # interactive generation. Using the default random generation
-    # since this is only done once
+    # interactive generation.
+    # We might want to consider it if things are slow even in the
+    # C implementation.
     return [big.rand(N) for i in range(K)]
 
 def nizk_prove(N, phiN, Zi, r = None):
+    """ Compute ZK proof of knowledge of factorization of N
+
+    Args::
+
+        N:    public integer to prove the factorization
+        phiN: Euler totient of N. Equivalent to knowledge of factorization
+        Zi:   public generators for the subgroups
+        r:    random value in [0, ..., A]. Optional
+
+    Returns::
+
+        e: public challenge for the ZK proof
+        y: proof of knowledge of factorization
+    """
+
     if r is None:
         r = big.rand(A)
 
@@ -61,9 +87,9 @@ def nizk_prove(N, phiN, Zi, r = None):
     if DEBUG:
         print("X = {}".format(X.hex()))
 
-    # Compute e = H'(N,z1,...,zK,X)
+    # Compute public challenge e = H'(N,z1,...,zK,X)
     Hprime = hashlib.new(Hprime_param)
-    
+
     Hprime.update(N.to_bytes(nlen, byteorder='big'))
 
     for Z in Zi:
@@ -73,11 +99,28 @@ def nizk_prove(N, phiN, Zi, r = None):
 
     e = big.from_bytes(Hprime.digest()[:B//8])
 
+    # Compute proof for the public challenge
     y = r + (N-phiN) * e
 
     return e,y
 
 def nizk_verify(Zi, N, e, y):
+    """ Verify ZK proof of knowledge of factorization of N
+
+    Args::
+
+        Zi:   public generators for the subgroups
+        N:    public integer to prove the factorization
+        e: public challenge for the ZK proof
+        y: proof of knowledge of factorization
+
+    Returns::
+
+        True if the ZK proof is correct, False otherwise
+    """
+    if y < 0 or y > A:
+        return False
+
     # Verifier exponent exp = y - N*e = r - phiN*e
     exp = y - N*e
 
@@ -90,7 +133,7 @@ def nizk_verify(Zi, N, e, y):
     H = hashlib.new(H_param)
     for i, Z in enumerate(Zi):
         Zr = pow(Z,exp,N)
-    
+
         if inv:
             Zr = big.invmodp(Zr,N)
 
@@ -98,12 +141,12 @@ def nizk_verify(Zi, N, e, y):
             print("Z_{} = {}".format(i,Zr))
 
         H.update(Zr.to_bytes(nlen, byteorder='big'))
-    
+
     X = H.digest()
 
     # Compute e_verifier = H'(N,z1,...,zK,X)
     Hprime = hashlib.new(Hprime_param)
-    
+
     Hprime.update(N.to_bytes(nlen, byteorder='big'))
 
     for Z in Zi:

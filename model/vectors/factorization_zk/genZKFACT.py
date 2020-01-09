@@ -18,10 +18,10 @@ from sec256k1 import factorization_zk as fact
 vector_fields = {
     "setup": ["TEST", "N", "Z1", "Z2"],
     "prove": ["TEST", "N", "PHI", "R", "Z1", "Z2", "E", "Y"],
-    "verify": ["TEST", "Z1", "Z2", "Z3", "E", "Y"]
+    "verify": ["TEST", "Z1", "Z2", "E", "Y"]
 }
 
-def genVector(test_no):
+def genVector(test_no, tv_type):
     """Generate a single test vector
 
         Args::
@@ -42,6 +42,20 @@ def genVector(test_no):
     phiN = (p-1) * (q-1)
 
     Zi = fact.nizk_setup(N)
+
+    # If it is only a setup, it should be simple enough to not go thorugh
+    # the run to validate the generated tv. This saves a lot of time, since
+    # the run is quite expensive
+    if tv_type == "setup":
+        v = {
+            "TEST": test_no,
+            "N":    hex(N)[2:].zfill(fact.nlen//4),
+            "PHI":  hex(phiN)[2:].zfill(fact.nlen//4),
+            "Z1":   hex(Zi[0])[2:].zfill(fact.nlen//4),
+            "Z2":   hex(Zi[1])[2:].zfill(fact.nlen//4),
+        }
+
+        return v
 
     r   = big.rand(fact.A)
     e,y = fact.nizk_prove(N,phiN,Zi,r=r)
@@ -76,7 +90,7 @@ if __name__ == '__main__':
     vectors = []
 
     for i in range(args.nVec):
-        vector = genVector(i)
+        vector = genVector(i, args.type)
 
         vector = {k: vector[k] for k in vector_fields[args.type]}
         vectors.append(vector)
