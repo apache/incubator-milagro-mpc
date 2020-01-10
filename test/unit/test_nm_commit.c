@@ -23,9 +23,9 @@
 #include <time.h>
 #include "amcl/commitments.h"
 
-#define LINE_LEN 256
+/* NM Commitment unit tests */
 
-#define DEBUG
+#define LINE_LEN 256
 
 void read_OCTET(octet *OCT, char *string)
 {

@@ -18,7 +18,7 @@ under the License.
 */
 
 /*
-   Benchmark Paillier crypto system.
+   Benchmark NM Commitment.
  */
 
 #include <stdio.h>
