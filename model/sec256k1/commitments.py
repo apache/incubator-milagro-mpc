@@ -171,8 +171,8 @@ def commit(x, xlen, r=None):
         print("x = {}".format(x_bytes.hex()))
         print("r = {}".format(r_bytes.hex()))
 
-    H.update(big.to_bytes(x))
-    H.update(r.to_bytes(l, byteorder='big'))
+    H.update(x_bytes)
+    H.update(r_bytes)
 
     C = H.digest()
 
