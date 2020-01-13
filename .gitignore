@@ -17,3 +17,5 @@ vagrant/repo
 
 log.txt
 coverage
+examples/scratch.c
+model/examples/scratch.py

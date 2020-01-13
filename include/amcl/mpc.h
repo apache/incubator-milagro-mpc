@@ -27,6 +27,7 @@ under the License.
 #define MPC_H
 
 #include <amcl/amcl.h>
+#include <amcl/paillier.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,7 +71,7 @@ void OCT_truncate(octet *y,octet *x);
  *  @param SK the input private signing key
  *  @param M the input message to be signed
  *  @param R component of the signature
- *  @param D component of the signature
+ *  @param S component of the signature
  */
 int MPC_ECDSA_SIGN(int sha, octet *K, octet *SK, octet *M, octet *R, octet *S);
 
@@ -92,14 +93,12 @@ int MPC_ECDSA_VERIFY(octet *HM,octet *PK, octet *R,octet *S);
  *  Encrypt multplicative share, \f$ a \f$, of secret \f$ s = a.b \f$
  *
  *  @param  RNG              Pointer to a cryptographically secure random number generator
- *  @param  N                Public key
- *  @param  G                Public key
+ *  @param  PUB              Paillier Public key
  *  @param  A                Multiplicative share of secret
  *  @param  CA               Ciphertext
  *  @param  R                R value for testing. If RNG is NULL then this value is read.
- *  @return                  Returns 0 or else error code
  */
-int MPC_MTA_CLIENT1(csprng *RNG, octet* N, octet* G, octet* A, octet* CA, octet* R);
+void MPC_MTA_CLIENT1(csprng *RNG, PAILLIER_public_key* PUB, octet* A, octet* CA, octet* R);
 
 /*! \brief Client MtA second pass
  *
@@ -110,14 +109,11 @@ int MPC_MTA_CLIENT1(csprng *RNG, octet* N, octet* G, octet* A, octet* CA, octet*
  *  <li> \f$ \alpha = D_A(cb) = D_A(E_A(ab + z)) = ab + z \text{ }\mathrm{mod}\text{ }q \f$
  *  </ol>
  *
- *  @param   N                Public key
- *  @param   L                Private key
- *  @param   M                Private key
+ *  @param   PRIV             Paillier Private key
  *  @param   CB               Ciphertext
  *  @param   ALPHA            Additive share of secret
- *  @return                   Returns 0 or else error code
  */
-int MPC_MTA_CLIENT2(octet* N, octet* L, octet* M, octet* CB, octet* ALPHA);
+void MPC_MTA_CLIENT2(PAILLIER_private_key *PRIV, octet* CB, octet* ALPHA);
 
 /*! \brief Server MtA
  *
@@ -131,17 +127,15 @@ int MPC_MTA_CLIENT2(octet* N, octet* L, octet* M, octet* CB, octet* ALPHA);
  *  </ol>
  *
  *  @param   RNG              Pointer to a cryptographically secure random number generator
- *  @param   N                Public key
- *  @param   G                Public key
+ *  @param   PUB              Paillier Public key
  *  @param   B                Multiplicative share of secret
  *  @param   CA               Ciphertext of client's additive share of secret
  *  @param   Z                Plaintext z value (see above)
  *  @param   R                R value for testing. If RNG is NULL then this value is read.
  *  @param   CB               Ciphertext
  *  @param   BETA             Additive share of secret (see above)
- *  @return                   Returns 0 or else error code
  */
-int MPC_MTA_SERVER(csprng *RNG, octet* N, octet* G, octet* B, octet* CA, octet* Z, octet* R, octet* CB, octet* BETA);
+void MPC_MTA_SERVER(csprng *RNG, PAILLIER_public_key* PUB, octet* B, octet* CA, octet* Z, octet* R, octet* CB, octet* BETA);
 
 /** \brief Sum of secret shares
  *
@@ -156,9 +150,8 @@ int MPC_MTA_SERVER(csprng *RNG, octet* N, octet* G, octet* B, octet* CA, octet* 
  *  @param ALPHA              Additive share of A1.B2
  *  @param BETA               Additive share of A2.B1
  *  @param SUM                The sum of all values
- *  @return                   Returns 0 or else error code
  */
-int MPC_SUM_MTA(octet *A, octet *B, octet *ALPHA, octet *BETA, octet *SUM);
+void MPC_SUM_MTA(octet *A, octet *B, octet *ALPHA, octet *BETA, octet *SUM);
 
 /** \brief Calculate the inverse of the sum of kgamma values
  *
@@ -171,9 +164,8 @@ int MPC_SUM_MTA(octet *A, octet *B, octet *ALPHA, octet *BETA, octet *SUM);
  *  @param KGAMMA1            Actor 1 additive share
  *  @param KGAMMA2            Actor 2 additive share
  *  @param INVKGAMMA          Inverse of the sum of the additive shares
- *  @return                   Returns 0 or else error code
  */
-int MPC_INVKGAMMA(octet *KGAMMA1, octet *KGAMMA2, octet *INVKGAMMA);
+void MPC_INVKGAMMA(octet *KGAMMA1, octet *KGAMMA2, octet *INVKGAMMA);
 
 /** \brief R component
  *
@@ -201,7 +193,7 @@ int MPC_R(octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R);
  *  @param  HM                Hash value
  *  @return                   Returns 0 or else error code
  */
-int MPC_HASH(int sha, octet *M, octet *HM);
+void MPC_HASH(int sha, octet *M, octet *HM);
 
 /** \brief S component
  *
@@ -230,12 +222,11 @@ int MPC_S(octet *HM, octet *R, octet *K, octet *SIGMA, octet *S);
  *  <li> \f$ s = s1 + s2 \text{ }\mathrm{mod}\text{ }q \f$
  *  </ol>
  *
- *  @param  s1                Actor 1 S component
- *  @param  s2                Actor 2 S component
+ *  @param  S1                Actor 1 S component
+ *  @param  S2                Actor 2 S component
  *  @param  S                 S component sum
- *  @return                   Returns 0 or else error code
  */
-int MPC_SUM_S(octet *S1, octet *S2, octet *S);
+void MPC_SUM_S(octet *S1, octet *S2, octet *S);
 
 /** \brief Sum of ECDSA public key shares
  *
@@ -245,8 +236,8 @@ int MPC_SUM_S(octet *S1, octet *S2, octet *S);
  *  <li> \f$ pk = pk1 + pk2 \text{ }\mathrm{mod}\text{ }q \f$
  *  </ol>
  *
- *  @param  pk1               Actor 1 public key share
- *  @param  pk2               Actor 2 public key share
+ *  @param  PK1               Actor 1 public key share
+ *  @param  PK2               Actor 2 public key share
  *  @param  PK                ECDSA public key
  *  @return                   Returns 0 or else error code
  */
