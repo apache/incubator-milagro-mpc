@@ -49,7 +49,10 @@ hlen = 32
 # hlen = 32
 
 def nizk_setup(N):
-    """ Randomly choose the generators z_i
+    """ Compute the generators z_i deterministically
+
+    The generators are computed using a one way function as
+    outlined in Section 3.3 of the paper
 
     Args::
 
@@ -57,15 +60,35 @@ def nizk_setup(N):
 
     Returns::
 
-        Zi: randomly chosen generators
+        Zi: public generators
     """
 
-    # TODO It might be possible to use h(n,i) to generate the
-    # Zi, but I'm not sure it does not affect K or the non
-    # interactive generation.
-    # We might want to consider it if things are slow even in the
-    # C implementation.
-    return [big.rand(N) for i in range(K)]
+    # ceil(nlen//hlen)
+    chunks = -(-nlen // hlen)
+
+    Nbytes = N.to_bytes(nlen, byteorder='big')
+
+    Zi = []
+
+    i = 0
+    for _ in range(K):
+        Zk = b''
+        for _ in range(chunks):
+            H = hashlib.new(H_param)
+            H.update(Nbytes)
+
+            i_bytes = i.to_bytes(1, byteorder='big')
+            H.update(i_bytes)
+
+            Zk = Zk + H.digest()
+
+            i = i+1
+
+        Zk = int.from_bytes(Zk, byteorder='big')
+        Zk = Zk % N
+        Zi.append(Zk)
+
+    return Zi
 
 def nizk_prove(N, P, Q, Zi, r = None):
     """ Compute ZK proof of knowledge of factorization of N
