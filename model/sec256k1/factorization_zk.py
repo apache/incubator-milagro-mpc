@@ -15,25 +15,38 @@ DEBUG = False
 
 # Parameters for n ~ 1024 bit from paper
 
-# nlen = 1024
-# A = 1 << nlen
+# nlen = 1024 // 8
+# A = 1 << (8 * nlen)
 # B = 80
 # K = 3
 
 # H_param = 'sha256'
 # Hprime_param = 'sha1'
+# hlen = 32
 
-# Parameters for n ~ 4096 bit estimated using
+# Parameters for n ~ 2048 bit estimated using
 # the script in parameters/factorization_zk.py
 
-nlen = 4096
-A = 1 << nlen
+nlen = 2048 // 8
+A = 1 << (8 * nlen)
 B = 128
 K = 2
 
 H_param = 'sha256'
 Hprime_param = 'sha256'
-hlen = 256
+hlen = 32
+
+# Parameters for n ~ 4096 bit estimated using
+# the script in parameters/factorization_zk.py
+
+# nlen = 4096 // 8
+# A = 1 << (8 * nlen)
+# B = 128
+# K = 2
+
+# H_param = 'sha256'
+# Hprime_param = 'sha256'
+# hlen = 32
 
 def nizk_setup(N):
     """ Randomly choose the generators z_i

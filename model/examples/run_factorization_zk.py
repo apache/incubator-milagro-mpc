@@ -16,15 +16,15 @@ if __name__ == "__main__":
         p = 0xff76981f3580a943c035653a7323a577f6e8d9eef8910805ae7cb09a9dd3e65c2803940d09190ecf3ed6f41fc20c0be95b6b2e572df9b4e96c41304320af3e71
         q = 0xfdd0d8fadc7d412a8db6e358958d2d4c97cb5cc0e77921493cdd2cfc8de2e7875684b3ee564f099c14cb343c90fad09d90de98d72f604a002f28f154f6e5916d
     else:
-        p = number.getStrongPrime(fact.nlen//2)
-        q = number.getStrongPrime(fact.nlen//2)
+        p = number.getStrongPrime(fact.nlen * 4)
+        q = number.getStrongPrime(fact.nlen * 4)
 
     N = p * q
 
     print("ZK proof of knowledge of factoring")
-    print("\tP = {}".format(hex(p)[2:].zfill(fact.nlen//8)))
-    print("\tQ = {}".format(hex(q)[2:].zfill(fact.nlen//8)))
-    print("\tN = {}".format(hex(N)[2:].zfill(fact.nlen//4)))
+    print("\tP = {}".format(hex(p)[2:].zfill(fact.nlen)))
+    print("\tQ = {}".format(hex(q)[2:].zfill(fact.nlen)))
+    print("\tN = {}".format(hex(N)[2:].zfill(fact.nlen * 2)))
     print("")
 
     # ZK proof setup (once for each n, can be reused)
@@ -40,7 +40,7 @@ if __name__ == "__main__":
         Zi = fact.nizk_setup(N)
 
     for i, Z in enumerate(Zi):
-        print("\tZ_{} = {}".format(i, hex(Z)[2:].zfill(fact.nlen//4)))
+        print("\tZ_{} = {}".format(i, hex(Z)[2:].zfill(fact.nlen * 2)))
     print("")
 
     # ZK proof. It assumes the Zi have already been broadcasted to any verifier
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     e,y = fact.nizk_prove(N,p,q,Zi,r=r)
 
     print("\tE = {}".format(hex(e)[2:].zfill(fact.B//4)))
-    print("\tY = {}".format(hex(y)[2:].zfill(fact.nlen//4)))
+    print("\tY = {}".format(hex(y)[2:].zfill(fact.nlen * 2)))
     print("")
 
     # ZK verifiction

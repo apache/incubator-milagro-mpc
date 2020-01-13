@@ -36,8 +36,8 @@ def genVector(test_no, tv_type):
 
             Exception
     """
-    P = number.getStrongPrime(fact.nlen//2)
-    Q = number.getStrongPrime(fact.nlen//2)
+    P = number.getStrongPrime(fact.nlen * 4)
+    Q = number.getStrongPrime(fact.nlen * 4)
     N    = P * Q
 
     Zi = fact.nizk_setup(N)
@@ -48,9 +48,9 @@ def genVector(test_no, tv_type):
     if tv_type == "setup":
         v = {
             "TEST": test_no,
-            "N":    hex(N)[2:].zfill(fact.nlen//4),
-            "Z1":   hex(Zi[0])[2:].zfill(fact.nlen//4),
-            "Z2":   hex(Zi[1])[2:].zfill(fact.nlen//4),
+            "N":    hex(N)[2:].zfill(fact.nlen * 2),
+            "Z1":   hex(Zi[0])[2:].zfill(fact.nlen * 2),
+            "Z2":   hex(Zi[1])[2:].zfill(fact.nlen * 2),
         }
 
         return v
@@ -62,14 +62,14 @@ def genVector(test_no, tv_type):
 
     v = {
         "TEST": test_no,
-        "N":    hex(N)[2:].zfill(fact.nlen//4),
-        "P":    hex(P)[2:].zfill(fact.nlen//8),
-        "Q":    hex(Q)[2:].zfill(fact.nlen//8),
-        "R":    hex(r)[2:].zfill(fact.nlen//4),
-        "Z1":   hex(Zi[0])[2:].zfill(fact.nlen//4),
-        "Z2":   hex(Zi[1])[2:].zfill(fact.nlen//4),
+        "N":    hex(N)[2:].zfill(fact.nlen * 2),
+        "P":    hex(P)[2:].zfill(fact.nlen),
+        "Q":    hex(Q)[2:].zfill(fact.nlen),
+        "R":    hex(r)[2:].zfill(fact.nlen * 2),
+        "Z1":   hex(Zi[0])[2:].zfill(fact.nlen * 2),
+        "Z2":   hex(Zi[1])[2:].zfill(fact.nlen * 2),
         "E":    hex(e)[2:].zfill(fact.B//4),
-        "Y":    hex(y)[2:].zfill(fact.nlen//4)
+        "Y":    hex(y)[2:].zfill(fact.nlen * 2)
     }
 
     return v

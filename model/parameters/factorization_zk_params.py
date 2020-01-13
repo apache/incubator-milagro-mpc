@@ -15,7 +15,7 @@ from scipy.special import zeta
 ## User configurable part ##
 
 # Length of the number for factoring proof n = p * q
-nlen = 4096
+nlen = 2048
 
 # Security parameter
 k = 128
