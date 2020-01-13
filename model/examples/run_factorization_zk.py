@@ -19,8 +19,7 @@ if __name__ == "__main__":
         p = number.getStrongPrime(fact.nlen//2)
         q = number.getStrongPrime(fact.nlen//2)
 
-    N    = p * q
-    phiN = (p-1) * (q-1)
+    N = p * q
 
     print("ZK proof of knowledge of factoring")
     print("\tP = {}".format(hex(p)[2:].zfill(fact.nlen//8)))
@@ -51,7 +50,7 @@ if __name__ == "__main__":
     if DETERMINISTIC:
         r = 0x01
 
-    e,y = fact.nizk_prove(N,phiN,Zi,r=r)
+    e,y = fact.nizk_prove(N,p,q,Zi,r=r)
 
     print("\tE = {}".format(hex(e)[2:].zfill(fact.B//4)))
     print("\tY = {}".format(hex(y)[2:].zfill(fact.nlen//4)))

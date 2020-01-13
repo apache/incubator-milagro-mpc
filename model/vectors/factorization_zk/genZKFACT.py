@@ -17,7 +17,7 @@ from sec256k1 import factorization_zk as fact
 
 vector_fields = {
     "setup": ["TEST", "N", "Z1", "Z2"],
-    "prove": ["TEST", "N", "PHI", "R", "Z1", "Z2", "E", "Y"],
+    "prove": ["TEST", "N", "P", "Q", "R", "Z1", "Z2", "E", "Y"],
     "verify": ["TEST", "Z1", "Z2", "E", "Y"]
 }
 
@@ -36,10 +36,9 @@ def genVector(test_no, tv_type):
 
             Exception
     """
-    p = number.getStrongPrime(fact.nlen//2)
-    q = number.getStrongPrime(fact.nlen//2)
-    N    = p * q
-    phiN = (p-1) * (q-1)
+    P = number.getStrongPrime(fact.nlen//2)
+    Q = number.getStrongPrime(fact.nlen//2)
+    N    = P * Q
 
     Zi = fact.nizk_setup(N)
 
@@ -50,7 +49,6 @@ def genVector(test_no, tv_type):
         v = {
             "TEST": test_no,
             "N":    hex(N)[2:].zfill(fact.nlen//4),
-            "PHI":  hex(phiN)[2:].zfill(fact.nlen//4),
             "Z1":   hex(Zi[0])[2:].zfill(fact.nlen//4),
             "Z2":   hex(Zi[1])[2:].zfill(fact.nlen//4),
         }
@@ -58,14 +56,15 @@ def genVector(test_no, tv_type):
         return v
 
     r   = big.rand(fact.A)
-    e,y = fact.nizk_prove(N,phiN,Zi,r=r)
+    e,y = fact.nizk_prove(N, P, Q, Zi, r=r)
 
-    assert fact.nizk_verify(Zi,N,e,y)
+    assert fact.nizk_verify(Zi, N, e, y)
 
     v = {
         "TEST": test_no,
         "N":    hex(N)[2:].zfill(fact.nlen//4),
-        "PHI":  hex(phiN)[2:].zfill(fact.nlen//4),
+        "P":    hex(P)[2:].zfill(fact.nlen//8),
+        "Q":    hex(Q)[2:].zfill(fact.nlen//8),
         "R":    hex(r)[2:].zfill(fact.nlen//4),
         "Z1":   hex(Zi[0])[2:].zfill(fact.nlen//4),
         "Z2":   hex(Zi[1])[2:].zfill(fact.nlen//4),

@@ -33,6 +33,7 @@ K = 2
 
 H_param = 'sha256'
 Hprime_param = 'sha256'
+hlen = 256
 
 def nizk_setup(N):
     """ Randomly choose the generators z_i
@@ -53,15 +54,16 @@ def nizk_setup(N):
     # C implementation.
     return [big.rand(N) for i in range(K)]
 
-def nizk_prove(N, phiN, Zi, r = None):
+def nizk_prove(N, P, Q, Zi, r = None):
     """ Compute ZK proof of knowledge of factorization of N
 
     Args::
 
-        N:    public integer to prove the factorization
-        phiN: Euler totient of N. Equivalent to knowledge of factorization
-        Zi:   public generators for the subgroups
-        r:    random value in [0, ..., A]. Optional
+        N:  public integer to prove the factorization
+        P:  first factor of N
+        Q:  second factor of N
+        Zi: public generators for the subgroups
+        r:  random value in [0, ..., A]. Optional
 
     Returns::
 
@@ -75,7 +77,10 @@ def nizk_prove(N, phiN, Zi, r = None):
     # Compute commitment X = H(z1^r, ..., zK^r)
     H = hashlib.new(H_param)
     for i, Z in enumerate(Zi):
-        Zr = pow(Z,r,N)
+        Zrp = pow(Z % P, r, P)
+        Zrq = pow(Z % Q, r, Q)
+
+        Zr = big.crt(Zrp, Zrq, P, Q)
 
         if DEBUG:
             print("Z_{} = {}".format(i,Zr))
@@ -100,7 +105,7 @@ def nizk_prove(N, phiN, Zi, r = None):
     e = big.from_bytes(Hprime.digest()[:B//8])
 
     # Compute proof for the public challenge
-    y = r + (N-phiN) * e
+    y = r + (N - (P-1) * (Q-1)) * e
 
     return e,y
 
