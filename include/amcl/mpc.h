@@ -42,7 +42,7 @@ extern "C" {
  *  @param  x       Input string
  *  @return         Returns 0 or else error code
  */
-void read_OCTET(octet* y, char* x);
+void read_OCTET(octet *y, char *x);
 
 /*! \brief Truncates an octet string
 *
@@ -113,7 +113,7 @@ void MPC_MTA_CLIENT1(csprng *RNG, PAILLIER_public_key* PUB, octet* A, octet* CA,
  *  @param   CB               Ciphertext
  *  @param   ALPHA            Additive share of secret
  */
-void MPC_MTA_CLIENT2(PAILLIER_private_key *PRIV, octet* CB, octet* ALPHA);
+void MPC_MTA_CLIENT2(PAILLIER_private_key *PRIV, octet* CB, octet *ALPHA);
 
 /*! \brief Server MtA
  *
@@ -135,7 +135,7 @@ void MPC_MTA_CLIENT2(PAILLIER_private_key *PRIV, octet* CB, octet* ALPHA);
  *  @param   CB               Ciphertext
  *  @param   BETA             Additive share of secret (see above)
  */
-void MPC_MTA_SERVER(csprng *RNG, PAILLIER_public_key* PUB, octet* B, octet* CA, octet* Z, octet* R, octet* CB, octet* BETA);
+void MPC_MTA_SERVER(csprng *RNG, PAILLIER_public_key *PUB, octet *B, octet *CA, octet *Z, octet *R, octet *CB, octet *BETA);
 
 /** \brief Sum of secret shares
  *

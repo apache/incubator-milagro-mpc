@@ -30,7 +30,7 @@ under the License.
 static char* curve_order_hex = "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141";
 
 // Read string into an octet
-void read_OCTET(octet* y, char* x)
+void read_OCTET(octet *y, char *x)
 {
     int len = strlen(x);
     char buff[len];
@@ -202,7 +202,7 @@ int MPC_ECDSA_VERIFY(octet *HM, octet *PK, octet *R,octet *S)
 
 
 // Client MTA first pass
-void MPC_MTA_CLIENT1(csprng *RNG,  PAILLIER_public_key* PUB, octet* A, octet* CA, octet* R)
+void MPC_MTA_CLIENT1(csprng *RNG,  PAILLIER_public_key *PUB, octet *A, octet *CA, octet *R)
 {
     // Read A
     char a1[FS_2048];
@@ -215,7 +215,7 @@ void MPC_MTA_CLIENT1(csprng *RNG,  PAILLIER_public_key* PUB, octet* A, octet* CA
 }
 
 // Client MtA second pass
-void MPC_MTA_CLIENT2(PAILLIER_private_key *PRIV, octet* CB, octet* ALPHA)
+void MPC_MTA_CLIENT2(PAILLIER_private_key *PRIV, octet *CB, octet *ALPHA)
 {
     BIG_512_60 q[FFLEN_4096];
     BIG_512_60 alpha[FFLEN_4096];
@@ -250,7 +250,7 @@ void MPC_MTA_CLIENT2(PAILLIER_private_key *PRIV, octet* CB, octet* ALPHA)
 }
 
 // MtA server
-void MPC_MTA_SERVER(csprng* RNG, PAILLIER_public_key* PUB, octet* B, octet* CA, octet* ZO, octet* R, octet* CB, octet* BETA)
+void MPC_MTA_SERVER(csprng *RNG, PAILLIER_public_key *PUB, octet *B, octet *CA, octet *ZO, octet *R, octet *CB, octet *BETA)
 {
     BIG_512_60 q[FFLEN_4096];
     BIG_512_60 z[FFLEN_4096];
@@ -386,9 +386,7 @@ void MPC_INVKGAMMA(octet *KGAMMA1, octet *KGAMMA2, octet *INVKGAMMA)
     BIG_256_56_fromBytes(kgamma2,KGAMMA2->val);
 
     // kgamma = kgamma1  + kgamma2
-    BIG_256_56_zero(kgamma);
-    BIG_256_56_add(kgamma,kgamma,kgamma1);
-    BIG_256_56_add(kgamma,kgamma,kgamma2);
+    BIG_256_56_add(kgamma,kgamma1,kgamma2);
 
     // kgamma = kgamma mod q
     BIG_256_56_mod(kgamma,q);
