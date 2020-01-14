@@ -37,8 +37,10 @@ function(amcl_test name source dependencies expected_response)
   )
 endfunction()
 
+# MPC tests
 amcl_test(test_mta test_mta.c mpc "SUCCESS" "mpc/MTA.txt")
 amcl_test(test_r test_r.c mpc "SUCCESS" "mpc/R.txt")
 amcl_test(test_s test_s.c mpc "SUCCESS" "mpc/S.txt")
 
-
+# NM Commitment tests
+amcl_test(test_nm_commit test_nm_commit.c mpc "SUCCESS" "commitments/nm_commit.txt")
