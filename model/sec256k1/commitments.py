@@ -1,5 +1,5 @@
-import sec256k1.big as big
-import sec256k1.schnorr as schnorr
+import hashlib
+from sec256k1 import big, schnorr
 
 DEBUG = False
 
@@ -132,3 +132,71 @@ def bc_setup_verify(b0, b1, b2, co0, co1, co2, c, p0, p1, p2, p3, N):
         return False
 
     return schnorr.n_verify(b2, b0, co2, c, p3, N)
+
+# --- General purpose commitment scheme ---
+#
+#   As described in the Threshold ECDSA paper, Section 2.4
+#
+
+# Security parameter
+l = 256
+L = 1 << l
+
+# Chosen hash function
+hf    = 'sha256'
+hflen = 32
+
+def commit(x, xlen, r=None):
+    """Compute commitment for a value
+
+    Args::
+        x    : value to commit to
+        xlen : length in bytes of the value to commit
+        r    : random integer of length l, the security parameter. Optional
+
+    Returns::
+        r : random integer of length l used in the commitment
+        C : commitment to the value x
+
+    """
+    H = hashlib.new(hf)
+
+    if r is None:
+        r = big.rand(L)
+
+    x_bytes = x.to_bytes(xlen, byteorder='big')
+    r_bytes = r.to_bytes(l//8, byteorder='big')
+
+    if DEBUG:
+        print("x = {}".format(x_bytes.hex()))
+        print("r = {}".format(r_bytes.hex()))
+
+    H.update(x_bytes)
+    H.update(r_bytes)
+
+    C = H.digest()
+
+    return r, C
+
+def decommit(C, r, x, xlen):
+    """Verify a commitment
+
+    Args::
+        C    : commitment to verify
+        r    : decommitment value
+        x    : committed value
+        xlen : length in bytes of the committed value
+
+    Returns::
+        True if the value is successfully decommitted, False otherwise
+    """
+
+    # Not checking the length of r, since it is padded/truncated
+    # to be of the correct length. In C it might be worth to have
+    # an explicit check since we use octets
+    r, D = commit(x,xlen,r)
+
+    if DEBUG:
+        print("D = {}".format(D.hex()))
+
+    return C == D
