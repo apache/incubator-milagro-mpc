@@ -54,7 +54,7 @@ if __name__ == "__main__":
     alice = Player('Alice', p1, q1, sk1, k1, gamma1)
     bob = Player('Bob', p2, q2, sk2, k2, gamma2)
 
-    # Player.how_many()
+    #Player.how_many()
 
     ### alice.k * bob.gamma ###
 
@@ -66,18 +66,18 @@ if __name__ == "__main__":
 
     ca, r1 = alice.kgamma.client1(r1)
     print(f"alice ca {hex(ca)[2:].zfill(1024)}\n")
-    print(f"alice r {hex(r1)[2:].zfill(512)}\n")
+    print(f"alice r1 {hex(r1)[2:].zfill(1024)}\n")
 
     cb, r2, z2 = bob.kgamma.server(alice.n, alice.g, ca, z2, r2)
     print(f"bob cb {hex(cb)[2:].zfill(1024)}\n")
-    print(f"bob r2 {hex(r2)[2:].zfill(512)}\n")
+    print(f"bob r2 {hex(r2)[2:].zfill(1024)}\n")
     print(f"bob z2 {hex(z2)[2:].zfill(512)}\n")
     print(f"bob.kgamma.beta {hex(bob.kgamma.beta)[2:].zfill(512)}\n")
 
     alice.kgamma.client2(cb)
     print(f"alice.kgamma.alpha {hex(alice.kgamma.alpha)[2:].zfill(512)}\n")
 
-    got = (alice.kgamma.alpha + bob.kgamma.beta) % curve.r
+    got = ( alice.kgamma.alpha + bob.kgamma.beta ) % curve.r
 
     print(f"expected {hex(expected)}")
     print(f"got {hex(got)}")
@@ -97,11 +97,10 @@ if __name__ == "__main__":
         f.write(f"char* CB12_hex = \"{hex(cb)[2:].zfill(1024)}\";\n\n")
         f.write(f"char* R12_hex = \"{hex(r2)[2:].zfill(512)}\";\n\n")
         f.write(f"char* Z12_hex = \"{hex(z2)[2:].zfill(64)}\";\n\n")
-        f.write(
-            f"char* BETA2_hex = \"{hex(bob.kgamma.beta)[2:].zfill(64)}\";\n\n")
-        f.write(
-            f"char* ALPHA1_hex = \"{hex(alice.kgamma.alpha)[2:].zfill(64)}\";\n\n")
+        f.write(f"char* BETA2_hex = \"{hex(bob.kgamma.beta)[2:].zfill(64)}\";\n\n")
+        f.write(f"char* ALPHA1_hex = \"{hex(alice.kgamma.alpha)[2:].zfill(64)}\";\n\n")
         f.write(f"char* A1B2_hex = \"{hex(expected)[2:].zfill(64)}\";\n\n")
+
 
     ### bob.k * alice.gamma ###
 
@@ -118,7 +117,7 @@ if __name__ == "__main__":
     bob.kgamma.client2(cb)
     print(f"bob.kgamma.alpha {bob.kgamma.alpha}")
 
-    got = (bob.kgamma.alpha + alice.kgamma.beta) % curve.r
+    got = ( bob.kgamma.alpha + alice.kgamma.beta ) % curve.r
 
     print(f"expected {hex(expected)}")
     print(f"got {hex(got)}")
@@ -138,32 +137,28 @@ if __name__ == "__main__":
         f.write(f"char* CB21_hex = \"{hex(cb)[2:].zfill(1024)}\";\n\n")
         f.write(f"char* R21_hex = \"{hex(r1)[2:].zfill(512)}\";\n\n")
         f.write(f"char* Z21_hex = \"{hex(z1)[2:].zfill(64)}\";\n\n")
-        f.write(
-            f"char* BETA1_hex = \"{hex(alice.kgamma.beta)[2:].zfill(64)}\";\n\n")
-        f.write(
-            f"char* ALPHA2_hex = \"{hex(bob.kgamma.alpha)[2:].zfill(64)}\";\n\n")
+        f.write(f"char* BETA1_hex = \"{hex(alice.kgamma.beta)[2:].zfill(64)}\";\n\n")
+        f.write(f"char* ALPHA2_hex = \"{hex(bob.kgamma.alpha)[2:].zfill(64)}\";\n\n")
         f.write(f"char* A2B1_hex = \"{hex(expected)[2:].zfill(64)}\";\n\n")
 
     ### kgamma = (alice.k + bob.k)(alice.gamma + bob.gamma)
 
-    # print(alice)
-    # print(bob)
+    #print(alice)
+    #print(bob)
 
     k = (alice.k + bob.k) % curve.r
     gamma = (alice.gamma + bob.gamma) % curve.r
     expected = k * gamma % curve.r
 
-    got = (alice.kgamma.sum() + bob.kgamma.sum()) % curve.r
+    got = ( alice.kgamma.sum() + bob.kgamma.sum() ) % curve.r
 
     print(f"kgamma expected {expected} {hex(expected)}")
     print(f"kgamma got {got} {hex(got)}")
     assert got == expected, f"expected {hex(expected)} got {hex(got)}"
 
     with open("MtA.txt", "a") as f:
-        f.write(
-            f"char* SUM1_hex = \"{hex(alice.kgamma.sum())[2:].zfill(64)}\";\n\n")
-        f.write(
-            f"char* SUM2_hex = \"{hex(bob.kgamma.sum())[2:].zfill(64)}\";\n\n")
+        f.write(f"char* SUM1_hex = \"{hex(alice.kgamma.sum())[2:].zfill(64)}\";\n\n")
+        f.write(f"char* SUM2_hex = \"{hex(bob.kgamma.sum())[2:].zfill(64)}\";\n\n")
         f.write(f"char* AB_hex = \"{hex(expected)[2:].zfill(64)}\";\n\n")
 
     print(f"alice.kgamma.a {hex(alice.kgamma.a)}")

@@ -40,6 +40,14 @@ int main(int argc, char** argv)
     int len=0;
     FILE *fp;
 
+    int rc=0;
+
+    // Paillier Keys
+    PAILLIER_private_key PRIV1;
+    PAILLIER_public_key PUB1;
+    PAILLIER_private_key PRIV2;
+    PAILLIER_public_key PUB2;
+
     char line[LINE_LEN]= {0};
     char *linePtr=NULL;
 
@@ -53,21 +61,13 @@ int main(int argc, char** argv)
     const char* RESULTline = "RESULT = ";
 
     // Alice
-    char n1[FS_2048]= {0};
-    octet N1 = {0,sizeof(n1),n1};
-    const char* N1line = "N1 = ";
+    char p1[FS_2048]= {0};
+    octet P1 = {0,sizeof(p1),p1};
+    const char* P1line = "P1 = ";
 
-    char g1[FS_2048]= {0};
-    octet G1 = {0,sizeof(g1),g1};
-    const char* G1line = "G1 = ";
-
-    char l1[FS_2048] = {0};
-    octet L1 = {0,sizeof(l1),l1};
-    const char* L1line = "L1 = ";
-
-    char m1[FS_2048]= {0};
-    octet M1 = {0,sizeof(m1),m1};
-    const char* M1line = "M1 = ";
+    char q1[FS_2048]= {0};
+    octet Q1 = {0,sizeof(q1),q1};
+    const char* Q1line = "Q1 = ";
 
     char a1[FS_2048]= {0};
     octet A1 = {0,sizeof(a1),a1};
@@ -77,11 +77,11 @@ int main(int argc, char** argv)
     octet B1 = {0,sizeof(b1),b1};
     const char* B1line = "B1 = ";
 
-    char r21[FS_2048]= {0};
+    char r21[FS_4096]= {0};
     octet R21 = {0,sizeof(r21),r21};
     const char* R21line = "R21 = ";
 
-    char r11[FS_2048]= {0};
+    char r11[FS_4096]= {0};
     octet R11 = {0,sizeof(r11),r11};
     const char* R11line = "R11 = ";
 
@@ -90,21 +90,13 @@ int main(int argc, char** argv)
     const char* Z21line = "Z21 = ";
 
     // Bob
-    char n2[FS_2048]= {0};
-    octet N2 = {0,sizeof(n2),n2};
-    const char* N2line = "N2 = ";
+    char p2[FS_2048]= {0};
+    octet P2 = {0,sizeof(p2),p2};
+    const char* P2line = "P2 = ";
 
-    char g2[FS_2048]= {0};
-    octet G2 = {0,sizeof(g2),g2};
-    const char* G2line = "G2 = ";
-
-    char l2[FS_2048] = {0};
-    octet L2 = {0,sizeof(l2),l2};
-    const char* L2line = "L2 = ";
-
-    char m2[FS_2048]= {0};
-    octet M2 = {0,sizeof(m2),m2};
-    const char* M2line = "M2 = ";
+    char q2[FS_2048]= {0};
+    octet Q2 = {0,sizeof(q2),q2};
+    const char* Q2line = "Q2 = ";
 
     char a2[FS_2048]= {0};
     octet A2 = {0,sizeof(a2),a2};
@@ -114,11 +106,11 @@ int main(int argc, char** argv)
     octet B2 = {0,sizeof(b2),b2};
     const char* B2line = "B2 = ";
 
-    char r22[FS_2048]= {0};
+    char r22[FS_4096]= {0};
     octet R22 = {0,sizeof(r22),r22};
     const char* R22line = "R22 = ";
 
-    char r12[FS_2048]= {0};
+    char r12[FS_4096]= {0};
     octet R12 = {0,sizeof(r12),r12};
     const char* R12line = "R12 = ";
 
@@ -192,51 +184,27 @@ int main(int argc, char** argv)
             printf("TEST = %d\n",testNo);
         }
 
-        // Read N1
-        if (!strncmp(line,N1line, strlen(N1line)))
+        // Read P1
+        if (!strncmp(line,P1line, strlen(P1line)))
         {
-            len = strlen(N1line);
+            len = strlen(P1line);
             linePtr = line + len;
-            read_OCTET(&N1,linePtr);
+            read_OCTET(&P1,linePtr);
 #ifdef DEBUG
-            printf("N1 = ");
-            OCT_output(&N1);
+            printf("P1 = ");
+            OCT_output(&P1);
 #endif
         }
 
-        // Read G1
-        if (!strncmp(line,G1line, strlen(G1line)))
+        // Read Q1
+        if (!strncmp(line,Q1line, strlen(Q1line)))
         {
-            len = strlen(G1line);
+            len = strlen(Q1line);
             linePtr = line + len;
-            read_OCTET(&G1,linePtr);
+            read_OCTET(&Q1,linePtr);
 #ifdef DEBUG
-            printf("G1 = ");
-            OCT_output(&G1);
-#endif
-        }
-
-        // Read L1
-        if (!strncmp(line,L1line, strlen(L1line)))
-        {
-            len = strlen(L1line);
-            linePtr = line + len;
-            read_OCTET(&L1,linePtr);
-#ifdef DEBUG
-            printf("L1 = ");
-            OCT_output(&L1);
-#endif
-        }
-
-        // Read M1
-        if (!strncmp(line,M1line, strlen(M1line)))
-        {
-            len = strlen(M1line);
-            linePtr = line + len;
-            read_OCTET(&M1,linePtr);
-#ifdef DEBUG
-            printf("M1 = ");
-            OCT_output(&M1);
+            printf("Q1 = ");
+            OCT_output(&Q1);
 #endif
         }
 
@@ -300,51 +268,27 @@ int main(int argc, char** argv)
 #endif
         }
 
-        // Read N2
-        if (!strncmp(line,N2line, strlen(N2line)))
+        // Read P2
+        if (!strncmp(line,P2line, strlen(P2line)))
         {
-            len = strlen(N2line);
+            len = strlen(P2line);
             linePtr = line + len;
-            read_OCTET(&N2,linePtr);
+            read_OCTET(&P2,linePtr);
 #ifdef DEBUG
-            printf("N2 = ");
-            OCT_output(&N2);
+            printf("P2 = ");
+            OCT_output(&P2);
 #endif
         }
 
-        // Read G2
-        if (!strncmp(line,G2line, strlen(G2line)))
+        // Read Q2
+        if (!strncmp(line,Q2line, strlen(Q2line)))
         {
-            len = strlen(G2line);
+            len = strlen(Q2line);
             linePtr = line + len;
-            read_OCTET(&G2,linePtr);
+            read_OCTET(&Q2,linePtr);
 #ifdef DEBUG
-            printf("G2 = ");
-            OCT_output(&G2);
-#endif
-        }
-
-        // Read L2
-        if (!strncmp(line,L2line, strlen(L2line)))
-        {
-            len = strlen(L2line);
-            linePtr = line + len;
-            read_OCTET(&L2,linePtr);
-#ifdef DEBUG
-            printf("L2 = ");
-            OCT_output(&L2);
-#endif
-        }
-
-        // Read M2
-        if (!strncmp(line,M2line, strlen(M2line)))
-        {
-            len = strlen(M2line);
-            linePtr = line + len;
-            read_OCTET(&M2,linePtr);
-#ifdef DEBUG
-            printf("M2 = ");
-            OCT_output(&M2);
+            printf("Q2 = ");
+            OCT_output(&Q2);
 #endif
         }
 
@@ -460,79 +404,35 @@ int main(int argc, char** argv)
         {
             applyVector=0;
 
+            // Generating Paillier key pairs
+            PAILLIER_KEY_PAIR(NULL, &P1, &Q1, &PUB1, &PRIV1);
+            PAILLIER_KEY_PAIR(NULL, &P2, &Q2, &PUB2, &PRIV2);
+
             // ALPHA1 + BETA2 = A1 * B2
-            int rc = MPC_MTA_CLIENT1(NULL, &N1, &G1, &A1, &CA11, &R11);
-            if (rc)
-            {
-                fprintf(stderr, "FAILURE MPC_MTA_CLIENT1 Test %d rc: %d\n", testNo, rc);
-                fclose(fp);
-                exit(EXIT_FAILURE);
-            }
+            MPC_MTA_CLIENT1(NULL, &PUB1, &A1, &CA11, &R11);
 
-            rc = MPC_MTA_SERVER(NULL,  &N1, &G1, &B2, &CA11, &Z12, &R12, &CB12, &BETA2);
-            if (rc)
-            {
-                fprintf(stderr, "FAILURE MPC_MTA_SERVER Test %d rc: %d\n", testNo, rc);
-                fclose(fp);
-                exit(EXIT_FAILURE);
-            }
+            MPC_MTA_SERVER(NULL,  &PUB1, &B2, &CA11, &Z12, &R12, &CB12, &BETA2);
 
-            rc = MPC_MTA_CLIENT2(&N1, &L1, &M1, &CB12, &ALPHA1);
-            if (rc)
-            {
-                fprintf(stderr, "FAILURE MPC_MTA_CLIENT2 Test %d rc: %d\n", testNo, rc);
-                fclose(fp);
-                exit(EXIT_FAILURE);
-            }
+            MPC_MTA_CLIENT2(&PRIV1, &CB12, &ALPHA1);
 
             // ALPHA2 + BETA1 = A2 * B1
-            rc = MPC_MTA_CLIENT1(NULL, &N2, &G2, &A2, &CA22, &R22);
-            if (rc)
-            {
-                fprintf(stderr, "FAILURE MPC_MTA_CLIENT1 rc: %d\n", rc);
-                exit(EXIT_FAILURE);
-            }
+            MPC_MTA_CLIENT1(NULL, &PUB2, &A2, &CA22, &R22);
 
-            rc = MPC_MTA_SERVER(NULL,  &N2, &G2, &B1, &CA22, &Z21, &R21, &CB21, &BETA1);
-            if (rc)
-            {
-                fprintf(stderr, "FAILURE MPC_MTA_SERVER rc: %d\n", rc);
-                exit(EXIT_FAILURE);
-            }
+            MPC_MTA_SERVER(NULL,  &PUB2, &B1, &CA22, &Z21, &R21, &CB21, &BETA1);
 
-            rc = MPC_MTA_CLIENT2(&N2, &L2, &M2, &CB21, &ALPHA2);
-            if (rc)
-            {
-                fprintf(stderr, "FAILURE MPC_MTA_CLIENT2 rc: %d\n", rc);
-                exit(EXIT_FAILURE);
-            }
+            MPC_MTA_CLIENT2(&PRIV2, &CB21, &ALPHA2);
 
             // sum = A1.B1 + alpha1  + beta1
-            rc = MPC_SUM_MTA(&A1, &B1, &ALPHA1, &BETA1, NULL, NULL, &SUM1);
-            if (rc)
-            {
-                fprintf(stderr, "FAILURE MPC_SUM_MTA rc: %d\n", rc);
-                exit(EXIT_FAILURE);
-            }
+            MPC_SUM_MTA(&A1, &B1, &ALPHA1, &BETA1, &SUM1);
 
             // sum = A2.B2 + alpha2  + beta2
-            rc = MPC_SUM_MTA(&A2, &B2, &ALPHA2, &BETA2, NULL, NULL, &SUM2);
-            if (rc)
-            {
-                fprintf(stderr, "FAILURE MPC_SUM_MTA rc: %d\n", rc);
-                exit(EXIT_FAILURE);
-            }
+            MPC_SUM_MTA(&A2, &B2, &ALPHA2, &BETA2, &SUM2);
 
             // Calculate the inverse of kgamma
-            rc = MPC_INVKGAMMA(&SUM1, &SUM2, NULL, &INVKGAMMA);
-            if (rc)
-            {
-                fprintf(stderr, "FAILURE MPC_INVKGAMMA rc: %d\n", rc);
-                exit(EXIT_FAILURE);
-            }
+            MPC_INVKGAMMA(&SUM1, &SUM2, &INVKGAMMA);
 
             // Calculate the R signature component
-            rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, NULL, &SIG_R);
+            rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, &SIG_R);
             if (rc)
             {
                 fprintf(stderr, "FAILURE MPC_R rc: %d\n", rc);

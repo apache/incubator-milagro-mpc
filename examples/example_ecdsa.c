@@ -34,23 +34,11 @@ int test(csprng *RNG)
 {
     int rc;
 
-    char p1[FS_2048];
-    octet P1 = {0,sizeof(p1),p1};
-
-    char q1[FS_2048];
-    octet Q1 = {0,sizeof(q1),q1};
-
-    char n1[FS_2048] = {0};
-    octet N1 = {0,sizeof(n1),n1};
-
-    char g1[FS_2048];
-    octet G1 = {0,sizeof(g1),g1};
-
-    char l1[FS_2048] = {0};
-    octet L1 = {0,sizeof(l1),l1};
-
-    char m1[FS_2048] = {0};
-    octet M1 = {0,sizeof(m1),m1};
+    // Paillier Keys
+    PAILLIER_private_key PRIV1;
+    PAILLIER_public_key PUB1;
+    PAILLIER_private_key PRIV2;
+    PAILLIER_public_key PUB2;
 
     char k1[EGS_SECP256K1];
     octet K1 = {0,sizeof(k1),k1};
@@ -81,24 +69,6 @@ int test(csprng *RNG)
 
     char alpha1[EGS_SECP256K1];
     octet ALPHA1 = {0,sizeof(alpha1),alpha1};
-
-    char p2[FS_2048];
-    octet P2 = {0,sizeof(p2),p2};
-
-    char q2[FS_2048];
-    octet Q2 = {0,sizeof(q2),q2};
-
-    char n2[FS_2048] = {0};
-    octet N2 = {0,sizeof(n2),n2};
-
-    char g2[FS_2048];
-    octet G2 = {0,sizeof(g2),g2};
-
-    char l2[FS_2048] = {0};
-    octet L2 = {0,sizeof(l2),l2};
-
-    char m2[FS_2048] = {0};
-    octet M2 = {0,sizeof(m2),m2};
 
     char k2[EGS_SECP256K1];
     octet K2 = {0,sizeof(k2),k2};
@@ -176,20 +146,10 @@ int test(csprng *RNG)
     octet HM = {0,sizeof(hm),hm};
 
     printf("Generating Paillier key pair one\n");
-    rc = PAILLIER_KEY_PAIR(RNG, &P1, &Q1, &N1, &G1, &L1, &M1);
-    if (rc)
-    {
-        fprintf(stderr, "ERROR PAILLIER_KEY_PAIR rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    PAILLIER_KEY_PAIR(RNG, NULL, NULL, &PUB1, &PRIV1);
 
     printf("Generating Paillier key pair two\n");
-    rc = PAILLIER_KEY_PAIR(RNG, &P2, &Q2, &N2, &G2, &L2, &M2);
-    if (rc)
-    {
-        fprintf(stderr, "ERROR PAILLIER_KEY_PAIR rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    PAILLIER_KEY_PAIR(RNG, NULL, NULL, &PUB2, &PRIV2);
 
     printf("Generating ECDSA key pair one\n");
     ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&W1,&PK1);
@@ -238,23 +198,13 @@ int test(csprng *RNG)
     OCT_output(&M);
 
     // ALPHA1 + BETA2 = K1 * GAMMA2
-    rc = MPC_MTA_CLIENT1(RNG, &N1, &G1, &K1, &CA11, &R11);
-    if (rc)
-    {
-        fprintf(stderr, "FAILURE MPC_MTA_CLIENT1 rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    MPC_MTA_CLIENT1(RNG, &PUB1, &K1, &CA11, &R11);
 
     printf("CA11: ");
     OCT_output(&CA11);
     printf("\n");
 
-    rc = MPC_MTA_SERVER(RNG, &N1, &G1, &GAMMA2, &CA11, &Z12, &R12, &CB12, &BETA2);
-    if (rc)
-    {
-        fprintf(stderr, "FAILURE MPC_MTA_SERVER rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    MPC_MTA_SERVER(RNG, &PUB1, &GAMMA2, &CA11, &Z12, &R12, &CB12, &BETA2);
 
     printf("CB12: ");
     OCT_output(&CB12);
@@ -264,35 +214,20 @@ int test(csprng *RNG)
     OCT_output(&BETA2);
     printf("\n");
 
-    rc = MPC_MTA_CLIENT2(&N1, &L1, &M1, &CB12, &ALPHA1);
-    if (rc)
-    {
-        fprintf(stderr, "FAILURE MPC_MTA_CLIENT2 rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    MPC_MTA_CLIENT2(&PRIV1, &CB12, &ALPHA1);
 
     printf("ALPHA1: ");
     OCT_output(&ALPHA1);
     printf("\n");
 
     // ALPHA2 + BETA1 = K2 * GAMMA1
-    rc = MPC_MTA_CLIENT1(RNG, &N2, &G2, &K2, &CA22, &R22);
-    if (rc)
-    {
-        fprintf(stderr, "FAILURE MPC_MTA_CLIENT1 rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    MPC_MTA_CLIENT1(RNG, &PUB2, &K2, &CA22, &R22);
 
     printf("CA22: ");
     OCT_output(&CA22);
     printf("\n");
 
-    rc = MPC_MTA_SERVER(RNG,  &N2, &G2, &GAMMA1, &CA22, &Z21, &R21, &CB21, &BETA1);
-    if (rc)
-    {
-        fprintf(stderr, "FAILURE MPC_MTA_SERVER rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    MPC_MTA_SERVER(RNG, &PUB2, &GAMMA1, &CA22, &Z21, &R21, &CB21, &BETA1);
 
     printf("CB21: ");
     OCT_output(&CB21);
@@ -302,55 +237,35 @@ int test(csprng *RNG)
     OCT_output(&BETA1);
     printf("\n");
 
-    rc = MPC_MTA_CLIENT2(&N2, &L2, &M2, &CB21, &ALPHA2);
-    if (rc)
-    {
-        fprintf(stderr, "FAILURE MPC_MTA_CLIENT2 rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    MPC_MTA_CLIENT2(&PRIV2, &CB21, &ALPHA2);
 
     printf("ALPHA2: ");
     OCT_output(&ALPHA2);
     printf("\n");
 
     // sum = K1.GAMMA1 + alpha1  + beta1
-    rc = MPC_SUM_MTA(&K1, &GAMMA1, &ALPHA1, &BETA1, NULL, NULL, &SUM1);
-    if (rc)
-    {
-        fprintf(stderr, "FAILURE MPC_SUM_MTA rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    MPC_SUM_MTA(&K1, &GAMMA1, &ALPHA1, &BETA1, &SUM1);
 
     printf("SUM1: ");
     OCT_output(&SUM1);
     printf("\n");
 
     // sum = K2.GAMMA2 + alpha2  + beta2
-    rc = MPC_SUM_MTA(&K2, &GAMMA2, &ALPHA2, &BETA2, NULL, NULL, &SUM2);
-    if (rc)
-    {
-        fprintf(stderr, "FAILURE MPC_SUM_MTA rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    MPC_SUM_MTA(&K2, &GAMMA2, &ALPHA2, &BETA2, &SUM2);
 
     printf("SUM2: ");
     OCT_output(&SUM2);
     printf("\n");
 
     // Calculate the inverse of kgamma
-    rc = MPC_INVKGAMMA(&SUM1, &SUM2, NULL, &INVKGAMMA);
-    if (rc)
-    {
-        fprintf(stderr, "FAILURE MPC_INVKGAMMA rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    MPC_INVKGAMMA(&SUM1, &SUM2, &INVKGAMMA);
 
     printf("INVKGAMMA: ");
     OCT_output(&INVKGAMMA);
     printf("\n");
 
     // Calculate the R signature component
-    rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, NULL, &SIG_R);
+    rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, &SIG_R);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_R rc: %d\n", rc);
@@ -358,23 +273,13 @@ int test(csprng *RNG)
     }
 
     // ALPHA1 + BETA2 = K1 * W2
-    rc = MPC_MTA_CLIENT1(NULL, &N1, &G1, &K1, &CA11, &R11);
-    if (rc)
-    {
-        fprintf(stderr, "FAILURE MPC_MTA_CLIENT1 rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    MPC_MTA_CLIENT1(NULL, &PUB1, &K1, &CA11, &R11);
 
     printf("CA11: ");
     OCT_output(&CA11);
     printf("\n");
 
-    rc = MPC_MTA_SERVER(NULL,  &N1, &G1, &W2, &CA11, &Z12, &R12, &CB12, &BETA2);
-    if (rc)
-    {
-        fprintf(stderr, "FAILURE MPC_MTA_SERVER rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    MPC_MTA_SERVER(NULL, &PUB1, &W2, &CA11, &Z12, &R12, &CB12, &BETA2);
 
     printf("CB12: ");
     OCT_output(&CB12);
@@ -384,35 +289,20 @@ int test(csprng *RNG)
     OCT_output(&BETA2);
     printf("\n");
 
-    rc = MPC_MTA_CLIENT2(&N1, &L1, &M1, &CB12, &ALPHA1);
-    if (rc)
-    {
-        fprintf(stderr, "FAILURE MPC_MTA_CLIENT2 rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    MPC_MTA_CLIENT2(&PRIV1, &CB12, &ALPHA1);
 
     printf("ALPHA1: ");
     OCT_output(&ALPHA1);
     printf("\n");
 
     // ALPHA2 + BETA1 = K2 * W1
-    rc = MPC_MTA_CLIENT1(NULL, &N2, &G2, &K2, &CA22, &R22);
-    if (rc)
-    {
-        fprintf(stderr, "FAILURE MPC_MTA_CLIENT1 rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    MPC_MTA_CLIENT1(NULL, &PUB2, &K2, &CA22, &R22);
 
     printf("CA22: ");
     OCT_output(&CA22);
     printf("\n");
 
-    rc = MPC_MTA_SERVER(NULL,  &N2, &G2, &W1, &CA22, &Z21, &R21, &CB21, &BETA1);
-    if (rc)
-    {
-        fprintf(stderr, "FAILURE MPC_MTA_SERVER rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    MPC_MTA_SERVER(NULL,  &PUB2, &W1, &CA22, &Z21, &R21, &CB21, &BETA1);
 
     printf("CB21: ");
     OCT_output(&CB21);
@@ -422,48 +312,28 @@ int test(csprng *RNG)
     OCT_output(&BETA1);
     printf("\n");
 
-    rc = MPC_MTA_CLIENT2(&N2, &L2, &M2, &CB21, &ALPHA2);
-    if (rc)
-    {
-        fprintf(stderr, "FAILURE MPC_MTA_CLIENT2 rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    MPC_MTA_CLIENT2(&PRIV2, &CB21, &ALPHA2);
 
     printf("ALPHA2: ");
     OCT_output(&ALPHA2);
     printf("\n");
 
     // sum = K1.W1 + alpha1  + beta1
-    rc = MPC_SUM_MTA(&K1, &W1, &ALPHA1, &BETA1, NULL, NULL, &SUM1);
-    if (rc)
-    {
-        fprintf(stderr, "FAILURE MPC_SUM_MTA rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    MPC_SUM_MTA(&K1, &W1, &ALPHA1, &BETA1, &SUM1);
 
     printf("SUM1: ");
     OCT_output(&SUM1);
     printf("\n");
 
     // sum = K2.W2 + alpha2  + beta2
-    rc = MPC_SUM_MTA(&K2, &W2, &ALPHA2, &BETA2, NULL, NULL, &SUM2);
-    if (rc)
-    {
-        fprintf(stderr, "FAILURE MPC_SUM_MTA rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    MPC_SUM_MTA(&K2, &W2, &ALPHA2, &BETA2, &SUM2);
 
     printf("SUM2: ");
     OCT_output(&SUM2);
     printf("\n");
 
     // Calculate the message hash
-    rc = MPC_HASH(HASH_TYPE_SECP256K1, &M, &HM);
-    if (rc)
-    {
-        fprintf(stderr, "FAILURE MPC_HASH rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    MPC_HASH(HASH_TYPE_SECP256K1, &M, &HM);
 
     // Calculate the S1 signature component
     rc = MPC_S(&HM, &SIG_R, &K1, &SUM1, &SIG_S1);
@@ -490,12 +360,7 @@ int test(csprng *RNG)
     printf("\n");
 
     // Sum S signature component
-    rc = MPC_SUM_S(&SIG_S1, &SIG_S2, NULL, &SIG_S);
-    if (rc)
-    {
-        fprintf(stderr, "FAILURE MPC_SUM_S rc: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
+    MPC_SUM_S(&SIG_S1, &SIG_S2, &SIG_S);
 
     printf("SIG_R: ");
     OCT_output(&SIG_R);
@@ -506,7 +371,7 @@ int test(csprng *RNG)
     printf("\n");
 
     // Sum ECDSA public keys
-    rc = MPC_SUM_PK(&PK1, &PK2, NULL, &PK);
+    rc = MPC_SUM_PK(&PK1, &PK2, &PK);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_SUM_PK rc: %d\n", rc);
@@ -527,7 +392,6 @@ int test(csprng *RNG)
     {
         printf("ECDSA succeeded\n");
     }
-
 
     printf("SUCCESS\n");
     exit(EXIT_SUCCESS);
