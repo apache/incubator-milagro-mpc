@@ -25,13 +25,12 @@ under the License.
 #include <amcl/ecdh_SECP256K1.h>
 #include <amcl/ecdh_support.h>
 #include <amcl/randapi.h>
-#include <amcl/paillier.h>
 #include <amcl/mpc.h>
 
 static char* curve_order_hex = "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141";
 
 // Read string into an octet
-void read_OCTET(octet* y, char* x)
+void read_OCTET(octet *y, char *x)
 {
     int len = strlen(x);
     char buff[len];
@@ -143,6 +142,7 @@ int MPC_ECDSA_SIGN(int sha, octet *K, octet *SK, octet *M, octet *R, octet *S)
     return 0;
 }
 
+
 /* IEEE1363 ECDSA Signature Verification. Signature R and S on M is verified using public key, PK */
 int MPC_ECDSA_VERIFY(octet *HM, octet *PK, octet *R,octet *S)
 {
@@ -202,10 +202,8 @@ int MPC_ECDSA_VERIFY(octet *HM, octet *PK, octet *R,octet *S)
 
 
 // Client MTA first pass
-int MPC_MTA_CLIENT1(csprng *RNG, octet* N, octet* G, octet* A, octet* CA, octet* R)
+void MPC_MTA_CLIENT1(csprng *RNG,  PAILLIER_public_key *PUB, octet *A, octet *CA, octet *R)
 {
-    int rc;
-
     // Read A
     char a1[FS_2048];
     octet A1 = {0,sizeof(a1),a1};
@@ -213,15 +211,12 @@ int MPC_MTA_CLIENT1(csprng *RNG, octet* N, octet* G, octet* A, octet* CA, octet*
     A1.len = FS_2048 - EGS_SECP256K1;
     OCT_joctet(&A1,A);
 
-    rc = PAILLIER_ENCRYPT(RNG, N, G, &A1, CA, R);
-    return rc;
+    PAILLIER_ENCRYPT(RNG, PUB, &A1, CA, R);
 }
 
 // Client MtA second pass
-int MPC_MTA_CLIENT2(octet* N, octet* L, octet* M, octet* CB, octet* ALPHA)
+void MPC_MTA_CLIENT2(PAILLIER_private_key *PRIV, octet *CB, octet *ALPHA)
 {
-    int rc;
-
     BIG_512_60 q[FFLEN_4096];
     BIG_512_60 alpha[FFLEN_4096];
 
@@ -236,11 +231,7 @@ int MPC_MTA_CLIENT2(octet* N, octet* L, octet* M, octet* CB, octet* ALPHA)
     FF_4096_zero(q, FFLEN_4096);
     BIG_512_60_fromBytesLen(q[0],CO.val,CO.len);
 
-    rc = PAILLIER_DECRYPT(N, L, M, CB, &T);
-    if (rc)
-    {
-        return rc;
-    }
+    PAILLIER_DECRYPT(PRIV, CB, &T);
 
     FF_4096_zero(alpha, FFLEN_4096);
     FF_4096_fromOctet(alpha,&T,HFLEN_4096);
@@ -256,14 +247,11 @@ int MPC_MTA_CLIENT2(octet* N, octet* L, octet* M, octet* CB, octet* ALPHA)
     ALPHA->len = EGS_SECP256K1;
     ALPHA1.len = FS_4096 - EGS_SECP256K1;
     OCT_truncate(ALPHA,&ALPHA1);
-
-    return rc;
 }
 
 // MtA server
-int MPC_MTA_SERVER(csprng *RNG, octet* N, octet* G, octet* B, octet* CA, octet* ZO, octet* R, octet* CB, octet* BETA)
+void MPC_MTA_SERVER(csprng *RNG, PAILLIER_public_key *PUB, octet *B, octet *CA, octet *ZO, octet *R, octet *CB, octet *BETA)
 {
-    int rc;
     BIG_512_60 q[FFLEN_4096];
     BIG_512_60 z[FFLEN_4096];
     BIG_512_60 beta[FFLEN_4096];
@@ -316,21 +304,13 @@ int MPC_MTA_SERVER(csprng *RNG, octet* N, octet* G, octet* B, octet* CA, octet* 
     FF_4096_sub(beta, q, z, FFLEN_4096);
 
     // CT = E_A(a.b)
-    rc = PAILLIER_MULT(N, CA, &B1, &CT);
-    if (rc)
-    {
-        return rc;
-    }
+    PAILLIER_MULT(PUB, CA, &B1, &CT);
 
     // CZ = E_A(z)
-    rc = PAILLIER_ENCRYPT(RNG, N, G, &Z, &CZ, R);
-    if (rc)
-    {
-        return rc;
-    }
+    PAILLIER_ENCRYPT(RNG, PUB, &Z, &CZ, R);
 
     // CB = E_A(a.b + z)
-    rc = PAILLIER_ADD(N, &CT, &CZ, CB);
+    PAILLIER_ADD(PUB, &CT, &CZ, CB);
 
     // Output Z for Debug
     if (ZO!=NULL)
@@ -352,12 +332,10 @@ int MPC_MTA_SERVER(csprng *RNG, octet* N, octet* G, octet* B, octet* CA, octet* 
     BETA->len = EGS_SECP256K1;
     BETA1.len = FS_4096 - EGS_SECP256K1;
     OCT_truncate(BETA,&BETA1);
-
-    return rc;
 }
 
 /* sum = a1.b1 + alpha + beta  */
-int MPC_SUM_MTA(octet *A, octet *B, octet *ALPHA, octet *BETA,  octet *SUM)
+void MPC_SUM_MTA(octet *A, octet *B, octet *ALPHA, octet *BETA,  octet *SUM)
 {
     BIG_256_56 a;
     BIG_256_56 b;
@@ -378,7 +356,7 @@ int MPC_SUM_MTA(octet *A, octet *B, octet *ALPHA, octet *BETA,  octet *SUM)
     // sum = a.b mod q
     BIG_256_56_modmul(sum,a,b,q);
 
-    // sum = sum + alpha  + beta 
+    // sum = sum + alpha  + beta
     BIG_256_56_add(sum,sum,alpha);
     BIG_256_56_add(sum,sum,beta);
 
@@ -388,13 +366,11 @@ int MPC_SUM_MTA(octet *A, octet *B, octet *ALPHA, octet *BETA,  octet *SUM)
     // Output result
     SUM->len=EGS_SECP256K1;
     BIG_256_56_toBytes(SUM->val,sum);
-
-    return 0;
 }
 
 
 /* Calculate the inverse of kgamma */
-int MPC_INVKGAMMA(octet *KGAMMA1, octet *KGAMMA2, octet *INVKGAMMA)
+void MPC_INVKGAMMA(octet *KGAMMA1, octet *KGAMMA2, octet *INVKGAMMA)
 {
     BIG_256_56 kgamma1;
     BIG_256_56 kgamma2;
@@ -409,10 +385,8 @@ int MPC_INVKGAMMA(octet *KGAMMA1, octet *KGAMMA2, octet *INVKGAMMA)
     BIG_256_56_fromBytes(kgamma1,KGAMMA1->val);
     BIG_256_56_fromBytes(kgamma2,KGAMMA2->val);
 
-    // kgamma = kgamma1  + kgamma2 
-    BIG_256_56_zero(kgamma);
-    BIG_256_56_add(kgamma,kgamma,kgamma1);
-    BIG_256_56_add(kgamma,kgamma,kgamma2);    
+    // kgamma = kgamma1  + kgamma2
+    BIG_256_56_add(kgamma,kgamma1,kgamma2);
 
     // kgamma = kgamma mod q
     BIG_256_56_mod(kgamma,q);
@@ -423,8 +397,6 @@ int MPC_INVKGAMMA(octet *KGAMMA1, octet *KGAMMA2, octet *INVKGAMMA)
     // Output result
     INVKGAMMA->len=EGS_SECP256K1;
     BIG_256_56_toBytes(INVKGAMMA->val,invkgamma);
-
-    return 0;
 }
 
 
@@ -476,7 +448,7 @@ int MPC_R(octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R)
 }
 
 // Hash the message
-int MPC_HASH(int sha, octet *M, octet *HM)
+void MPC_HASH(int sha, octet *M, octet *HM)
 {
     char h[128];
     octet H = {0,sizeof(h),h};
@@ -492,8 +464,6 @@ int MPC_HASH(int sha, octet *M, octet *HM)
     // Output result
     HM->len=MODBYTES_256_56;
     BIG_256_56_toBytes(HM->val,z);
-
-    return 0;
 }
 
 // Calculate the s component of the signature
@@ -539,7 +509,7 @@ int MPC_S(octet *HM, octet *R, octet *K, octet *SIGMA, octet *S)
 }
 
 /* Calculate sum of s components of signature  */
-int MPC_SUM_S(octet *S1, octet *S2, octet *S)
+void MPC_SUM_S(octet *S1, octet *S2, octet *S)
 {
     BIG_256_56 s1;
     BIG_256_56 s2;
@@ -553,7 +523,7 @@ int MPC_SUM_S(octet *S1, octet *S2, octet *S)
     BIG_256_56_fromBytes(s1,S1->val);
     BIG_256_56_fromBytes(s2,S2->val);
 
-    // s = s1 + s2 
+    // s = s1 + s2
     BIG_256_56_add(s,s1,s2);
 
     // s = s mod q
@@ -562,8 +532,6 @@ int MPC_SUM_S(octet *S1, octet *S2, octet *S)
     // Output result
     S->len=EGS_SECP256K1;
     BIG_256_56_toBytes(S->val,s);
-
-    return 0;
 }
 
 // Add the ECDSA public keys shares

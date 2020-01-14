@@ -35,6 +35,8 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
+    int rc=0;
+
     int len=0;
     FILE *fp;
 
@@ -43,6 +45,10 @@ int main(int argc, char** argv)
 
     int applyVector=0;
 
+    // Paillier Keys
+    PAILLIER_private_key PRIV;
+    PAILLIER_public_key PUB;
+
     const char* TESTline = "TEST = ";
     int testNo=0;
 
@@ -50,21 +56,13 @@ int main(int argc, char** argv)
     int result=0;
     const char* RESULTline = "RESULT = ";
 
-    char n[FS_2048]= {0};
-    octet N = {0,sizeof(n),n};
-    const char* Nline = "N = ";
+    char p[FS_2048]= {0};
+    octet P = {0,sizeof(p),p};
+    const char* Pline = "P = ";
 
-    char g[FS_2048]= {0};
-    octet G = {0,sizeof(g),g};
-    const char* Gline = "G = ";
-
-    char l[FS_2048] = {0};
-    octet L = {0,sizeof(l),l};
-    const char* Lline = "L = ";
-
-    char m[FS_2048]= {0};
-    octet M = {0,sizeof(m),m};
-    const char* Mline = "M = ";
+    char q[FS_2048]= {0};
+    octet Q = {0,sizeof(q),q};
+    const char* Qline = "Q = ";
 
     char a[FS_2048]= {0};
     octet A = {0,sizeof(a),a};
@@ -78,11 +76,11 @@ int main(int argc, char** argv)
     octet Z = {0,sizeof(z),z};
     const char* Zline = "Z = ";
 
-    char r1[FS_2048]= {0};
+    char r1[FS_4096]= {0};
     octet R1 = {0,sizeof(r1),r1};
     const char* R1line = "R1 = ";
 
-    char r2[FS_2048]= {0};
+    char r2[FS_4096]= {0};
     octet R2 = {0,sizeof(r2),r2};
     const char* R2line = "R2 = ";
 
@@ -132,51 +130,27 @@ int main(int argc, char** argv)
             printf("TEST = %d\n",testNo);
         }
 
-        // Read N
-        if (!strncmp(line,Nline, strlen(Nline)))
+        // Read P
+        if (!strncmp(line,Pline, strlen(Pline)))
         {
-            len = strlen(Nline);
+            len = strlen(Pline);
             linePtr = line + len;
-            read_OCTET(&N,linePtr);
+            read_OCTET(&P,linePtr);
 #ifdef DEBUG
-            printf("N = ");
-            OCT_output(&N);
+            printf("P = ");
+            OCT_output(&P);
 #endif
         }
 
-        // Read G
-        if (!strncmp(line,Gline, strlen(Gline)))
+        // Read Q
+        if (!strncmp(line,Qline, strlen(Qline)))
         {
-            len = strlen(Gline);
+            len = strlen(Qline);
             linePtr = line + len;
-            read_OCTET(&G,linePtr);
+            read_OCTET(&Q,linePtr);
 #ifdef DEBUG
-            printf("G = ");
-            OCT_output(&G);
-#endif
-        }
-
-        // Read L
-        if (!strncmp(line,Lline, strlen(Lline)))
-        {
-            len = strlen(Lline);
-            linePtr = line + len;
-            read_OCTET(&L,linePtr);
-#ifdef DEBUG
-            printf("L = ");
-            OCT_output(&L);
-#endif
-        }
-
-        // Read M
-        if (!strncmp(line,Mline, strlen(Mline)))
-        {
-            len = strlen(Mline);
-            linePtr = line + len;
-            read_OCTET(&M,linePtr);
-#ifdef DEBUG
-            printf("M = ");
-            OCT_output(&M);
+            printf("Q = ");
+            OCT_output(&Q);
 #endif
         }
 
@@ -304,13 +278,10 @@ int main(int argc, char** argv)
         {
             applyVector=0;
 
-            int rc = MPC_MTA_CLIENT1(NULL, &N, &G, &A, &CA, &R1);
-            if (rc)
-            {
-                fprintf(stderr, "FAILURE MPC_MTA_CLIENT1 Test %d rc: %d\n", testNo, rc);
-                fclose(fp);
-                exit(EXIT_FAILURE);
-            }
+            //  Paillier key pair
+            PAILLIER_KEY_PAIR(NULL, &P, &Q, &PUB, &PRIV);
+
+            MPC_MTA_CLIENT1(NULL, &PUB, &A, &CA, &R1);
 
 #ifdef DEBUG
             printf("CA: ");
@@ -327,13 +298,7 @@ int main(int argc, char** argv)
                 exit(EXIT_FAILURE);
             }
 
-            rc = MPC_MTA_SERVER(NULL,  &N, &G, &B, &CA, &Z, &R2, &CB, &BETA);
-            if (rc)
-            {
-                fprintf(stderr, "FAILURE MPC_MTA_SERVER Test %d rc: %d\n", testNo, rc);
-                fclose(fp);
-                exit(EXIT_FAILURE);
-            }
+            MPC_MTA_SERVER(NULL, &PUB, &B, &CA, &Z, &R2, &CB, &BETA);
 
 #ifdef DEBUG
             printf("CB: ");
@@ -362,13 +327,7 @@ int main(int argc, char** argv)
                 exit(EXIT_FAILURE);
             }
 
-            rc = MPC_MTA_CLIENT2(&N, &L, &M, &CB, &ALPHA);
-            if (rc)
-            {
-                fprintf(stderr, "FAILURE MPC_MTA_CLIENT2 Test %d rc: %d\n", testNo, rc);
-                fclose(fp);
-                exit(EXIT_FAILURE);
-            }
+            MPC_MTA_CLIENT2(&PRIV, &CB, &ALPHA);
 
 #ifdef DEBUG
             printf("ALPHA: ");
