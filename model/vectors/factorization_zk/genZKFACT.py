@@ -16,9 +16,8 @@ from sec256k1 import big
 from sec256k1 import factorization_zk as fact
 
 vector_fields = {
-    "setup": ["TEST", "N", "Z1", "Z2"],
-    "prove": ["TEST", "N", "P", "Q", "R", "Z1", "Z2", "E", "Y"],
-    "verify": ["TEST", "Z1", "Z2", "E", "Y"]
+    "prove": ["TEST", "N", "P", "Q", "R", "E", "Y"],
+    "verify": ["TEST", "N", "E", "Y"]
 }
 
 def genVector(test_no, tv_type):
@@ -38,47 +37,30 @@ def genVector(test_no, tv_type):
     """
     P = number.getStrongPrime(fact.nlen * 4)
     Q = number.getStrongPrime(fact.nlen * 4)
-    N    = P * Q
+    N = P * Q
 
     Zi = fact.nizk_setup(N)
 
-    # If it is only a setup, it should be simple enough to not go thorugh
-    # the run to validate the generated tv. This saves a lot of time, since
-    # the run is quite expensive
-    if tv_type == "setup":
-        v = {
-            "TEST": test_no,
-            "N":    hex(N)[2:].zfill(fact.nlen * 2),
-            "Z1":   hex(Zi[0])[2:].zfill(fact.nlen * 2),
-            "Z2":   hex(Zi[1])[2:].zfill(fact.nlen * 2),
-        }
+    R    = big.rand(fact.A)
+    E, Y = fact.nizk_prove(N, P, Q, Zi, r=R)
 
-        return v
+    assert fact.nizk_verify(Zi, N, E, Y)
 
-    r   = big.rand(fact.A)
-    e,y = fact.nizk_prove(N, P, Q, Zi, r=r)
-
-    assert fact.nizk_verify(Zi, N, e, y)
-
-    v = {
+    return {
         "TEST": test_no,
         "N":    hex(N)[2:].zfill(fact.nlen * 2),
         "P":    hex(P)[2:].zfill(fact.nlen),
         "Q":    hex(Q)[2:].zfill(fact.nlen),
-        "R":    hex(r)[2:].zfill(fact.nlen * 2),
-        "Z1":   hex(Zi[0])[2:].zfill(fact.nlen * 2),
-        "Z2":   hex(Zi[1])[2:].zfill(fact.nlen * 2),
-        "E":    hex(e)[2:].zfill(fact.B//4),
-        "Y":    hex(y)[2:].zfill(fact.nlen * 2)
+        "R":    hex(R)[2:].zfill(fact.nlen * 2),
+        "E":    hex(E)[2:].zfill(fact.B//4),
+        "Y":    hex(Y)[2:].zfill(fact.nlen * 2)
     }
-
-    return v
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--type', dest='type', type=str, default='commit',
-                        help='test vector type', choices=["setup", "prove", "verify"])
+                        help='test vector type', choices=["prove", "verify"])
     parser.add_argument(
         'nVec', type=int, help='number of test vectors to generate')
 
