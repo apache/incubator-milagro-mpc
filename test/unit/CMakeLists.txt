@@ -44,3 +44,7 @@ amcl_test(test_s test_s.c mpc "SUCCESS" "mpc/S.txt")
 
 # NM Commitment tests
 amcl_test(test_nm_commit test_nm_commit.c mpc "SUCCESS" "commitments/nm_commit.txt")
+
+# ZKP of knowledge of factoring
+amcl_test(test_factoring_zk_prove test_factoring_zk_prove.c mpc "SUCCESS" "factoring_zk/prove.txt")
+amcl_test(test_factoring_zk_verify test_factoring_zk_verify.c mpc "SUCCESS" "factoring_zk/verify.txt")
