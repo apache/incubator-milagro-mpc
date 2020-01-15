@@ -24,3 +24,13 @@ configure_file (
 add_executable(bench_nm_commit ${CMAKE_CURRENT_BINARY_DIR}/bench_nm_commit.c)
 
 target_link_libraries(bench_nm_commit mpc)
+
+# ZKP of knowldege of factoring benchmark
+configure_file (
+  "${CMAKE_CURRENT_SOURCE_DIR}/bench_factoring_zk.c.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/bench_factoring_zk.c"
+)
+
+add_executable(bench_factoring_zk ${CMAKE_CURRENT_BINARY_DIR}/bench_factoring_zk.c)
+
+target_link_libraries(bench_factoring_zk mpc)
