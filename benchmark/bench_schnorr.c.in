@@ -18,7 +18,7 @@ under the License.
 */
 
 /*
-   Benchmark NM Commitment.
+ * Benchmark Schnorr's Proof.
  */
 
 #include <stdio.h>
