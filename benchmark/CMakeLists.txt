@@ -5,22 +5,19 @@ include_directories (${PROJECT_SOURCE_DIR}/include
                      ${PROJECT_BINARY_DIR}/include
                      /usr/local/include)
 
-# MPC benchmark
-configure_file (
-  "${CMAKE_CURRENT_SOURCE_DIR}/bench_mpc.c.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/bench_mpc.c"
-)
+# List of benchmarks to configure
+file(GLOB_RECURSE SRCS *.c.in)
 
-add_executable(bench_mpc ${CMAKE_CURRENT_BINARY_DIR}/bench_mpc.c)
+foreach(bench ${SRCS})
+  # Extract the filename without an extension
+  get_filename_component(target ${bench} NAME_WE)
 
-target_link_libraries(bench_mpc mpc)
+  configure_file (
+    "${bench}"
+    "${CMAKE_CURRENT_BINARY_DIR}/${target}.c"
+  )
 
-# NM Commitment benchmark
-configure_file (
-  "${CMAKE_CURRENT_SOURCE_DIR}/bench_nm_commit.c.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/bench_nm_commit.c"
-)
+  add_executable(${target} ${CMAKE_CURRENT_BINARY_DIR}/${target}.c)
 
-add_executable(bench_nm_commit ${CMAKE_CURRENT_BINARY_DIR}/bench_nm_commit.c)
-
-target_link_libraries(bench_nm_commit mpc)
+  target_link_libraries(${target} mpc)
+endforeach(bench)
