@@ -77,10 +77,10 @@ int MPC_ECDSA_SIGN(int sha, octet *K, octet *SK, octet *M, octet *R, octet *S);
 
 /** \brief ECDSA Verify signature
  *
- *  Verify the signature (R,S) on a message
+ *  Verify the ECDSA signature (R,S) on a message
  *
  *  @param  HM               Hash of the message
- *  @param  PK               Public key
+ *  @param  PK               ECDSA public key
  *  @param  R                R component of signature
  *  @param  S                S component of signature
  *  @return                  Returns 0 or else error code
@@ -214,7 +214,7 @@ void MPC_HASH(int sha, octet *M, octet *HM);
  */
 int MPC_S(octet *HM, octet *R, octet *K, octet *SIGMA, octet *S);
 
-/** \brief Sum of s components
+/** \brief Sum of ECDSA s components
  *
  *  Calculate the sum of the s components of the ECDSA signature
  *
@@ -222,8 +222,8 @@ int MPC_S(octet *HM, octet *R, octet *K, octet *SIGMA, octet *S);
  *  <li> \f$ s = s1 + s2 \text{ }\mathrm{mod}\text{ }q \f$
  *  </ol>
  *
- *  @param  S1                Actor 1 S component
- *  @param  S2                Actor 2 S component
+ *  @param  S1                Actor 1 ECDSA s component
+ *  @param  S2                Actor 2 ECDSA s component
  *  @param  S                 S component sum
  */
 void MPC_SUM_S(octet *S1, octet *S2, octet *S);
@@ -236,8 +236,8 @@ void MPC_SUM_S(octet *S1, octet *S2, octet *S);
  *  <li> \f$ pk = pk1 + pk2 \text{ }\mathrm{mod}\text{ }q \f$
  *  </ol>
  *
- *  @param  PK1               Actor 1 public key share
- *  @param  PK2               Actor 2 public key share
+ *  @param  PK1               Actor 1 ECDSA public key share
+ *  @param  PK2               Actor 2 ECDSA public key share
  *  @param  PK                ECDSA public key
  *  @return                   Returns 0 or else error code
  */

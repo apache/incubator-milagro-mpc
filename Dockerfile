@@ -37,6 +37,8 @@ RUN apt-get update && \
     apt-get install -y build-essential cmake doxygen lcov python3-dev python3-pip wget git && \
     apt-get clean
 
+RUN pip3 install cffi
+
 # install golang
 RUN cd /tmp && \
     wget https://dl.google.com/go/go1.13.linux-amd64.tar.gz && \

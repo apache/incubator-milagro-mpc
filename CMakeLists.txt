@@ -26,6 +26,8 @@ endmacro()
 add_definitions(-D CMAKE)
 
 # Includes
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+include(CMakeDependentOption)
 include(CTest)
 include(GNUInstallDirs)
 
@@ -45,11 +47,13 @@ option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(BUILD_TESTS "Build tests" ON)
 option(BUILD_EXAMPLES "Build examples" ON)
 option(BUILD_BENCHMARK "Build benchmark" ON)
+cmake_dependent_option(BUILD_PYTHON "Build Python" ON "BUILD_SHARED_LIBS" ON)
 log(BUILD_DOXYGEN)
 log(BUILD_SHARED_LIBS)
 log(BUILD_TESTS)
 log(BUILD_EXAMPLES)
 log(BUILD_BENCHMARK) 
+log(BUILD_PYTHON)
 
 # Allow the developer to select if Dynamic or Static libraries are built
 # Set the default LIB_TYPE variable to STATIC
@@ -124,6 +128,11 @@ endif()
 if(BUILD_BENCHMARK)
   message(STATUS "Build benchmark")
   add_subdirectory(benchmark)
+endif()
+
+if(BUILD_PYTHON)
+  message(STATUS "Build Python wrappers")
+  add_subdirectory(python)
 endif()
 
 # Build Documentation
