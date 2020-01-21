@@ -14,18 +14,17 @@ import argparse
 from genVector import genSchnorrVector
 
 vector_fields = {
-    "commit": ["TEST", "R", "CO"],
-    "prove": ["TEST", "R", "CH", "X", "P"],
-    "verify": ["TEST", "V", "CO", "CH", "P"],
+    "commit": ["TEST", "R", "C"],
+    "challenge": ["TEST", "V", "C", "E"],
+    "prove": ["TEST", "R", "E", "X", "P"],
+    "verify": ["TEST", "V", "C", "E", "P"],
 }
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--type', dest='type', type=str, default='commit',
-                        help='test vector type', choices=["commit", "prove", "verify"])
-    parser.add_argument(
-        'nVec', type=int, help='number of test vectors to generate')
+    parser.add_argument('--type', dest='type', type=str, default='commit', help='test vector type', choices=["commit", "challenge", "prove", "verify"])
+    parser.add_argument('nVec', type=int, help='number of test vectors to generate')
 
     args = parser.parse_args()
 

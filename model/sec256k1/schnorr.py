@@ -1,3 +1,4 @@
+import hashlib
 import sec256k1.big as big
 import sec256k1.ecp as ecp
 import sec256k1.curve as curve
@@ -52,7 +53,7 @@ def d_verify(R, V, C, c, t, u):
     return P == Q
 
 
-# Classic Schnorr algorithm to prove knowledge of a dlog
+# NIZK Schnorr algorithm to prove knowledge of a dlog
 #
 # s s.t. V = s.G
 
@@ -69,28 +70,35 @@ def commit(r=None):
     return r, C
 
 
-def challenge():
-    return big.rand(curve.r)
+def challenge(V, C):
+    H = hashlib.new("sha256")
+
+    H.update(ecp.generator().toBytes(True))
+    H.update(C.toBytes(True))
+    H.update(V.toBytes(True))
+
+    e_bytes = H.digest()
+    e = big.from_bytes(e_bytes)
+    e = e % curve.r
+
+    return e
 
 
 def prove(r, c, x):
-    return (r + c * x) % curve.r
+    return (r - c * x) % curve.r
 
 
 def verify(V, C, c, p):
     '''
-        Verify p.G = C + c.V
+        Verify C = p.G + c.V
     '''
-    P = p * ecp.generator()
 
-    Q = C.copy()
-    Q.add(c * V)
+    P = V.mul(c,ecp.generator(),p)
 
     if DEBUG:
         print("P {}".format(P))
-        print("Q {}".format(Q))
 
-    return P == Q
+    return P == C
 
 
 # Classical Schnorr algorithm in the setting of number groups

@@ -17,10 +17,7 @@
     under the License.
 */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include "amcl/commitments.h"
 
 /* NM Commitment unit tests */

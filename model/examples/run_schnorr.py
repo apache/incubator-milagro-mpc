@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     # Generate DLOG
     if DETERMINISTIC:
-        x = 0x4fae328973e89cc97691d799eaf8022f94afa4886cfad2090ece42094c7dc7b7
+        x = 0xfab4ce512dff74bd9c71c89a14de5b877af45dca0329ee3fcb72611c0784fef3
     else:
         x = big.rand(curve.r)
 
@@ -31,30 +31,27 @@ if __name__ == "__main__":
     # Commitment
     r = None
     if DETERMINISTIC:
-        r = 0x2286bee96c840d9b51ff2c47c048841756a5e7f5a019792190a3cb89c09728b3
+        r = 0x803ccd21cddad626e15f21b1ad787949e9beef08e6e68a9e00df59dec16ed290
 
     # C is the commitment, r is kept secret
     r, C = schnorr.commit(r)
 
-    print("[Alice] Commit\n\tr {}\n\tC {}\n".format(hex(r)[2:].zfill(64), C))
+    print("Commit\n\tr {}\n\tC {}\n".format(hex(r)[2:].zfill(64), C))
 
     # Challenge
-    if DETERMINISTIC:
-        c = 0x5b6422696ac19b95727e95c3567450a9e65f2a43a5219712ad7b41a7382ca2b4
-    else:
-        c = schnorr.challenge()
+    c = schnorr.challenge(V,C)
 
-    print("[Bob] Challenge {}\n".format(hex(c)[2:].zfill(64)))
+    print("Challenge {}\n".format(hex(c)[2:].zfill(64)))
 
     # Proof
     p = schnorr.prove(r, c, x)
 
-    print("[Alice] Prove {}\n".format(hex(p)[2:].zfill(64)))
+    print("Proof {}\n".format(hex(p)[2:].zfill(64)))
 
     # Verification
     ok = schnorr.verify(V, C, c, p)
 
-    print("[Bob] Verify: {}\n".format(ok))
+    print("Verification: {}\n".format(ok))
 
     # Double DLOG knowledge proof
 

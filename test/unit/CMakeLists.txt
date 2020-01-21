@@ -44,3 +44,9 @@ amcl_test(test_s test_s.c mpc "SUCCESS" "mpc/S.txt")
 
 # NM Commitment tests
 amcl_test(test_nm_commit test_nm_commit.c mpc "SUCCESS" "commitments/nm_commit.txt")
+
+# Classic Schnorr tests
+amcl_test(test_schnorr_commit test_schnorr_commit.c mpc "SUCCESS" "schnorr/commit.txt")
+amcl_test(test_schnorr_challenge test_schnorr_challenge.c mpc "SUCCESS" "schnorr/challenge.txt")
+amcl_test(test_schnorr_prove test_schnorr_prove.c mpc "SUCCESS" "schnorr/prove.txt")
+amcl_test(test_schnorr_verify test_schnorr_verify.c mpc "SUCCESS" "schnorr/verify.txt")
