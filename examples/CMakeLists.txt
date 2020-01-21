@@ -31,6 +31,6 @@ foreach(example ${SRCS})
 
   add_executable(${target} ${example})
 
-  target_link_libraries(${target} mpc)
+  target_link_libraries(${target} amcl_mpc)
 endforeach(example)
 

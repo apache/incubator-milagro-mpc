@@ -91,8 +91,6 @@ char* GAMMAPT2_hex = "04fc86f69384e2b0cc3d563dc24ebb3a7ca0ac12dfa671e4cda4abdec3
 
 char* SUMGAMMAPT_hex = "04b46da316359aead5e06c983407b199465bad193dc661334aafb1d7d94bafe721e671defdf3eedef2b6f298f7cdc673a740e88dbb313f2afdb294ee6527e325c1";
 
-char* RPT_hex = "048adf50a4f51443cac2b4d488092ab49925da09e3feb57a1fc03b5b917ca6de9fdefc78277d8cb4865e3e4b17c2821017316d9b21e648e733a207aee22ec91b3c";
-
 char* SIG_R_hex = "8adf50a4f51443cac2b4d488092ab49925da09e3feb57a1fc03b5b917ca6de9f";
 
 int main()

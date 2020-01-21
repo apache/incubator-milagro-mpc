@@ -15,30 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# List of tests
-file(GLOB_RECURSE SRCS *.c)
+cmake_minimum_required(VERSION 3.1)
 
-# Add the binary tree directory to the search path for linking and include files
-link_directories (${PROJECT_BINARY_DIR}/src
-                  /usr/local/lib)
-
-include_directories (${PROJECT_SOURCE_DIR}/include
-                     /usr/local/include)
-
-# define macro to simplify adding tests
-macro(do_test arg result)
-  add_test(${arg} ${TARGET_SYSTEM_EMULATOR} ${arg}${CMAKE_EXECUTABLE_SUFFIX})
-  set_tests_properties(${arg} PROPERTIES PASS_REGULAR_EXPRESSION ${result})
-endmacro()
-
-foreach(test ${SRCS})
-  # Extract the filename without an extension
-  get_filename_component(target ${test} NAME_WE)
-
-  add_executable(${target} ${test})
-
-  target_link_libraries(${target} amcl_mpc)
-
-  do_test(${target} "SUCCESS")
-endforeach(test)
+execute_process(COMMAND
+  python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"
+  OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 
