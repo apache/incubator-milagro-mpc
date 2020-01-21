@@ -63,26 +63,29 @@ def nizk_setup(N):
         Zi: public generators
     """
 
-    # ceil(nlen//hlen)
-    chunks = -(-nlen // hlen)
+    chunks = nlen // hlen
 
     Nbytes = N.to_bytes(nlen, byteorder='big')
 
     Zi = []
 
-    i = 0
-    for _ in range(K):
+    Hn = hashlib.new(H_param)
+    Hn.update(Nbytes)
+
+    for k in range(K):
         Zk = b''
-        for _ in range(chunks):
-            H = hashlib.new(H_param)
-            H.update(Nbytes)
 
-            i_bytes = i.to_bytes(1, byteorder='big')
-            H.update(i_bytes)
+        Hk = Hn.copy()
+        k_bytes = k.to_bytes(4, byteorder='big')
+        Hk.update(k_bytes)
 
-            Zk = Zk + H.digest()
+        for i in range(chunks):
+            Hi = Hk.copy()
 
-            i = i+1
+            i_bytes = i.to_bytes(4, byteorder='big')
+            Hi.update(i_bytes)
+
+            Zk = Zk + Hi.digest()
 
         Zk = int.from_bytes(Zk, byteorder='big')
         Zk = Zk % N
@@ -113,13 +116,13 @@ def nizk_prove(N, P, Q, Zi, r = None):
     # Compute commitment X = H(z1^r, ..., zK^r)
     H = hashlib.new(H_param)
     for i, Z in enumerate(Zi):
-        Zrp = pow(Z % P, r, P)
-        Zrq = pow(Z % Q, r, Q)
+        Zrp = pow(Z % P, r % (P-1), P)
+        Zrq = pow(Z % Q, r % (Q-1), Q)
 
         Zr = big.crt(Zrp, Zrq, P, Q)
 
         if DEBUG:
-            print("Z_{} = {}".format(i,Zr))
+            print("Zr_{} = {}".format(i,Zr))
 
         H.update(Zr.to_bytes(nlen, byteorder='big'))
 
@@ -163,23 +166,16 @@ def nizk_verify(Zi, N, e, y):
         return False
 
     # Verifier exponent exp = y - N*e = r - phiN*e
-    exp = y - N*e
-
-    inv = False
-    if exp < 0:
-        exp = -exp
-        inv = True
+    exp = N*e - y
 
     # Compute verifier X = H(z1^exp,...,xK^exp) = H(z1^r,...,zK^r)
     H = hashlib.new(H_param)
     for i, Z in enumerate(Zi):
         Zr = pow(Z,exp,N)
-
-        if inv:
-            Zr = big.invmodp(Zr,N)
+        Zr = big.invmodp(Zr,N)
 
         if DEBUG:
-            print("Z_{} = {}".format(i,Zr))
+            print("Zr_{} = {}".format(i,hex(Zr)[2:]))
 
         H.update(Zr.to_bytes(nlen, byteorder='big'))
 
