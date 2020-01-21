@@ -6,7 +6,7 @@ import sec256k1.curve as curve
 import sec256k1.schnorr as schnorr
 
 
-def genSchnorrVector(test_no, x=None, r=None, c=None):
+def genSchnorrVector(test_no, x=None, r=None):
     """Generate a single test vector
 
         Use parameters to generate a single test vector
@@ -16,7 +16,6 @@ def genSchnorrVector(test_no, x=None, r=None, c=None):
             test_no: Test vector identifier
             x: exponent for the DLOG
             r: random number for the commitment
-            c: challenge
 
         Returns::
 
@@ -36,20 +35,19 @@ def genSchnorrVector(test_no, x=None, r=None, c=None):
     # ZK proof
     r, C = schnorr.commit(r)
 
-    if c is None:
-        c = schnorr.challenge()
+    e = schnorr.challenge(V, C)
 
-    p = schnorr.prove(r, c, x)
+    p = schnorr.prove(r, e, x)
 
-    assert schnorr.verify(V, C, c, p), "inconsistent test vector"
+    assert schnorr.verify(V, C, e, p), "inconsistent test vector"
 
     vector = {
         "TEST": test_no,
         "X": hex(x)[2:].zfill(64),
-        "V": "{}".format(V),
+        "V": "{}".format(V.toBytes(True).hex()),
         "R": hex(r)[2:].zfill(64),
-        "CO": "{}".format(C),
-        "CH": hex(c)[2:].zfill(64),
+        "C": "{}".format(C.toBytes(True).hex()),
+        "E": hex(e)[2:].zfill(64),
         "P": hex(p)[2:].zfill(64),
     }
 
