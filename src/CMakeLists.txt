@@ -17,7 +17,7 @@
 
 file(GLOB_RECURSE SOURCES *.c)
 
-set(target "mpc")
+set(target "amcl_mpc")
 
 link_directories(${CMAKE_CURRENT_BINARY_DIR}
                  /usr/local/lib)
@@ -39,3 +39,10 @@ install(TARGETS ${target} DESTINATION lib PERMISSIONS
         OWNER_WRITE OWNER_READ OWNER_EXECUTE
         GROUP_READ GROUP_EXECUTE
         WORLD_READ WORLD_EXECUTE)
+
+message(STATUS "Copy ${target} library to python directory for testing")
+add_custom_command(TARGET ${target} POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy
+                          "${CMAKE_CURRENT_BINARY_DIR}/lib*"
+                          "${PROJECT_BINARY_DIR}/python/")
+      

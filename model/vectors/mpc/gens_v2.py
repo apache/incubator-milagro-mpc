@@ -69,7 +69,7 @@ def genVector(test_no):
     vector['W2'] = hex(bob.w)[2:].zfill(64)    
 
     ca, r = alice.kw.client1()
-    vector['R11'] = hex(r)[2:].zfill(512)     
+    vector['R11'] = hex(r)[2:].zfill(1024)     
 
     cb, r, z = bob.kw.server(alice.n, alice.g, ca)
     vector['R12'] = hex(r)[2:].zfill(1024)
@@ -91,7 +91,7 @@ def genVector(test_no):
     vector['W1'] = hex(alice.w)[2:].zfill(64)
 
     ca, r = bob.kw.client1()
-    vector['R22'] = hex(r)[2:].zfill(512)     
+    vector['R22'] = hex(r)[2:].zfill(1024)     
 
     cb, r, z = alice.kw.server(bob.n, bob.g, ca)
     vector['R21'] = hex(r)[2:].zfill(1024)

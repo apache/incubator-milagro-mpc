@@ -422,10 +422,10 @@ int main(int argc, char** argv)
 
             MPC_MTA_CLIENT2(&PRIV2, &CB21, &ALPHA2);
 
-            // sum = A1.B1 + alpha1  + beta1
+            // sum = A1.B1 + alpha1 + beta1
             MPC_SUM_MTA(&A1, &B1, &ALPHA1, &BETA1, &SUM1);
 
-            // sum = A2.B2 + alpha2  + beta2
+            // sum = A2.B2 + alpha2 + beta2
             MPC_SUM_MTA(&A2, &B2, &ALPHA2, &BETA2, &SUM2);
 
             // Calculate the inverse of kgamma
