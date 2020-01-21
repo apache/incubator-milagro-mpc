@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 {
     if (argc != 2)
     {
-        printf("usage: ./test_paillier_decrypt [path to test vector file]\n");
+        printf("usage: ./test_factoring_zk_verify [path to test vector file]\n");
         exit(EXIT_FAILURE);
     }
 
