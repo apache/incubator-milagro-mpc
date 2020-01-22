@@ -559,3 +559,56 @@ int MPC_SUM_PK(octet *PK1, octet *PK2, octet *PK)
     return 0;
 }
 
+// Write Paillier public key to octets
+void MPC_DUMP_PAILLIER_PK(PAILLIER_public_key *PUB, octet *N, octet *G, octet *N2)
+{
+    FF_4096_toOctet(N, PUB->n, FFLEN_4096);
+    FF_4096_toOctet(G, PUB->g, FFLEN_4096);
+    FF_4096_toOctet(N2, PUB->n2, FFLEN_4096);
+}
+
+// Load Paillier public key from octets
+void MPC_LOAD_PAILLIER_PK(PAILLIER_public_key *PUB, octet *N, octet *G, octet *N2)
+{
+  FF_4096_fromOctet(PUB->n, N, FFLEN_4096);
+    FF_4096_fromOctet(PUB->g, G, FFLEN_4096);
+    FF_4096_fromOctet(PUB->n2, N2, FFLEN_4096);
+}
+
+// Write Paillier secret key to octets
+void MPC_DUMP_PAILLIER_SK(PAILLIER_private_key *PRIV, octet *P, octet *Q, octet *LP, octet *LQ, octet *INVP, octet *INVQ, octet *P2, octet *Q2, octet *MP, octet *MQ)
+{
+      FF_2048_toOctet(P, PRIV->p, HFLEN_2048);
+    FF_2048_toOctet(Q, PRIV->q, HFLEN_2048);
+
+    FF_2048_toOctet(LP, PRIV->lp, HFLEN_2048);
+    FF_2048_toOctet(LQ, PRIV->lq, HFLEN_2048);
+
+    FF_2048_toOctet(INVP, PRIV->invp, FFLEN_2048);
+    FF_2048_toOctet(INVQ, PRIV->invq, FFLEN_2048);
+
+    FF_2048_toOctet(P2, PRIV->p2, FFLEN_2048);
+    FF_2048_toOctet(Q2, PRIV->q2, FFLEN_2048);                
+    
+    FF_2048_toOctet(MP, PRIV->mp, HFLEN_2048);
+    FF_2048_toOctet(MQ, PRIV->mq, HFLEN_2048);
+}
+
+// Load Paillier secret key from octets
+void MPC_LOAD_PAILLIER_SK(PAILLIER_private_key *PRIV, octet *P, octet *Q, octet *LP, octet *LQ, octet *INVP, octet *INVQ, octet *P2, octet *Q2, octet *MP, octet *MQ)
+{
+      FF_2048_fromOctet(PRIV->p, P, HFLEN_2048);
+    FF_2048_fromOctet(PRIV->q, Q, HFLEN_2048);
+
+    FF_2048_fromOctet(PRIV->lp, LP, HFLEN_2048);
+    FF_2048_fromOctet(PRIV->lq, LQ, HFLEN_2048);
+
+    FF_2048_fromOctet(PRIV->invp, INVP, FFLEN_2048);
+    FF_2048_fromOctet(PRIV->invq, INVQ, FFLEN_2048);
+
+    FF_2048_fromOctet(PRIV->p2, P2, FFLEN_2048);
+    FF_2048_fromOctet(PRIV->q2, Q2, FFLEN_2048);                
+    
+    FF_2048_fromOctet(PRIV->mp, MP, HFLEN_2048);
+    FF_2048_fromOctet(PRIV->mq, MQ, HFLEN_2048);
+}
