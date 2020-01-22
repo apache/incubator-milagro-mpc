@@ -101,36 +101,55 @@ def verify(V, C, c, p):
     return P == C
 
 
-# Classical Schnorr algorithm in the setting of number groups
+# NIZK Schnorr algorithm in the setting of number groups
+# with composite modulus.
 #
-# s s.t. b1 = b0^s mod q
+# s s.t. b1 = b0^s mod PQ, P = 2p + 1, Q = 2q + 1, b0 generator of Z/pqZ
 
 
-def n_commit(b0, q, r=None):
+def n_commit(b0, pq, P, Q, r=None):
     '''
-        Commit co = b0^r mod q
+        Commit c = b0^r mod Q
     '''
 
     if r is None:
-        r = big.rand(q)
+        r = big.rand(pq)
 
-    return r, pow(b0, r, q)
+    cp = pow(b0 % P, r % (P-1), P)
+    cq = pow(b0 % Q, r % (Q-1), Q)
 
+    c = big.crt(cp, cq, P, Q)
 
-def n_challenge(q):
-    return big.rand(q)
-
-
-def n_prove(r, c, x, phi):
-    return (r + c * x) % phi
+    return r, c
 
 
-def n_verify(b0, b1, co, c, p, q):
+def n_challenge(b0, b1, c, n):
     '''
-        Verify b0^p = co * b1^c
+        Generate challenge in [0, .., 2^256-1]
+
+        n is the length in bytes of b0, b1 and c
+    '''
+    H = hashlib.new("sha256")
+
+    H.update(b0.to_bytes(n, byteorder='big'))
+    H.update(b1.to_bytes(n, byteorder='big'))
+    H.update(c.to_bytes(n, byteorder='big'))
+
+    e_bytes = H.digest()
+    e = big.from_bytes(e_bytes)
+
+    return e
+
+
+def n_prove(r, e, x, q):
+    return (r - e * x) % q
+
+
+def n_verify(b0, b1, c, e, p, N):
+    '''
+        Verify c = b0^p * b1^e
     '''
 
-    proof = pow(b0, p, q)
-    gt    = big.modmul(co, pow(b1, c, q), q)
+    proof = big.modmul(pow(b0, p, N), pow(b1, e, N), N)
 
-    return proof == gt
+    return proof == c

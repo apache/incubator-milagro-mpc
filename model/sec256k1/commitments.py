@@ -12,6 +12,8 @@ DEBUG = False
 #
 #   https://link.springer.com/content/pdf/10.1007/BFb0052225.pdf
 #
+# Simplified version using only b0, b1. We only need two generators
+# and the knowledge of the DLOG between them.
 
 
 def bc_generator(p, P):
@@ -59,79 +61,60 @@ def bc_setup(k, P=None, Q=None):
 
     b0 = big.crt(gp,gq,P,Q)
 
-    # Compute random powers of b0
+    # Compute random power of b0
     pq = p*q
     N  = P*Q
 
     alpha = big.rand(pq)
-    beta  = big.rand(pq)
 
     ialpha = big.invmodp(alpha, pq)
     while ialpha == 0:
         alpha  = alpha + 1
         ialpha = big.invmodp(alpha, pq)
 
-    ibeta = big.invmodp(beta, pq)
-    while ibeta == 0:
-        beta  = beta + 1
-        ibeta = big.invmodp(beta, pq)
+    b1p = pow(gp, alpha % p, P)
+    b1q = pow(gq, alpha % q, Q)
 
-    b1 = pow(b0, alpha, N)
-    b2 = pow(b0, beta, N)
+    b1 = big.crt(b1p, b1q, P, Q)
 
     if DEBUG:
         assert b0 == pow(b1, ialpha, N)
-        assert b0 == pow(b2, ibeta, N)
 
-    return P, Q, N, alpha, beta, ialpha, ibeta, b0, b1, b2
+    return P, Q, pq, N, alpha, ialpha, b0, b1
 
 
-# ZK proof that b0, b1, b2 are of the correct form.
+# ZK proof that b0, b1 are of the correct form.
 # Performed in a naive way as proofs:
 #   * knowledge of a      s.t. b1 = b0^a
 #   * knowldege of a^(-1) s.t. b0 = b1^(a^(-1))
-#   * knowledge of b      s.t. b2 = b0^b
-#   * knowldege of b^(-1) s.t. b0 = b2^(b^(-1))
 #
-# TODO investigate if there is a more efficient ZK
-#   proof for this
+# TODO This might not be valid in this setting.
+# Needs more research
 #
 
-def bc_setup_commit(b0, b1, b2, N):
-    # TODO check if information is leaked by reusing
-    # the same commitment for b0
+def bc_setup_commit(b0, b1, pq, P, Q, r0 = None, r1 = None):
+    r0, c0 = schnorr.n_commit(b0, pq, P, Q, r0)
+    r1, c1 = schnorr.n_commit(b1, pq, P, Q, r1)
 
-    r0, co0 = schnorr.n_commit(b0, N)
-    r1, co1 = schnorr.n_commit(b1, N)
-    r2, co2 = schnorr.n_commit(b2, N)
+    return r0, r1, c0, c1
 
-    return r0, r1, r2, co0, co1, co2,
+def bc_setup_challenge(b0, b1, c0, c1, n):
+    e0 = schnorr.n_challenge(b0, b1, c0, n)
+    e1 = schnorr.n_challenge(b1, b0, c1, n)
 
-def bc_setup_challenge(N):
-    # TODO check if information is leaked by reusing
-    # the same challenge
+    return e0, e1
 
-    return schnorr.n_challenge(N)
+def bc_setup_proof(r0, r1, e0, e1, alpha, ialpha, pq):
+    p0 = schnorr.n_prove(r0, e0, alpha,  pq)
+    p1 = schnorr.n_prove(r1, e1, ialpha, pq)
 
-def bc_setup_proof(r0, r1, r2, c, alpha, beta, ialpha, ibeta, phi):
-    p0 = schnorr.n_prove(r0, c, alpha,  phi)
-    p1 = schnorr.n_prove(r1, c, ialpha, phi)
-    p2 = schnorr.n_prove(r0, c, beta,   phi)
-    p3 = schnorr.n_prove(r2, c, ibeta,  phi)
+    return p0, p1
 
-    return p0, p1, p2, p3
-
-def bc_setup_verify(b0, b1, b2, co0, co1, co2, c, p0, p1, p2, p3, N):
-    if not schnorr.n_verify(b0, b1, co0, c, p0, N):
-        return False
-
-    if not schnorr.n_verify(b1, b0, co1, c, p1, N):
-        return False
-
-    if not schnorr.n_verify(b0, b2, co0, c, p2, N):
-        return False
-
-    return schnorr.n_verify(b2, b0, co2, c, p3, N)
+def bc_setup_verify(b0, b1, c0, c1, e0, e1, p0, p1, N):
+    ok0 = schnorr.n_verify(b0, b1, c0, e0, p0, N)
+    ok1 = schnorr.n_verify(b1, b0, c1, e1, p1, N)
+    
+    return ok0 and ok1
 
 # --- General purpose commitment scheme ---
 #
