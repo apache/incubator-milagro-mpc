@@ -44,7 +44,7 @@ extern "C"
  * \brief RSA modulus for ZKP
  */
 typedef struct
-  {
+{
     BIG_1024_58 n[FFLEN_2048]; /**< Integer to prove knowledge of factoring */
     BIG_1024_58 p[HFLEN_2048]; /**< First prime factor of n */
     BIG_1024_58 q[HFLEN_2048]; /**< Second prime factor of n*/

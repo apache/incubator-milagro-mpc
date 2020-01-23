@@ -36,7 +36,7 @@ extern "C"
 /* NM Commitment Scheme API */
 
 /*! \brief Generate a commitment for the value X
- * 
+ *
  * @param RNG   CSPRNG to use for commitment
  * @param X     Value to commit to
  * @param R     Decommitment value. If RNG is null then this value is read and must be 256 bit long
@@ -45,7 +45,7 @@ extern "C"
 extern void COMMITMENTS_NM_commit(csprng *RNG, octet *X, octet *R, octet *C);
 
 /*! \brief Decommit the value X
- * 
+ *
  * @param X     Committed value
  * @param R     Decommitment value. Must be 256 bit long
  * @param C     Commitment value

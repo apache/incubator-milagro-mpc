@@ -47,7 +47,7 @@ extern "C"
 /* Classic Schnorr's proofs API */
 
 /*! \brief Generate a commitment for the proof
- * 
+ *
  * @param RNG   CSPRNG to use for commitment
  * @param R     Secret value used for the commitment. If RNG is NULL this is read
  * @param C     Public commitment value. An ECP
@@ -57,7 +57,7 @@ extern void SCHNORR_commit(csprng *RNG, octet *R, octet *C);
 /*! \brief Generate the challenge for the proof
  *
  * Compute the challenge for the proof as described in RFC8235#section-3.3
- * 
+ *
  * @param V     Public ECP of the DLOG. V = x.G. Compressed form
  * @param C     Public commitment value. Compressed form
  * @param E     Challenge generated
@@ -65,7 +65,7 @@ extern void SCHNORR_commit(csprng *RNG, octet *R, octet *C);
 extern void SCHNORR_challenge(octet *V, octet *C, octet *E);
 
 /*! \brief Generate the proof for the given commitment and challenge
- * 
+ *
  * @param R     Secret value used for the commitment
  * @param E     Challenge received from the verifier
  * @param X     Secret exponent of the DLOG. V = x.G
@@ -74,7 +74,7 @@ extern void SCHNORR_challenge(octet *V, octet *C, octet *E);
 extern void SCHNORR_prove(octet *R, octet *E, octet *X, octet *P);
 
 /*! \brief Verify the proof of knowledge for the DLOG
- * 
+ *
  * @param V     Public ECP of the DLOG. V = x.G
  * @param C     Commitment value received from the prover
  * @param E     Challenge for the Schnorr Proof

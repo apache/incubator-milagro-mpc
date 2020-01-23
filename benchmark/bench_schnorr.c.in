@@ -193,7 +193,8 @@ int main()
         rc = SCHNORR_verify(&V, &C, &E, &P);
         iterations++;
         elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
-    } while (elapsed < MIN_TIME || iterations < MIN_ITERS);
+    }
+    while (elapsed < MIN_TIME || iterations < MIN_ITERS);
 
     if (rc != SCHNORR_OK)
     {

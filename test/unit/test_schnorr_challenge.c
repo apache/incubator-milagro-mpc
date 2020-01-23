@@ -80,7 +80,7 @@ int main(int argc, char **argv)
     }
 
     while (fgets(line, LINE_LEN, fp) != NULL)
-    {    
+    {
         // Read TEST number
         if (!strncmp(line, TESTline, strlen(TESTline)))
         {

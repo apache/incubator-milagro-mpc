@@ -48,58 +48,58 @@ int main()
     // Paillier Keys
     PAILLIER_private_key PRIV1;
     PAILLIER_public_key PUB1;
-    PAILLIER_private_key PRIV2;    
+    PAILLIER_private_key PRIV2;
     PAILLIER_public_key PUB2;
 
     // Paillier public key
     char n[FS_4096] = {0};
-    octet N = {0,sizeof(n),n};    
+    octet N = {0,sizeof(n),n};
     char g[FS_4096] = {0};
-    octet G = {0,sizeof(g),g};    
+    octet G = {0,sizeof(g),g};
     char n2[FS_4096] = {0};
     octet N2 = {0,sizeof(n2),n2};
 
     // Paillier private key
     char p[HFS_2048] = {0};
-    octet P = {0,sizeof(p),p};    
+    octet P = {0,sizeof(p),p};
     char q[HFS_2048] = {0};
     octet Q = {0,sizeof(q),q};
-    
+
     char lp[HFS_2048] = {0};
-    octet LP = {0,sizeof(lp),lp};    
+    octet LP = {0,sizeof(lp),lp};
     char lq[HFS_2048] = {0};
-    octet LQ = {0,sizeof(lq),lq};    
+    octet LQ = {0,sizeof(lq),lq};
 
     char invp[FS_2048] = {0};
-    octet INVP = {0,sizeof(invp),invp};    
+    octet INVP = {0,sizeof(invp),invp};
     char invq[FS_2048] = {0};
-    octet INVQ = {0,sizeof(invq),invq};    
+    octet INVQ = {0,sizeof(invq),invq};
 
     char p2[FS_2048] = {0};
-    octet P2 = {0,sizeof(p2),p2};    
+    octet P2 = {0,sizeof(p2),p2};
     char q2[FS_2048] = {0};
-    octet Q2 = {0,sizeof(q2),q2};    
+    octet Q2 = {0,sizeof(q2),q2};
 
     char mp[HFS_2048] = {0};
-    octet MP = {0,sizeof(mp),mp};    
+    octet MP = {0,sizeof(mp),mp};
     char mq[HFS_2048] = {0};
-    octet MQ = {0,sizeof(mq),mq};    
+    octet MQ = {0,sizeof(mq),mq};
 
     // Generating Paillier key pair
     PAILLIER_KEY_PAIR(&RNG, NULL, NULL, &PUB1, &PRIV1);
 
-    // Write public key to octets    
+    // Write public key to octets
     MPC_DUMP_PAILLIER_PK(&PUB1, &N, &G, &N2);
 
-    // Read public key from octets        
+    // Read public key from octets
     MPC_LOAD_PAILLIER_PK(&PUB2, &N, &G, &N2);
-        
+
     // Write secret key to octets
     MPC_DUMP_PAILLIER_SK(&PRIV1, &P, &Q, &LP, &LQ, &INVP, &INVQ, &P2, &Q2, &MP, &MQ);
 
     // Read secret key from octets
     MPC_LOAD_PAILLIER_SK(&PRIV2, &P, &Q, &LP, &LQ, &INVP, &INVQ, &P2, &Q2, &MP, &MQ);
-    
+
     char a1[FS_2048];
     octet A1 = {0,sizeof(a1),a1};
     char b1[FS_2048];
@@ -113,17 +113,17 @@ int main()
     octet B2 = {0,sizeof(b2),b2};
     char ca2[FS_4096];
     octet CA2 = {0,sizeof(ca2),ca2};
-    
+
     int v = 5;
     BIG_1024_58 pt[FFLEN_2048];
     FF_2048_init(pt, v, FFLEN_2048);
     FF_2048_toOctet(&A1, pt, FFLEN_2048);
-    FF_2048_toOctet(&A2, pt, FFLEN_2048);    
+    FF_2048_toOctet(&A2, pt, FFLEN_2048);
 
     printf("A1: ");
     OCT_output(&A1);
-    printf("\n");    
-    
+    printf("\n");
+
     PAILLIER_ENCRYPT(&RNG, &PUB1, &A1, &CA1, NULL);
     printf("CA1: ");
     OCT_output(&CA1);
@@ -132,12 +132,12 @@ int main()
     PAILLIER_DECRYPT(&PRIV1, &CA1, &B1);
     printf("B1: ");
     OCT_output(&B1);
-    printf("\n");    
+    printf("\n");
 
     printf("A2: ");
     OCT_output(&A2);
-    printf("\n");    
-    
+    printf("\n");
+
     PAILLIER_ENCRYPT(&RNG, &PUB2, &A2, &CA2, NULL);
     printf("CA2: ");
     OCT_output(&CA2);
@@ -146,5 +146,5 @@ int main()
     PAILLIER_DECRYPT(&PRIV2, &CA2, &B2);
     printf("B2: ");
     OCT_output(&B2);
-    printf("\n");    
+    printf("\n");
 }
