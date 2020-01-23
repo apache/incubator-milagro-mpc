@@ -21,88 +21,11 @@ under the License.
    Benchmark NM Commitment.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+#include "bench.h"
 #include "amcl/commitments.h"
 
 #define MIN_TIME    5.0
 #define MIN_ITERS   10
-#define MICROSECOND 1000000.0
-
-// https://sourceforge.net/p/predef/wiki/Compilers/
-static void print_compiler_info()
-{
-#if defined(__clang__)
-    printf("Compiler:\t\tclang (%s)\n", __clang_version__);
-#elif defined(__GNUC_PATCHLEVEL__)
-    printf("Compiler:\t\tgcc (%d.%d.%d)\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
-#elif defined(__GNUC_MINOR__)
-    printf("Compiler:\t\tgcc (%d.%d)\n", __GNUC__, __GNUC_MINOR__);
-#elif defined(__INTEL_COMPILER)
-    printf("Compiler:\t\tIntel C/C++ (%d)\n", __INTEL_COMPILER);
-#elif defined(_MSC_FULL_VER)
-    printf("Compiler:\tMicrosoft C/C++ (%d)\n", _MSC_FULL_VER);
-#elif defined(__CC_ARM)
-    printf("Compiler:\t\tARM C/C++ (%d)\n", __ARMCC_VERSION);
-#else
-    printf("Compiler:\t\tUnknown"\n);
-#endif
-}
-
-#if defined(__ANDROID__)
-#include <android/api-level.h>
-#endif
-
-// https://sourceforge.net/p/predef/wiki/Architectures/
-// https://sourceforge.net/p/predef/wiki/OperatingSystems/
-static void print_platform_info()
-{
-#if defined(__linux__)
-    printf("Target platform:\tLinux ");
-
-#if defined(__x86_64__)
-    printf("(64-bit)\n");
-#else
-    printf("(32-bit)\n");
-#endif
-
-#if defined(__ANDROID__)
-    printf("Target platform:\tAndroid %d\n", __ANDROID_API__);
-#endif
-
-#elif defined(_WIN64)
-    printf("Target platform:\tWindows (64-bit)\n");
-#elif defined(_WIN32)
-    printf("Target platform:\tWindows (32-bit)\n");
-#elif defined(__APPLE__)
-    printf("Target platform:\tMac OS\n");
-#else
-    printf("Target platform:\tUnknown\n");
-#endif
-}
-
-
-static void print_mpc_configuration()
-{
-    printf("Project Version:\t@BUILD_VERSION@\n");
-    printf("CFLAGS:\t\t\t@CMAKE_C_FLAGS@\n");
-    printf("Build type:\t\t@CMAKE_BUILD_TYPE@\n");
-    printf("AMCL Version:\t\t%d.%d.%d\n", AMCL_VERSION_MAJOR, AMCL_VERSION_MINOR, AMCL_VERSION_PATCH);
-    printf("AMCL Detected OS:\t%s\n", OS);
-    printf("AMCL CHUNK:\t\t%d\n", CHUNK);
-}
-
-static void print_system_info()
-{
-    printf("Configuration info\n");
-    printf("==================\n");
-    print_platform_info();
-    print_compiler_info();
-    print_mpc_configuration();
-    printf("\n");
-}
 
 char *R_hex = "fc33060a9804e80a36c4421a8fd0ead332aa89aeee91b425cca93635829966a6";
 char *X_hex = "cc39908d5a7133e500d729b7458196a6f9bd8a7f501b88f020994936f7cae37c";

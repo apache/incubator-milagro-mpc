@@ -18,24 +18,27 @@
 link_directories(${CMAKE_CURRENT_BINARY_DIR}
                  /usr/local/lib)
 
-include_directories (${PROJECT_SOURCE_DIR}/include
+include_directories (${PROJECT_SOURCE_DIR}/src
+                     ${PROJECT_SOURCE_DIR}/include
+                     ${PROJECT_SOURCE_DIR}/benchmark
                      ${PROJECT_BINARY_DIR}/include
                      /usr/local/include)
 
-# List of benchmarks to configure
-file(GLOB_RECURSE SRCS *.c.in)
+configure_file(
+  "bench.c.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/bench.c"
+)
+
+add_library(mpc_bench_utils OBJECT ${CMAKE_CURRENT_BINARY_DIR}/bench.c)
+
+# List of benchmarks
+file(GLOB_RECURSE SRCS *.c)
 
 foreach(bench ${SRCS})
   # Extract the filename without an extension
   get_filename_component(target ${bench} NAME_WE)
 
-  configure_file (
-    "${bench}"
-    "${CMAKE_CURRENT_BINARY_DIR}/${target}.c"
-  )
+  add_executable(${target} ${target}.c)
 
-  add_executable(${target} ${CMAKE_CURRENT_BINARY_DIR}/${target}.c)
-
-  target_link_libraries(${target} amcl_mpc)
+  target_link_libraries(${target} amcl_mpc mpc_bench_utils)
 endforeach(bench)
-
