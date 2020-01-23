@@ -19,7 +19,8 @@
 link_directories (${PROJECT_BINARY_DIR}/src
                   /usr/local/lib)
 
-include_directories (${PROJECT_SOURCE_DIR}/include
+include_directories (${PROJECT_SOURCE_DIR}/src
+                     ${PROJECT_SOURCE_DIR}/include
                      /usr/local/include)
 
 function(amcl_test name source dependencies expected_response)
@@ -55,3 +56,6 @@ amcl_test(test_schnorr_challenge test_schnorr_challenge.c amcl_mpc "SUCCESS" "sc
 amcl_test(test_schnorr_prove test_schnorr_prove.c amcl_mpc "SUCCESS" "schnorr/prove.txt")
 amcl_test(test_schnorr_verify test_schnorr_verify.c amcl_mpc "SUCCESS" "schnorr/verify.txt")
 
+# BC Commitment tests
+amcl_test(test_bc_setup test_bc_setup.c amcl_mpc "SUCCESS" "commitments/bc_setup.txt")
+amcl_test(test_bc_internals test_bc_internals.c amcl_mpc "SUCCESS")
