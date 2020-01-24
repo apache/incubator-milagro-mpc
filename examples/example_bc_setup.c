@@ -69,7 +69,7 @@ int main()
 
     printf("Clear secret values from the modulus");
     COMMITMENTS_BC_kill_priv_modulus(&m);
-    
+
     printf("\n\tP      = ");
     FF_2048_output(m.P, HFLEN_2048);
     printf("\n\tQ      = ");
