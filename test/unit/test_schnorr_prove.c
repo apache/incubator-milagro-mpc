@@ -68,7 +68,7 @@ int main(int argc, char **argv)
     octet X = {0, sizeof(x), x};
     const char *Xline = "X = ";
 
-        char p_golden[SGS_SECP256K1];
+    char p_golden[SGS_SECP256K1];
     octet P_GOLDEN = {0, sizeof(p_golden), p_golden};
     const char *Pline = "P = ";
 
@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     }
 
     while (fgets(line, LINE_LEN, fp) != NULL)
-    {    
+    {
         // Read TEST number
         if (!strncmp(line, TESTline, strlen(TESTline)))
         {

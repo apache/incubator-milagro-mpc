@@ -81,7 +81,7 @@ int main(int argc, char **argv)
 
     /* Test happy path with test vectors */
     while (fgets(line, LINE_LEN, fp) != NULL)
-    {    
+    {
         // Read TEST number
         if (!strncmp(line, TESTline, strlen(TESTline)))
         {

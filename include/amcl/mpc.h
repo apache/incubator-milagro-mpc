@@ -243,6 +243,56 @@ void MPC_SUM_S(octet *S1, octet *S2, octet *S);
  */
 int MPC_SUM_PK(octet *PK1, octet *PK2, octet *PK);
 
+/*! \brief Write Paillier public key to octets
+ *
+ *  @param   PUB              Paillier public key
+ *  @param   N                Paillier Modulus - \f$ n = pq \f$
+ *  @param   G                Public Base - \f$ g = n+1 \f$
+ *  @param   N2               Precomputed \f$ n^2 \f$
+ */
+void MPC_DUMP_PAILLIER_PK(PAILLIER_public_key *PUB, octet *N, octet *G, octet *N2);
+
+/*! \brief Load Paillier public key from octets
+ *
+ *  @param   PUB              Paillier public key
+ *  @param   N                Paillier Modulus - \f$ n = pq \f$
+ *  @param   G                Public Base - \f$ g = n+1 \f$
+ *  @param   N2               Precomputed \f$ n^2 \f$
+ */
+void MPC_LOAD_PAILLIER_PK(PAILLIER_public_key *PUB, octet *N, octet *G, octet *N2);
+
+/*! \brief Write Paillier secret key to octets
+ *
+ *  @param   PRIV             Paillier secret key
+ *  @param   P                Secret prime number
+ *  @param   Q                Secret prime number
+ *  @param   LP               Private Key modulo \f$ p \f$ (Euler totient of \f$ p \f$)
+ *  @param   LQ               Private Key modulo \f$ q \f$ (Euler totient of \f$ q \f$)
+ *  @param   INVP             Precomputed \f$ p^{-1} \pmod{2^m} \f$
+ *  @param   INVQ             Precomputed \f$ q^{-1} \pmod{2^m} \f$
+ *  @param   P2               Precomputed \f$ p^2 \f$
+ *  @param   Q2               Precomputed \f$ q^2 \f$
+ *  @param   MP               Precomputed \f$ L(g^{lp} \pmod{p^2})^{-1} \f$
+ *  @param   MQ               Precomputed \f$ L(g^{lq} \pmod{q^2})^{-1} \f$
+ */
+void MPC_DUMP_PAILLIER_SK(PAILLIER_private_key *PRIV, octet *P, octet *Q, octet *LP, octet *LQ, octet *INVP, octet *INVQ, octet *P2, octet *Q2, octet *MP, octet *MQ);
+
+/*! \brief Load Paillier secret key from octets
+ *
+ *  @param   PRIV             Paillier secret key
+ *  @param   P                Secret prime number
+ *  @param   Q                Secret prime number
+ *  @param   LP               Private Key modulo \f$ p \f$ (Euler totient of \f$ p \f$)
+ *  @param   LQ               Private Key modulo \f$ q \f$ (Euler totient of \f$ q \f$)
+ *  @param   INVP             Precomputed \f$ p^{-1} \pmod{2^m} \f$
+ *  @param   INVQ             Precomputed \f$ q^{-1} \pmod{2^m} \f$
+ *  @param   P2               Precomputed \f$ p^2 \f$
+ *  @param   Q2               Precomputed \f$ q^2 \f$
+ *  @param   MP               Precomputed \f$ L(g^{lp} \pmod{p^2})^{-1} \f$
+ *  @param   MQ               Precomputed \f$ L(g^{lq} \pmod{q^2})^{-1} \f$
+ */
+void MPC_LOAD_PAILLIER_SK(PAILLIER_private_key *PRIV, octet *P, octet *Q, octet *LP, octet *LQ, octet *INVP, octet *INVQ, octet *P2, octet *Q2, octet *MP, octet *MQ);
+
 #ifdef __cplusplus
 }
 #endif

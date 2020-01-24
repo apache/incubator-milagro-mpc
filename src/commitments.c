@@ -48,13 +48,13 @@ void hash(octet *X, octet *R, octet *C)
 
 // Compute a commitment for the value X
 void COMMITMENTS_NM_commit(csprng *RNG, octet *X, octet *R, octet *C)
-{    
+{
     if (RNG != NULL)
     {
         OCT_rand(R, RNG, SHA256);
     }
-    
-    hash(X, R, C);    
+
+    hash(X, R, C);
 }
 
 // Verify the commitment for the value X

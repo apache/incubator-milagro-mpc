@@ -68,7 +68,7 @@ int main()
     SCHNORR_challenge(&V, &C, &E);
 
     SCHNORR_prove(&R, &E, &X, &P);
-    
+
     rc = SCHNORR_verify(&V, &C, &E, &P);
     if (rc)
     {

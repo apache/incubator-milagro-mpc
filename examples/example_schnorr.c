@@ -69,7 +69,7 @@ int main()
     OCT_output(&X);
     printf("\tV = ");
     OCT_output(&V);
-    
+
     printf("\nGenerate a commitment C = r.G\n");
     SCHNORR_commit(&RNG, &R, &C);
 
