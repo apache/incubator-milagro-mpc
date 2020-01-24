@@ -20,24 +20,10 @@ under the License.
 /* ZKP of factoring prove unit test */
 
 #include <string.h>
+#include "test.h"
 #include "amcl/factoring_zk.h"
 
 #define LINE_LEN 2000
-
-void read_OCTET(octet *OCT, char *string)
-{
-    int len = strlen(string);
-    char buff[len];
-    memcpy(buff, string, len);
-    char *end = strchr(buff, ',');
-    if (end == NULL)
-    {
-        printf("ERROR unexpected test vector %s\n", string);
-        exit(EXIT_FAILURE);
-    }
-    end[0] = '\0';
-    OCT_fromHex(OCT, buff);
-}
 
 int main(int argc, char **argv)
 {
@@ -47,11 +33,11 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    int len = 0;
-    FILE *fp;
+    int rc;
+    int test_run = 0;
 
+    FILE *fp;
     char line[LINE_LEN] = {0};
-    char *linePtr = NULL;
 
     const char *TESTline = "TEST = ";
     int testNo = 0;
@@ -68,6 +54,9 @@ int main(int argc, char **argv)
     octet Y = {0, sizeof(y), y};
     const char *Yline = "Y = ";
 
+    // Line terminating a test vector
+    const char *last_line = Yline;
+
     fp = fopen(argv[1], "r");
     if (fp == NULL)
     {
@@ -79,53 +68,35 @@ int main(int argc, char **argv)
 
     while (fgets(line, LINE_LEN, fp) != NULL)
     {
-        // Read TEST Number
-        if (!strncmp(line, TESTline, strlen(TESTline)))
-        {
-            len = strlen(TESTline);
-            linePtr = line + len;
-            sscanf(linePtr, "%d\n", &testNo);
-        }
+        scan_int(&testNo, line, TESTline);
 
-        // Read N
-        if (!strncmp(line, Nline, strlen(Nline)))
-        {
-            len = strlen(Nline);
-            linePtr = line + len;
-            read_OCTET(&N, linePtr);
-        }
+        scan_OCTET(fp, &N, line, Nline);
+        scan_OCTET(fp, &E, line, Eline);
+        scan_OCTET(fp, &Y, line, Yline);
 
-        // Read E
-        if (!strncmp(line, Eline, strlen(Eline)))
+        if (!strncmp(line, last_line, strlen(last_line)))
         {
-            len = strlen(Eline);
-            linePtr = line + len;
-            read_OCTET(&E, linePtr);
-        }
+            rc = FACTORING_ZK_verify(&N, &E, &Y);
+            assert_tv(fp, testNo, "FACTORING_ZK_verify", rc);
 
-        // Read Y and run test
-        if (!strncmp(line, Yline, strlen(Yline)))
-        {
-            len = strlen(Yline);
-            linePtr = line + len;
-            read_OCTET(&Y, linePtr);
-
-            if (!FACTORING_ZK_verify(&N, &E, &Y))
-            {
-                printf("FAILURE FACTORING_ZK_verify. Test %d\n", testNo);
-                exit(EXIT_FAILURE);
-            }
+            // Mark that at least one test vector was executed
+            test_run = 1;
         }
+    }
+
+    fclose(fp);
+
+    if (test_run == 0)
+    {
+        printf("ERROR no test vector was executed\n");
+        exit(EXIT_FAILURE);
     }
 
     /* Test unhappy path */
     E.val[0]++;
 
-    if (FACTORING_ZK_verify(&N, &E, &Y))
-    {
-        printf("Failure FACTORING_ZK_verify. Invalid E");
-        exit(EXIT_FAILURE);
-    }
+    rc = !FACTORING_ZK_verify(&N, &E, &Y);
+    assert(NULL, "FACTORING_ZK_verify. Invalid E", rc);
 
     printf("SUCCESS\n");
     exit(EXIT_SUCCESS);

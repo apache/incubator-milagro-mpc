@@ -15,30 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-link_directories(${CMAKE_CURRENT_BINARY_DIR}
-                 /usr/local/lib)
+add_subdirectory(smoke)
+add_subdirectory(unit)
 
-include_directories (${PROJECT_SOURCE_DIR}/src
-                     ${PROJECT_SOURCE_DIR}/include
-                     ${PROJECT_SOURCE_DIR}/benchmark
-                     ${PROJECT_BINARY_DIR}/include
+include_directories (${PROJECT_SOURCE_DIR}/include
                      /usr/local/include)
 
-configure_file(
-  "bench.c.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/bench.c"
-)
-
-add_library(mpc_bench_utils OBJECT ${CMAKE_CURRENT_BINARY_DIR}/bench.c)
-
-# List of benchmarks
-file(GLOB_RECURSE SRCS *.c)
-
-foreach(bench ${SRCS})
-  # Extract the filename without an extension
-  get_filename_component(target ${bench} NAME_WE)
-
-  add_executable(${target} ${bench} $<TARGET_OBJECTS:mpc_bench_utils>)
-
-  target_link_libraries(${target} amcl_mpc)
-endforeach(bench)
+add_library(mpc_test_utils OBJECT test.c)

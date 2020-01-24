@@ -58,71 +58,88 @@ def paillier_setup(player):
 
     n, g, lp, lq, mp, mq = paillier.keys(p, q)
 
-    player["p"]  = p
-    player["q"]  = q
-    player["n"]  = n
-    player["g"]  = g
-    player["lp"] = lp
-    player["mp"] = mp
-    player["lq"] = lq
-    player["mq"] = mq
+    player["paillier_p"]  = p
+    player["paillier_q"]  = q
+    player["paillier_n"]  = n
+    player["paillier_g"]  = g
+    player["paillier_lp"] = lp
+    player["paillier_mp"] = mp
+    player["paillier_lq"] = lq
+    player["paillier_mq"] = mq
 
-def zk_setup(player):
+def zk_setup(player, k):
     '''
         Setup player additional RSA modulus for ZK proofs
     '''
 
-    # Toy dimension, 2048 but python is slow
-    P,Q,N, alpha, beta, ialpha, ibeta, b0, b1, b2 = commitments.bc_setup(1024)
+    P, Q, pq, N, alpha, ialpha, b0, b1 = commitments.bc_setup(k)
 
-    player["P"] = P
-    player["Q"] = Q
-    player["N"] = N
+    player["zk_P"] = P
+    player["zk_Q"] = Q
+    player["zk_N"] = N
+    player["zk_pq"] = pq
 
-    player["alpha"]  = alpha
-    player["beta"]   = beta
-    player["ialpha"] = ialpha
-    player["ibeta"]  = ibeta
+    player["zk_alpha"]  = alpha
+    player["zk_ialpha"] = ialpha
 
-    player["b0"] = b0
-    player["b1"] = b1
-    player["b2"] = b2
+    player["zk_b0"] = b0
+    player["zk_b1"] = b1
 
-def check_zk_setup(prover, verifier):
+def check_zk_setup(prover, verifier, k):
     '''
         ZK proof of correct ZK setup
     '''
 
-    r0, r1, r2, co0, co1, co2, = commitments.bc_setup_commit(prover["b0"], prover["b1"], prover["b2"], prover["N"])
+    r0, r1, c0, c1 = commitments.bc_setup_commit(
+        prover["zk_b0"],
+        prover["zk_b1"],
+        prover["zk_pq"],
+        prover["zk_P"],
+        prover["zk_Q"])
     
-    prover["r0"]  = r0
-    prover["r1"]  = r1
-    prover["r2"]  = r2
-    prover["co0"] = co0
-    prover["co1"] = co1
-    prover["co2"] = co2
+    prover["zk_r0"]  = r0
+    prover["zk_r1"]  = r1
+    prover["zk_c0"] = c0
+    prover["zk_c1"] = c1
 
-    verifier["c"] = commitments.bc_setup_challenge(prover["N"])
+    # This is actually done by both, leaving only verifier for simplicity
+    e0, e1 = commitments.bc_setup_challenge(
+        prover["zk_b0"],
+        prover["zk_b1"],
+        prover["zk_c0"],
+        prover["zk_c1"],
+        k)
     
-    p0, p1, p2, p3 = commitments.bc_setup_proof(
-        prover["r0"], prover["r1"], prover["r2"],
-        verifier["c"],
-        prover["alpha"], prover["beta"], prover["ialpha"], prover["ibeta"],
-        (prover["P"] - 1) * (prover["Q"] - 1))
+    verifier["zk_e0"] = e0
+    verifier["zk_e1"] = e1
+    
+    p0, p1 = commitments.bc_setup_proof(
+        prover["zk_r0"],
+        prover["zk_r1"],
+        verifier["zk_e0"], 
+        verifier["zk_e1"],
+        prover["zk_alpha"],
+        prover["zk_ialpha"],
+        prover["zk_pq"])
 
-    prover["p0"] = p0
-    prover["p1"] = p1
-    prover["p2"] = p2
-    prover["p3"] = p3
+    prover["zk_p0"] = p0
+    prover["zk_p1"] = p1
 
     return commitments.bc_setup_verify(
-        prover["b0"], prover["b1"], prover["b2"],
-        prover["co0"], prover["co1"], prover["co2"],
-        verifier["c"],
-        prover["p0"], prover["p1"], prover["p2"], prover["p3"],
-        prover["N"])
+        prover["zk_b0"],
+        prover["zk_b1"],
+        prover["zk_c0"],
+        prover["zk_c1"],
+        verifier["zk_e0"],
+        verifier["zk_e1"],
+        prover["zk_p0"],
+        prover["zk_p1"],
+        prover["zk_N"])
 
 if __name__ == "__main__":
+    # Toy dimension, 2048 but safe prime generation is slow
+    k = 512
+
     alice = {}
     bob   = {}
 
@@ -134,16 +151,16 @@ if __name__ == "__main__":
     print("Done!\n")
 
     print("ZK Setup")
-    zk_setup(alice)
-    zk_setup(bob)
+    zk_setup(alice, k)
+    zk_setup(bob, k)
 
     print("Verify ZK Setup")
-    if not check_zk_setup(alice, bob):
+    if not check_zk_setup(alice, bob, k):
         dumpgame(alice, bob)
         print("Invalid ZK setup for Alice")
         sys.exit(1)
 
-    if not check_zk_setup(bob, alice):
+    if not check_zk_setup(bob, alice, k):
         dumpgame(alice, bob)
         print("Invalid ZK setup for Bob")
         sys.exit(1)
@@ -156,15 +173,15 @@ if __name__ == "__main__":
 
     # -- Step 1 -- same for both MtA and MtAwC
     print("MtA Step 1")
-    alice["mta_CA"], alice["mta_r"] = mta.initiate(alice["n"], alice["g"], alice["mta_mult_share"])
+    alice["mta_CA"], alice["mta_r"] = mta.initiate(alice["paillier_n"], alice["paillier_g"], alice["mta_mult_share"])
 
     # ZK range proof
     print("MtA Range Proof")
     alpha, beta, gamma, rho, z, u, w = mta.rp_commit(
         alice["mta_mult_share"],
-        alice["g"],
-        alice["b1"], alice["b2"],
-        curve.r, alice["n"], alice["N"])
+        alice["paillier_g"],
+        alice["zk_b0"], alice["zk_b1"],
+        curve.r, alice["paillier_n"], alice["zk_N"])
 
     alice["mta_rp_alpha"] = alpha
     alice["mta_rp_beta"]  = beta
@@ -181,7 +198,7 @@ if __name__ == "__main__":
         alice["mta_mult_share"], alice["mta_r"], alice["mta_CA"],
         bob["mta_rp_e"],
         alice["mta_rp_alpha"], alice["mta_rp_beta"], alice["mta_rp_gamma"], alice["mta_rp_rho"],
-        alice["n"])
+        alice["paillier_n"])
 
     alice["mta_rp_s"]  = s
     alice["mta_rp_s1"] = s1
@@ -192,9 +209,9 @@ if __name__ == "__main__":
         alice["mta_rp_s"], alice["mta_rp_s1"], alice["mta_rp_s2"],
         alice["mta_rp_z"], alice["mta_rp_u"],  alice["mta_rp_w"],
         bob["mta_rp_e"],
-        alice["g"],
-        alice["b1"], alice["b2"],
-        curve.r, alice["n"], alice["N"]):
+        alice["paillier_g"],
+        alice["zk_b0"], alice["zk_b1"],
+        curve.r, alice["paillier_n"], alice["zk_N"]):
         
         dumpgame(alice, bob)
         print("Range Rroof Failed")
@@ -206,7 +223,7 @@ if __name__ == "__main__":
     print("MtA Step 2")
 
     bob["mta_CB"],bob["mta_add_share"], bob["mta_beta1"], bob["mta_r"] = mta.receive(
-        alice["n"], alice["g"], curve.r,
+        alice["paillier_n"], alice["paillier_g"], curve.r,
         bob["mta_mult_share"], alice["mta_CA"])
 
     # ZK range proof for receiver
@@ -214,9 +231,9 @@ if __name__ == "__main__":
 
     alpha, beta, gamma, rho, rho1, sigma, tau, z, z1, t, v, w = mta.mta_commit(
         bob["mta_mult_share"], bob["mta_beta1"], alice["mta_CA"],
-        alice["g"],
-        alice["b1"], alice["b2"],
-        curve.r, alice["n"], alice["N"])
+        alice["paillier_g"],
+        alice["zk_b0"], alice["zk_b1"],
+        curve.r, alice["paillier_n"], alice["zk_N"])
 
     bob["mta_rrp_alpha"] = alpha
     bob["mta_rrp_beta"]  = beta
@@ -239,7 +256,7 @@ if __name__ == "__main__":
         alice["mta_rrp_e"],
         bob["mta_rrp_alpha"], bob["mta_rrp_beta"], bob["mta_rrp_gamma"], bob["mta_rrp_rho"],
         bob["mta_rrp_rho1"], bob["mta_rrp_sigma"], bob["mta_rrp_tau"],
-        alice["n"])
+        alice["paillier_n"])
 
     bob["mta_rrp_s"]  = s
     bob["mta_rrp_s1"] = s1
@@ -252,9 +269,9 @@ if __name__ == "__main__":
         bob["mta_rrp_s"], bob["mta_rrp_s1"], bob["mta_rrp_s2"], bob["mta_rrp_t1"], bob["mta_rrp_t2"],
         bob["mta_rrp_z"], bob["mta_rrp_z1"], bob["mta_rrp_t"],  bob["mta_rrp_v"],  bob["mta_rrp_w"],
         alice["mta_rrp_e"],
-        alice["g"],
-        alice["b1"], alice["b2"],
-        curve.r, alice["n"], alice["N"]):
+        alice["paillier_g"],
+        alice["zk_b0"], alice["zk_b1"],
+        curve.r, alice["paillier_n"], alice["zk_N"]):
 
         dumpgame(alice, bob)
         print("Receiver Range Proof Failed")
@@ -266,12 +283,12 @@ if __name__ == "__main__":
     print("MtA Step 3")
 
     alice["mta_add_share"] = mta.complete(
-        alice["p"],
-        alice["q"],
-        alice["lp"],
-        alice["mp"],
-        alice["lq"],
-        alice["mq"],
+        alice["paillier_p"],
+        alice["paillier_q"],
+        alice["paillier_lp"],
+        alice["paillier_mp"],
+        alice["paillier_lq"],
+        alice["paillier_mq"],
         curve.r,
         bob["mta_CB"])
 
@@ -289,7 +306,7 @@ if __name__ == "__main__":
     print("MtAwC Step 2")
 
     bob["mtawc_CB"],bob["mtawc_add_share"], bob["mtawc_beta1"], bob["mtawc_r"] = mta.receive(
-        alice["n"], alice["g"], curve.r,
+        alice["paillier_n"], alice["paillier_g"], curve.r,
         bob["mta_mult_share"], alice["mta_CA"])
 
     bob["mtawc_X"] = bob["mta_mult_share"] * ecp.generator()
@@ -299,9 +316,9 @@ if __name__ == "__main__":
 
     alpha, beta, gamma, rho, rho1, sigma, tau, u, z, z1, t, v, w = mta.mtawc_commit(
         bob["mta_mult_share"], bob["mtawc_beta1"], alice["mta_CA"],
-        alice["g"],
-        alice["b1"], alice["b2"],
-        curve.r, alice["n"], alice["N"])
+        alice["paillier_g"],
+        alice["zk_b0"], alice["zk_b1"],
+        curve.r, alice["paillier_n"], alice["zk_N"])
 
     bob["mtawc_rrp_alpha"] = alpha
     bob["mtawc_rrp_beta"]  = beta
@@ -325,7 +342,7 @@ if __name__ == "__main__":
         alice["mtawc_rrp_e"],
         bob["mtawc_rrp_alpha"], bob["mtawc_rrp_beta"], bob["mtawc_rrp_gamma"], bob["mtawc_rrp_rho"],
         bob["mtawc_rrp_rho1"], bob["mtawc_rrp_sigma"], bob["mtawc_rrp_tau"],
-        alice["n"])
+        alice["paillier_n"])
 
     bob["mtawc_rrp_s"]  = s
     bob["mtawc_rrp_s1"] = s1
@@ -338,9 +355,9 @@ if __name__ == "__main__":
         bob["mtawc_rrp_s"], bob["mtawc_rrp_s1"], bob["mtawc_rrp_s2"], bob["mtawc_rrp_t1"], bob["mtawc_rrp_t2"],
         bob["mtawc_rrp_u"], bob["mtawc_rrp_z"],  bob["mtawc_rrp_z1"], bob["mtawc_rrp_t"],  bob["mtawc_rrp_v"],  bob["mtawc_rrp_w"],
         alice["mtawc_rrp_e"],
-        alice["g"],
-        alice["b1"], alice["b2"],
-        curve.r, alice["n"], alice["N"]):
+        alice["paillier_g"],
+        alice["zk_b0"], alice["zk_b1"],
+        curve.r, alice["paillier_n"], alice["zk_N"]):
 
         dumpgame(alice, bob)
         print("Receiver Range Proof Failed")
@@ -352,12 +369,12 @@ if __name__ == "__main__":
     print("MtAwC Step 3")
 
     alice["mtawc_add_share"] = mta.complete(
-        alice["p"],
-        alice["q"],
-        alice["lp"],
-        alice["mp"],
-        alice["lq"],
-        alice["mq"],
+        alice["paillier_p"],
+        alice["paillier_q"],
+        alice["paillier_lp"],
+        alice["paillier_mp"],
+        alice["paillier_lq"],
+        alice["paillier_mq"],
         curve.r,
         bob["mtawc_CB"])
 

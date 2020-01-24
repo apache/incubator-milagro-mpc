@@ -18,26 +18,12 @@ under the License.
 */
 
 #include <string.h>
+#include "test.h"
 #include "amcl/schnorr.h"
 
 /* Schnorr's Proof commitment unit test */
 
 #define LINE_LEN 256
-
-void read_OCTET(octet *OCT, char *string)
-{
-    int len = strlen(string);
-    char buff[len];
-    memcpy(buff, string, len);
-    char *end = strchr(buff, ',');
-    if (end == NULL)
-    {
-        printf("ERROR unexpected test vector %s\n", string);
-        exit(EXIT_FAILURE);
-    }
-    end[0] = '\0';
-    OCT_fromHex(OCT, buff);
-}
 
 int main(int argc, char **argv)
 {
@@ -47,11 +33,10 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    int len = 0;
-    FILE *fp;
+    int test_run = 0;
 
+    FILE *fp;
     char line[LINE_LEN] = {0};
-    char *linePtr = NULL;
 
     const char *TESTline = "TEST = ";
     int testNo = 0;
@@ -67,6 +52,9 @@ int main(int argc, char **argv)
     char c[SFS_SECP256K1+1];
     octet C = {0, sizeof(c), c};
 
+    // Line terminating a test vector
+    const char *last_line = Cline;
+
     fp = fopen(argv[1], "r");
     if (fp == NULL)
     {
@@ -76,37 +64,30 @@ int main(int argc, char **argv)
 
     while (fgets(line, LINE_LEN, fp) != NULL)
     {
-        // Read TEST number
-        if (!strncmp(line, TESTline, strlen(TESTline)))
-        {
-            len = strlen(TESTline);
-            linePtr = line + len;
-            sscanf(linePtr, "%d\n", &testNo);
-        }
+        scan_int(&testNo, line, TESTline);
 
-        // Read R
-        if (!strncmp(line, Rline, strlen(Rline)))
-        {
-            len = strlen(Rline);
-            linePtr = line + len;
-            read_OCTET(&R, linePtr);
-        }
+        // Read input
+        scan_OCTET(fp, &R, line, Rline);
 
-        // Read C and run test
-        if (!strncmp(line, Cline, strlen(Cline)))
-        {
-            len = strlen(Cline);
-            linePtr = line + len;
-            read_OCTET(&C_GOLDEN, linePtr);
+        // Read ground truth
+        scan_OCTET(fp, &C_GOLDEN, line, Cline);
 
+        if (!strncmp(line, last_line, strlen(last_line)))
+        {
             SCHNORR_commit(NULL, &R, &C);
+            compare_OCT(fp, testNo, "SCHNORR_commit", &C, &C_GOLDEN);
 
-            if (!OCT_comp(&C, &C_GOLDEN))
-            {
-                printf("FAILURE SCHNORR_commit. Test %d\n", testNo);
-                exit(EXIT_FAILURE);
-            }
+            // Mark that at least one test vector was executed
+            test_run = 1;
         }
+    }
+
+    fclose(fp);
+
+    if (test_run == 0)
+    {
+        printf("ERROR no test vector was executed\n");
+        exit(EXIT_FAILURE);
     }
 
     printf("SUCCESS\n");

@@ -18,18 +18,11 @@ under the License.
 */
 
 /*
-   Benchmark NM Commitment.
+   Benchmark utilities definitions.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include "amcl/commitments.h"
-
-#define MIN_TIME    5.0
-#define MIN_ITERS   10
-#define MICROSECOND 1000000.0
+#include "bench.h"
+#include "amcl/amcl.h"
 
 // https://sourceforge.net/p/predef/wiki/Compilers/
 static void print_compiler_info()
@@ -83,7 +76,6 @@ static void print_platform_info()
 #endif
 }
 
-
 static void print_mpc_configuration()
 {
     printf("Project Version:\t@BUILD_VERSION@\n");
@@ -94,7 +86,7 @@ static void print_mpc_configuration()
     printf("AMCL CHUNK:\t\t%d\n", CHUNK);
 }
 
-static void print_system_info()
+void print_system_info()
 {
     printf("Configuration info\n");
     printf("==================\n");
@@ -102,70 +94,4 @@ static void print_system_info()
     print_compiler_info();
     print_mpc_configuration();
     printf("\n");
-}
-
-char *R_hex = "fc33060a9804e80a36c4421a8fd0ead332aa89aeee91b425cca93635829966a6";
-char *X_hex = "cc39908d5a7133e500d729b7458196a6f9bd8a7f501b88f020994936f7cae37c";
-
-int main()
-{
-    int rc;
-
-    int iterations;
-    clock_t start;
-    double elapsed;
-
-    char x[32] = {0};
-    octet X = {0, sizeof(x), x};
-
-    char r[SHA256] = {0};
-    octet R = {0, sizeof(r), r};
-
-    char c[SHA256] = {0};
-    octet C = {0, sizeof(c), c};
-
-    // Load values
-    OCT_fromHex(&X, X_hex);
-    OCT_fromHex(&R, R_hex);
-
-    print_system_info();
-
-    printf("Timing info\n");
-    printf("===========\n");
-
-    iterations=0;
-    start=clock();
-    do
-    {
-        COMMITMENTS_NM_commit(NULL, &X, &R, &C);
-        iterations++;
-        elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
-    }
-    while (elapsed<MIN_TIME || iterations<MIN_ITERS);
-
-    elapsed= MICROSECOND * elapsed / iterations;
-    printf("\tCOMMITMENTS_NM_commit\t%8d iterations\t",iterations);
-    printf("%8.2lf us per iteration\n",elapsed);
-
-    iterations = 0;
-    start = clock();
-    do
-    {
-        rc = COMMITMENTS_NM_decommit(&X, &R, &C);
-        iterations++;
-        elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
-    }
-    while (elapsed < MIN_TIME || iterations < MIN_ITERS);
-
-    if (!rc)
-    {
-        printf("FAILURE COMMITMENTS_NM_decommit: %d\n", rc);
-        exit(EXIT_FAILURE);
-    }
-
-    elapsed = MICROSECOND * elapsed / iterations;
-    printf("\tCOMMITMENTS_NM_decommit\t%8d iterations\t", iterations);
-    printf("%8.2lf us per iteration\n", elapsed);
-
-    exit(EXIT_SUCCESS);
 }

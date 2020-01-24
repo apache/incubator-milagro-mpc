@@ -107,6 +107,26 @@ def isprime(p):
     return True
 
 
+def issafeprime(p, P):
+    '''
+        Safe prime primality test
+    '''
+    sp = 4849845  # 3*5*.. *19
+
+    # Sieve small primes for P before attempting MR on p
+    if gcd(P, sp) != 1:
+        return False
+
+    if not isprime(p):
+        return False
+
+    # p prime, P = 2p+1, 2^(P-1) = 1 mod P => P prime
+    if not pow(2, P-1, P) == 1:
+        return False
+
+    return True
+
+
 def rand(m):
     return random.SystemRandom().randint(2, m - 1)
 
@@ -117,17 +137,18 @@ def generate_safe_prime(k):
         k is the desired length for P
     '''
 
-    p = rand(1<<k-1)
+    p = rand(1<<(k-1))
 
     while p%4 != 3:
         p = p + 1
 
     P = 2 * p + 1
-    while not (isprime(p) and isprime(P)):
+    while not issafeprime(p, P):
         p = p + 4
         P = P + 8
 
     return p, P
+
 
 ## Modular arithmetic ##
 

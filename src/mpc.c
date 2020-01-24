@@ -29,22 +29,6 @@ under the License.
 
 static char* curve_order_hex = "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141";
 
-// Read string into an octet
-void read_OCTET(octet *y, char *x)
-{
-    int len = strlen(x);
-    char buff[len];
-    memcpy(buff,x,len);
-    char *end = strchr(buff,',');
-    if (end == NULL)
-    {
-        printf("ERROR unexpected test vector %s\n",x);
-        exit(EXIT_FAILURE);
-    }
-    end[0] = '\0';
-    OCT_fromHex(y,buff);
-}
-
 // Truncates an octet string
 void OCT_truncate(octet *y,octet *x)
 {
