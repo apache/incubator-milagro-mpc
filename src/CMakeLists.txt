@@ -30,19 +30,20 @@ add_library(${target} ${LIB_TYPE} ${SOURCES})
 target_link_libraries (${target}  amcl_paillier amcl_bls_BLS381 amcl_pairing_BLS381 amcl_curve_BLS381 amcl_curve_SECP256K1 amcl_core)
 
 set_target_properties(${target}
-                      PROPERTIES VERSION
-                                 ${BUILD_VERSION}
-                                 SOVERSION
-                                 ${VERSION_MAJOR})
+  PROPERTIES VERSION
+  ${BUILD_VERSION}
+  SOVERSION
+  ${VERSION_MAJOR})
 
 install(TARGETS ${target} DESTINATION lib PERMISSIONS
-        OWNER_WRITE OWNER_READ OWNER_EXECUTE
-        GROUP_READ GROUP_EXECUTE
-        WORLD_READ WORLD_EXECUTE)
+  OWNER_WRITE OWNER_READ OWNER_EXECUTE
+  GROUP_READ GROUP_EXECUTE
+  WORLD_READ WORLD_EXECUTE)
 
-message(STATUS "Copy ${target} library to python directory for testing")
-add_custom_command(TARGET ${target} POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E copy
-                          "${CMAKE_CURRENT_BINARY_DIR}/lib*"
-                          "${PROJECT_BINARY_DIR}/python/")
-      
+if(BUILD_PYTHON)
+  message(STATUS "Copy ${target} library to python directory for testing")
+  add_custom_command(TARGET ${target} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    "${CMAKE_CURRENT_BINARY_DIR}/lib*"
+    "${PROJECT_BINARY_DIR}/python/")
+endif(BUILD_PYTHON)
