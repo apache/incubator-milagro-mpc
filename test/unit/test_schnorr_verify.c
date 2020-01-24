@@ -18,26 +18,12 @@
 */
 
 #include <string.h>
+#include "test.h"
 #include "amcl/schnorr.h"
 
 /* Schnorr's Proof challenge verify test */
 
 #define LINE_LEN 256
-
-void read_OCTET(octet *OCT, char *string)
-{
-    int len = strlen(string);
-    char buff[len];
-    memcpy(buff, string, len);
-    char *end = strchr(buff, ',');
-    if (end == NULL)
-    {
-        printf("ERROR unexpected test vector %s\n", string);
-        exit(EXIT_FAILURE);
-    }
-    end[0] = '\0';
-    OCT_fromHex(OCT, buff);
-}
 
 int main(int argc, char **argv)
 {
@@ -48,10 +34,12 @@ int main(int argc, char **argv)
     }
 
     int rc;
-    FILE *fp;
+    int test_run = 0;
 
+    char err_msg[128];
+
+    FILE *fp;
     char line[LINE_LEN] = {0};
-    char *linePtr = NULL;
 
     const char *TESTline = "TEST = ";
     int testNo = 0;
@@ -72,6 +60,9 @@ int main(int argc, char **argv)
     octet P = {0, sizeof(p), p};
     const char *Pline = "P = ";
 
+    // Line terminating a test vector
+    const char *last_line = Pline;
+
     fp = fopen(argv[1], "r");
     if (fp == NULL)
     {
@@ -81,48 +72,32 @@ int main(int argc, char **argv)
 
     /* Test happy path with test vectors */
     while (fgets(line, LINE_LEN, fp) != NULL)
-    {    
-        // Read TEST number
-        if (!strncmp(line, TESTline, strlen(TESTline)))
-        {
-            linePtr = line + strlen(TESTline);
-            sscanf(linePtr, "%d\n", &testNo);
-        }
+    {
+        scan_int(&testNo, line, TESTline);
 
-        // Read V
-        if (!strncmp(line, Vline, strlen(Vline)))
-        {
-            linePtr = line + strlen(Vline);
-            read_OCTET(&V, linePtr);
-        }
+        // Read input
+        scan_OCTET(fp, &V, line, Vline);
+        scan_OCTET(fp, &C, line, Cline);
+        scan_OCTET(fp, &E, line, Eline);
+        scan_OCTET(fp, &P, line, Pline);
 
-        // Read C
-        if (!strncmp(line, Cline, strlen(Cline)))
+        if (!strncmp(line, last_line, strlen(last_line)))
         {
-            linePtr = line + strlen(Cline);
-            read_OCTET(&C, linePtr);
-        }
-
-        // Read E
-        if (!strncmp(line, Eline, strlen(Eline)))
-        {
-            linePtr = line + strlen(Eline);
-            read_OCTET(&E, linePtr);
-        }
-
-        // Read P and run test
-        if (!strncmp(line, Pline, strlen(Pline)))
-        {
-            linePtr = line + strlen(Pline);
-            read_OCTET(&P, linePtr);
-
             rc = SCHNORR_verify(&V, &C, &E, &P);
-            if (rc != SCHNORR_OK)
-            {
-                printf("FAILURE SCHNORR_verify. RC %d, Test %d", rc, testNo);
-                exit(EXIT_FAILURE);
-            }
+            sprintf(err_msg, "SCHNORR_verify. rc %d", rc);
+            assert_tv(fp, testNo, err_msg, rc == SCHNORR_OK);
+
+            // Mark that at least one test vector was executed
+            test_run = 1;
         }
+    }
+
+    fclose(fp);
+
+    if (test_run == 0)
+    {
+        printf("ERROR no test vector was executed\n");
+        exit(EXIT_FAILURE);
     }
 
     /* Test unhappy path */
@@ -130,25 +105,16 @@ int main(int argc, char **argv)
     octet ZERO = {0, sizeof(zero), zero};
 
     rc = SCHNORR_verify(&ZERO, &C, &E, &P);
-    if (rc != SCHNORR_INVALID_ECP)
-    {
-        printf("FAILURE SCHNORR_verify invalid V. RC %d", rc);
-        exit(EXIT_FAILURE);
-    }
+    sprintf(err_msg, "SCHNORR_verify invalid V. rc %d", rc);
+    assert(NULL, err_msg, rc == SCHNORR_INVALID_ECP);
 
     rc = SCHNORR_verify(&V, &ZERO, &E, &P);
-    if (rc != SCHNORR_INVALID_ECP)
-    {
-        printf("FAILURE SCHNORR_verify invalid C. RC %d", rc);
-        exit(EXIT_FAILURE);
-    }
+    sprintf(err_msg, "SCHNORR_verify invalid C. rc %d", rc);
+    assert(NULL, err_msg, rc == SCHNORR_INVALID_ECP);
 
     rc = SCHNORR_verify(&V, &C, &E, &ZERO);
-    if (rc != SCHNORR_FAIL)
-    {
-        printf("FAILURE SCHNORR_verify invalid proof. RC %d", rc);
-        exit(EXIT_FAILURE);
-    }
+    sprintf(err_msg, "SCHNORR_verify invalid proof. rc %d", rc);
+    assert(NULL, err_msg, rc == SCHNORR_FAIL);
 
     printf("SUCCESS\n");
     exit(EXIT_SUCCESS);

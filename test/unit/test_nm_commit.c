@@ -18,26 +18,12 @@
 */
 
 #include <string.h>
+#include "test.h"
 #include "amcl/commitments.h"
 
 /* NM Commitment unit tests */
 
 #define LINE_LEN 256
-
-void read_OCTET(octet *OCT, char *string)
-{
-    int len = strlen(string);
-    char buff[len];
-    memcpy(buff, string, len);
-    char *end = strchr(buff, ',');
-    if (end == NULL)
-    {
-        printf("ERROR unexpected test vector %s\n", string);
-        exit(EXIT_FAILURE);
-    }
-    end[0] = '\0';
-    OCT_fromHex(OCT, buff);
-}
 
 int main(int argc, char **argv)
 {
@@ -47,11 +33,11 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    int len = 0;
-    FILE *fp;
+    int rc;
+    int test_run = 0;
 
+    FILE *fp;
     char line[LINE_LEN] = {0};
-    char *linePtr = NULL;
 
     const char *TESTline = "TEST = ";
     int testNo = 0;
@@ -74,6 +60,9 @@ int main(int argc, char **argv)
     char c[SHA256];
     octet C = {0, sizeof(c), c};
 
+    // Line terminating a test vector
+    const char *last_line = Cline;
+
     /* Test happy path using test vectors */
     fp = fopen(argv[1], "r");
     if (fp == NULL)
@@ -84,69 +73,32 @@ int main(int argc, char **argv)
 
     while (fgets(line, LINE_LEN, fp) != NULL)
     {
-        // Read TEST number
-        if (!strncmp(line, TESTline, strlen(TESTline)))
-        {
-            len = strlen(TESTline);
-            linePtr = line + len;
-            sscanf(linePtr, "%d\n", &testNo);
-        }
+        scan_int(&testNo, line, TESTline);
 
-        // Read X
-        if (!strncmp(line, Xline, strlen(Xline)))
-        {
-            len = strlen(Xline);
-            linePtr = line + len;
-            read_OCTET(&X_GOLDEN, linePtr);
-#ifdef DEBUG
-            printf("X = ");
-            OCT_output(&X_GOLDEN);
-#endif
-        }
+        // Read ground truth
+        scan_OCTET(fp, &X_GOLDEN, line, Xline);
+        scan_OCTET(fp, &R_GOLDEN, line, Rline);
+        scan_OCTET(fp, &C_GOLDEN, line, Cline);
 
-        // Read R
-        if (!strncmp(line, Rline, strlen(Rline)))
+        if (!strncmp(line, last_line, strlen(last_line)))
         {
-            len = strlen(Rline);
-            linePtr = line + len;
-            read_OCTET(&R_GOLDEN, linePtr);
-#ifdef DEBUG
-            printf("R = ");
-            OCT_output(&R_GOLDEN);
-#endif
-        }
-
-        // Read C and start test
-        if (!strncmp(line, Cline, strlen(Cline)))
-        {
-            len = strlen(Cline);
-            linePtr = line + len;
-            read_OCTET(&C_GOLDEN, linePtr);
-#ifdef DEBUG
-            printf("\nC_GOLDEN = ");
-            OCT_output(&C_GOLDEN);
-#endif
-
-            // Test COMMITMENTS_NM_commit
             COMMITMENTS_NM_commit(NULL, &X_GOLDEN, &R_GOLDEN, &C);
-#ifdef DEBUG
-            printf("\nC = ");
-            OCT_output(&C);
-#endif
+            compare_OCT(fp, testNo, "COMMITMENT_NM_commit", &C_GOLDEN, &C);
 
-            if (!OCT_comp(&C_GOLDEN, &C))
-            {
-                printf("FAILURE COMMITMENT_NM_commit. Test %d\n", testNo);
-                exit(EXIT_FAILURE);
-            }
+            rc = COMMITMENTS_NM_decommit(&X_GOLDEN, &R_GOLDEN, &C_GOLDEN);
+            assert_tv(fp, testNo, "COMMITMENTS_NM_DECOMMIT", rc);
 
-            // Test COMMITMENTS_NM_decommit
-            if (!COMMITMENTS_NM_decommit(&X_GOLDEN, &R_GOLDEN, &C_GOLDEN))
-            {
-                printf("FAILURE COMMITMENTS_NM_decommit. Test %d\n", testNo);
-                exit(EXIT_FAILURE);
-            }
+            // Mark that at least one test vector was executed
+            test_run = 1;
         }
+    }
+
+    fclose(fp);
+
+    if (test_run == 0)
+    {
+        printf("ERROR no test vector was executed\n");
+        exit(EXIT_FAILURE);
     }
 
     /* Test COMMITMENTS_NM_decommit unhappy paths */
@@ -155,21 +107,15 @@ int main(int argc, char **argv)
     OCT_copy(&R, &R_GOLDEN);
     R.len--;
 
-    if (COMMITMENTS_NM_decommit(&X_GOLDEN, &R, &C_GOLDEN))
-    {
-        printf("FAILURE COMMITMENTS_NM_decommit. Invalid R length\n");
-        exit(EXIT_FAILURE);
-    }
+    rc = !COMMITMENTS_NM_decommit(&X_GOLDEN, &R, &C_GOLDEN);
+    assert(NULL, "COMMITMENTS_NM_decommit. Invalid R length", rc);
 
     // Test wrong decommitment
     OCT_copy(&R, &R_GOLDEN);
     R.val[0]--;
 
-    if (COMMITMENTS_NM_decommit(&X_GOLDEN, &R, &C_GOLDEN))
-    {
-        printf("FAILURE COMMITMENTS_NM_decommit. Invalid R\n");
-        exit(EXIT_FAILURE);
-    }
+    rc = !COMMITMENTS_NM_decommit(&X_GOLDEN, &R, &C_GOLDEN);
+    assert(NULL, "COMMITMENTS_NM_decommit. Invalid R", rc);
 
     printf("SUCCESS");
     exit(EXIT_SUCCESS);

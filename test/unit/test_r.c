@@ -17,17 +17,13 @@
     under the License.
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <amcl/randapi.h>
 #include <amcl/ecdh_SECP256K1.h>
 #include <amcl/ecdh_support.h>
 #include <amcl/paillier.h>
 #include <amcl/mpc.h>
+#include "test.h"
 
 #define LINE_LEN 2000
-
 
 int main(int argc, char** argv)
 {
@@ -37,21 +33,13 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    int len=0;
+    int rc;
+    int test_run = 0;
+
+    char err_msg[128];
+
     FILE *fp;
-
-    int rc=0;
-
-    // Paillier Keys
-    PAILLIER_private_key PRIV1;
-    PAILLIER_public_key PUB1;
-    PAILLIER_private_key PRIV2;
-    PAILLIER_public_key PUB2;
-
     char line[LINE_LEN]= {0};
-    char *linePtr=NULL;
-
-    int applyVector=0;
 
     const char* TESTline = "TEST = ";
     int testNo=0;
@@ -166,6 +154,15 @@ int main(int argc, char** argv)
     char cb12[FS_4096];
     octet CB12 = {0,sizeof(cb12),cb12};
 
+    // Paillier Keys
+    PAILLIER_private_key PRIV1;
+    PAILLIER_public_key PUB1;
+    PAILLIER_private_key PRIV2;
+    PAILLIER_public_key PUB2;
+
+    // Line terminating a test vector
+    const char *last_line = RESULTline;
+
     fp = fopen(argv[1], "r");
     if (fp == NULL)
     {
@@ -175,235 +172,35 @@ int main(int argc, char** argv)
 
     while (fgets(line, LINE_LEN, fp) != NULL)
     {
-        // Read TEST Number
-        if (!strncmp(line,TESTline, strlen(TESTline)))
-        {
-            len = strlen(TESTline);
-            linePtr = line + len;
-            sscanf(linePtr,"%d\n",&testNo);
-            printf("TEST = %d\n",testNo);
-        }
+        scan_int(&testNo, line, TESTline);
 
-        // Read P1
-        if (!strncmp(line,P1line, strlen(P1line)))
-        {
-            len = strlen(P1line);
-            linePtr = line + len;
-            read_OCTET(&P1,linePtr);
-#ifdef DEBUG
-            printf("P1 = ");
-            OCT_output(&P1);
-#endif
-        }
+        // Read inputs
+        scan_OCTET(fp, &P1, line,  P1line);
+        scan_OCTET(fp, &Q1, line,  Q1line);
+        scan_OCTET(fp, &A1, line,  A1line);
+        scan_OCTET(fp, &B1, line,  B1line);
+        scan_OCTET(fp, &R11, line, R11line);
+        scan_OCTET(fp, &R21, line, R21line);
+        scan_OCTET(fp, &Z21, line, Z21line);
 
-        // Read Q1
-        if (!strncmp(line,Q1line, strlen(Q1line)))
-        {
-            len = strlen(Q1line);
-            linePtr = line + len;
-            read_OCTET(&Q1,linePtr);
-#ifdef DEBUG
-            printf("Q1 = ");
-            OCT_output(&Q1);
-#endif
-        }
+        scan_OCTET(fp, &P2, line,  P2line);
+        scan_OCTET(fp, &Q2, line,  Q2line);
+        scan_OCTET(fp, &A2, line,  A2line);
+        scan_OCTET(fp, &B2, line,  B2line);
+        scan_OCTET(fp, &R12, line, R12line);
+        scan_OCTET(fp, &R22, line, R22line);
+        scan_OCTET(fp, &Z12, line, Z12line);
 
-        // Read A1
-        if (!strncmp(line,A1line, strlen(A1line)))
-        {
-            len = strlen(A1line);
-            linePtr = line + len;
-            read_OCTET(&A1,linePtr);
-#ifdef DEBUG
-            printf("A1 = ");
-            OCT_output(&A1);
-#endif
-        }
+        scan_OCTET(fp, &GAMMAPT1, line, GAMMAPT1line);
+        scan_OCTET(fp, &GAMMAPT2, line, GAMMAPT2line);
 
-        // Read B1
-        if (!strncmp(line,B1line, strlen(B1line)))
-        {
-            len = strlen(B1line);
-            linePtr = line + len;
-            read_OCTET(&B1,linePtr);
-#ifdef DEBUG
-            printf("B1 = ");
-            OCT_output(&B1);
-#endif
-        }
+        // Read ground truth
+        scan_OCTET(fp, &SIG_RGOLDEN, line, SIG_Rline);
 
-        // Read R21
-        if (!strncmp(line,R21line, strlen(R21line)))
-        {
-            len = strlen(R21line);
-            linePtr = line + len;
-            read_OCTET(&R21,linePtr);
-#ifdef DEBUG
-            printf("R21 = ");
-            OCT_output(&R21);
-#endif
-        }
+        scan_int(&result, line, RESULTline);
 
-        // Read R11
-        if (!strncmp(line,R11line, strlen(R11line)))
+        if (!strncmp(line, last_line, strlen(last_line)))
         {
-            len = strlen(R11line);
-            linePtr = line + len;
-            read_OCTET(&R11,linePtr);
-#ifdef DEBUG
-            printf("R11 = ");
-            OCT_output(&R11);
-#endif
-        }
-
-        // Read Z21
-        if (!strncmp(line,Z21line, strlen(Z21line)))
-        {
-            len = strlen(Z21line);
-            linePtr = line + len;
-            read_OCTET(&Z21,linePtr);
-#ifdef DEBUG
-            printf("Z21 = ");
-            OCT_output(&Z21);
-#endif
-        }
-
-        // Read P2
-        if (!strncmp(line,P2line, strlen(P2line)))
-        {
-            len = strlen(P2line);
-            linePtr = line + len;
-            read_OCTET(&P2,linePtr);
-#ifdef DEBUG
-            printf("P2 = ");
-            OCT_output(&P2);
-#endif
-        }
-
-        // Read Q2
-        if (!strncmp(line,Q2line, strlen(Q2line)))
-        {
-            len = strlen(Q2line);
-            linePtr = line + len;
-            read_OCTET(&Q2,linePtr);
-#ifdef DEBUG
-            printf("Q2 = ");
-            OCT_output(&Q2);
-#endif
-        }
-
-        // Read A2
-        if (!strncmp(line,A2line, strlen(A2line)))
-        {
-            len = strlen(A2line);
-            linePtr = line + len;
-            read_OCTET(&A2,linePtr);
-#ifdef DEBUG
-            printf("A2 = ");
-            OCT_output(&A2);
-#endif
-        }
-
-        // Read B2
-        if (!strncmp(line,B2line, strlen(B2line)))
-        {
-            len = strlen(B2line);
-            linePtr = line + len;
-            read_OCTET(&B2,linePtr);
-#ifdef DEBUG
-            printf("B2 = ");
-            OCT_output(&B2);
-#endif
-        }
-
-        // Read R22
-        if (!strncmp(line,R22line, strlen(R22line)))
-        {
-            len = strlen(R22line);
-            linePtr = line + len;
-            read_OCTET(&R22,linePtr);
-#ifdef DEBUG
-            printf("R22 = ");
-            OCT_output(&R22);
-#endif
-        }
-
-        // Read R12
-        if (!strncmp(line,R12line, strlen(R12line)))
-        {
-            len = strlen(R12line);
-            linePtr = line + len;
-            read_OCTET(&R12,linePtr);
-#ifdef DEBUG
-            printf("R12 = ");
-            OCT_output(&R12);
-#endif
-        }
-
-        // Read Z12
-        if (!strncmp(line,Z12line, strlen(Z12line)))
-        {
-            len = strlen(Z12line);
-            linePtr = line + len;
-            read_OCTET(&Z12,linePtr);
-#ifdef DEBUG
-            printf("Z12 = ");
-            OCT_output(&Z12);
-#endif
-        }
-
-        // Read GAMMAPT1
-        if (!strncmp(line,GAMMAPT1line, strlen(GAMMAPT1line)))
-        {
-            len = strlen(GAMMAPT1line);
-            linePtr = line + len;
-            read_OCTET(&GAMMAPT1,linePtr);
-#ifdef DEBUG
-            printf("GAMMAPT1 = ");
-            OCT_output(&GAMMAPT1);
-#endif
-        }
-
-        // Read GAMMAPT2
-        if (!strncmp(line,GAMMAPT2line, strlen(GAMMAPT2line)))
-        {
-            len = strlen(GAMMAPT2line);
-            linePtr = line + len;
-            read_OCTET(&GAMMAPT2,linePtr);
-#ifdef DEBUG
-            printf("GAMMAPT2 = ");
-            OCT_output(&GAMMAPT2);
-#endif
-        }
-
-        // Read SIG_R
-        if (!strncmp(line,SIG_Rline, strlen(SIG_Rline)))
-        {
-            len = strlen(SIG_Rline);
-            linePtr = line + len;
-            read_OCTET(&SIG_RGOLDEN,linePtr);
-#ifdef DEBUG
-            printf("SIG_RGOLDEN = ");
-            OCT_output(&SIG_RGOLDEN);
-#endif
-        }
-
-        // Read expected result
-        if (!strncmp(line,RESULTline, strlen(RESULTline)))
-        {
-            len = strlen(RESULTline);
-            linePtr = line + len;
-            sscanf(linePtr,"%d\n",&result);
-            applyVector=1;
-#ifdef DEBUG
-            printf("RESULT = %d\n\n", result);
-#endif
-        }
-
-        if (applyVector)
-        {
-            applyVector=0;
-
             // Generating Paillier key pairs
             PAILLIER_KEY_PAIR(NULL, &P1, &Q1, &PUB1, &PRIV1);
             PAILLIER_KEY_PAIR(NULL, &P2, &Q2, &PUB2, &PRIV2);
@@ -433,30 +230,24 @@ int main(int argc, char** argv)
 
             // Calculate the R signature component
             rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, &SIG_R);
-            if (rc)
-            {
-                fprintf(stderr, "FAILURE MPC_R rc: %d\n", rc);
-                exit(EXIT_FAILURE);
-            }
 
-#ifdef DEBUG
-            printf("SIG_R: ");
-            OCT_output(&SIG_R);
-            printf("\n");
-#endif
+            sprintf(err_msg, "MPC_R rc: %d", rc);
+            assert_tv(fp, testNo, err_msg, rc == 0);
+            compare_OCT(fp, testNo, "SIG_R != SIG_RGOLDEN", &SIG_R, &SIG_RGOLDEN);
 
-            // OCT_comp return 1 for equal
-            rc = !(OCT_comp(&SIG_R,&SIG_RGOLDEN));
-            if(rc != result)
-            {
-                fprintf(stderr, "FAILURE SIG_R != SIG_RGOLDEN rc: %d\n", rc);
-                exit(EXIT_FAILURE);
-            }
-
+            // Mark that at least one test vector was executed
+            test_run = 1;
         }
     }
+
     fclose(fp);
+
+    if (test_run == 0)
+    {
+        printf("ERROR no test vector was executed\n");
+        exit(EXIT_FAILURE);
+    }
+
     printf("SUCCESS TEST R GENERATION PASSED\n");
     exit(EXIT_SUCCESS);
 }
-

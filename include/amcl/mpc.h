@@ -33,17 +33,6 @@ under the License.
 extern "C" {
 #endif
 
-
-/*! \brief Read string into an octet
- *
- *  Read string into an octet
- *
- *  @param  y       Output octet
- *  @param  x       Input string
- *  @return         Returns 0 or else error code
- */
-void read_OCTET(octet *y, char *x);
-
 /*! \brief Truncates an octet string
 *
 *  Add the top x->len bytes of y to x

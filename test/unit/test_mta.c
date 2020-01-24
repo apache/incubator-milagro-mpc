@@ -17,13 +17,10 @@
     under the License.
 */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <amcl/randapi.h>
 #include <amcl/paillier.h>
 #include <amcl/mpc.h>
+#include "test.h"
 
 #define LINE_LEN 2000
 
@@ -35,15 +32,10 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    int rc=0;
+    int test_run = 0;
 
-    int len=0;
     FILE *fp;
-
     char line[LINE_LEN]= {0};
-    char *linePtr=NULL;
-
-    int applyVector=0;
 
     // Paillier Keys
     PAILLIER_private_key PRIV;
@@ -112,6 +104,9 @@ int main(int argc, char** argv)
     octet BETAGOLDEN = {0,sizeof(betagolden),betagolden};
     const char* BETAline = "BETA = ";
 
+    // Line terminating a test vector
+    const char *last_line = RESULTline;
+
     fp = fopen(argv[1], "r");
     if (fp == NULL)
     {
@@ -121,233 +116,53 @@ int main(int argc, char** argv)
 
     while (fgets(line, LINE_LEN, fp) != NULL)
     {
-        // Read TEST Number
-        if (!strncmp(line,TESTline, strlen(TESTline)))
-        {
-            len = strlen(TESTline);
-            linePtr = line + len;
-            sscanf(linePtr,"%d\n",&testNo);
-            printf("TEST = %d\n",testNo);
-        }
+        scan_int(&testNo, line, TESTline);
 
-        // Read P
-        if (!strncmp(line,Pline, strlen(Pline)))
-        {
-            len = strlen(Pline);
-            linePtr = line + len;
-            read_OCTET(&P,linePtr);
-#ifdef DEBUG
-            printf("P = ");
-            OCT_output(&P);
-#endif
-        }
+        // Read inputs
+        scan_OCTET(fp, &P,  line, Pline);
+        scan_OCTET(fp, &Q,  line, Qline);
+        scan_OCTET(fp, &A,  line, Aline);
+        scan_OCTET(fp, &B,  line, Bline);
+        scan_OCTET(fp, &Z,  line, Zline);
+        scan_OCTET(fp, &R1, line, R1line);
+        scan_OCTET(fp, &R2, line, R2line);
 
-        // Read Q
-        if (!strncmp(line,Qline, strlen(Qline)))
-        {
-            len = strlen(Qline);
-            linePtr = line + len;
-            read_OCTET(&Q,linePtr);
-#ifdef DEBUG
-            printf("Q = ");
-            OCT_output(&Q);
-#endif
-        }
+        // Read ground truth
+        scan_OCTET(fp, &CAGOLDEN, line, CAline);
+        scan_OCTET(fp, &CBGOLDEN, line, CBline);
+        scan_OCTET(fp, &BETAGOLDEN, line, BETAline);
+        scan_OCTET(fp, &ALPHAGOLDEN, line, ALPHAline);
 
-        // Read A
-        if (!strncmp(line,Aline, strlen(Aline)))
-        {
-            len = strlen(Aline);
-            linePtr = line + len;
-            read_OCTET(&A,linePtr);
-#ifdef DEBUG
-            printf("A = ");
-            OCT_output(&A);
-#endif
-        }
+        scan_int(&result, line, RESULTline);
 
-        // Read B
-        if (!strncmp(line,Bline, strlen(Bline)))
+        if (!strncmp(line, last_line, strlen(last_line)))
         {
-            len = strlen(Bline);
-            linePtr = line + len;
-            read_OCTET(&B,linePtr);
-#ifdef DEBUG
-            printf("B = ");
-            OCT_output(&B);
-#endif
-        }
-
-        // Read Z
-        if (!strncmp(line,Zline, strlen(Zline)))
-        {
-            len = strlen(Zline);
-            linePtr = line + len;
-            read_OCTET(&Z,linePtr);
-#ifdef DEBUG
-            printf("Z = ");
-            OCT_output(&Z);
-#endif
-        }
-
-        // Read R1
-        if (!strncmp(line,R1line, strlen(R1line)))
-        {
-            len = strlen(R1line);
-            linePtr = line + len;
-            read_OCTET(&R1,linePtr);
-#ifdef DEBUG
-            printf("R1 = ");
-            OCT_output(&R1);
-#endif
-        }
-
-        // Read R2
-        if (!strncmp(line,R2line, strlen(R2line)))
-        {
-            len = strlen(R2line);
-            linePtr = line + len;
-            read_OCTET(&R2,linePtr);
-#ifdef DEBUG
-            printf("R2 = ");
-            OCT_output(&R2);
-#endif
-        }
-
-        // Read CAGOLDEN
-        if (!strncmp(line,CAline, strlen(CAline)))
-        {
-            len = strlen(CAline);
-            linePtr = line + len;
-            read_OCTET(&CAGOLDEN,linePtr);
-#ifdef DEBUG
-            printf("CA = ");
-            OCT_output(&CAGOLDEN);
-#endif
-        }
-
-        // Read CBGOLDEN
-        if (!strncmp(line,CBline, strlen(CBline)))
-        {
-            len = strlen(CBline);
-            linePtr = line + len;
-            read_OCTET(&CBGOLDEN,linePtr);
-#ifdef DEBUG
-            printf("CB = ");
-            OCT_output(&CBGOLDEN);
-#endif
-        }
-
-        // Read ALPHAGOLDEN
-        if (!strncmp(line,ALPHAline, strlen(ALPHAline)))
-        {
-            len = strlen(ALPHAline);
-            linePtr = line + len;
-            read_OCTET(&ALPHAGOLDEN,linePtr);
-#ifdef DEBUG
-            printf("ALPHA = ");
-            OCT_output(&ALPHAGOLDEN);
-#endif
-        }
-
-        // Read BETAGOLDEN
-        if (!strncmp(line,BETAline, strlen(BETAline)))
-        {
-            len = strlen(BETAline);
-            linePtr = line + len;
-            read_OCTET(&BETAGOLDEN,linePtr);
-#ifdef DEBUG
-            printf("BETA = ");
-            OCT_output(&BETAGOLDEN);
-#endif
-        }
-
-        // Read expected result
-        if (!strncmp(line,RESULTline, strlen(RESULTline)))
-        {
-            len = strlen(RESULTline);
-            linePtr = line + len;
-            sscanf(linePtr,"%d\n",&result);
-            applyVector=1;
-#ifdef DEBUG
-            printf("RESULT = %d\n\n", result);
-#endif
-        }
-
-        if (applyVector)
-        {
-            applyVector=0;
-
             //  Paillier key pair
             PAILLIER_KEY_PAIR(NULL, &P, &Q, &PUB, &PRIV);
 
             MPC_MTA_CLIENT1(NULL, &PUB, &A, &CA, &R1);
-
-#ifdef DEBUG
-            printf("CA: ");
-            OCT_output(&CA);
-            printf("\n");
-#endif
-
-            // OCT_comp return 1 for equal
-            rc = !(OCT_comp(&CA,&CAGOLDEN));
-            if(rc != result)
-            {
-                fprintf(stderr, "FAILURE Test %d CA != CAGOLDEN \n", testNo);
-                fclose(fp);
-                exit(EXIT_FAILURE);
-            }
+            compare_OCT(fp, testNo, "CA != CAGOLDEN", &CA, &CAGOLDEN);
 
             MPC_MTA_SERVER(NULL, &PUB, &B, &CA, &Z, &R2, &CB, &BETA);
-
-#ifdef DEBUG
-            printf("CB: ");
-            OCT_output(&CB);
-            printf("\n");
-            printf("BETA: ");
-            OCT_output(&BETA);
-            printf("\n");
-#endif
-
-            // OCT_comp return 1 for equal
-            rc = !(OCT_comp(&CB,&CBGOLDEN));
-            if(rc != result)
-            {
-                fprintf(stderr, "FAILURE Test %d CB != CBGOLDEN \n", testNo);
-                fclose(fp);
-                exit(EXIT_FAILURE);
-            }
-
-            // OCT_comp return 1 for equal
-            rc = !(OCT_comp(&BETA,&BETAGOLDEN));
-            if(rc != result)
-            {
-                fprintf(stderr, "FAILURE Test %d BETA != BETAGOLDEN \n", testNo);
-                fclose(fp);
-                exit(EXIT_FAILURE);
-            }
+            compare_OCT(fp, testNo, "CB != CBGOLDEN", &CB, &CBGOLDEN);
+            compare_OCT(fp, testNo, "BETA != BETAGOLDEN", &BETA, &BETAGOLDEN);
 
             MPC_MTA_CLIENT2(&PRIV, &CB, &ALPHA);
+            compare_OCT(fp, testNo, "ALPHA != ALPHAGOLDEN", &ALPHA, &ALPHAGOLDEN);
 
-#ifdef DEBUG
-            printf("ALPHA: ");
-            OCT_output(&ALPHA);
-            printf("\n");
-#endif
-
-            // OCT_comp return 1 for equal
-            rc = !(OCT_comp(&ALPHA,&ALPHAGOLDEN));
-            if(rc != result)
-            {
-                fprintf(stderr, "FAILURE Test %d ALPHA != ALPHAGOLDEN \n", testNo);
-                fclose(fp);
-                exit(EXIT_FAILURE);
-            }
-
+            // Mark that at least one test vector was executed
+            test_run = 1;
         }
     }
+
     fclose(fp);
+
+    if (test_run == 0)
+    {
+        printf("ERROR no test vector was executed\n");
+        exit(EXIT_FAILURE);
+    }
+
     printf("SUCCESS TEST MTA PASSED\n");
     exit(EXIT_SUCCESS);
 }
-

@@ -18,26 +18,12 @@
 */
 
 #include <string.h>
+#include "test.h"
 #include "amcl/schnorr.h"
 
 /* Schnorr's Proof prove unit test */
 
 #define LINE_LEN 256
-
-void read_OCTET(octet *OCT, char *string)
-{
-    int len = strlen(string);
-    char buff[len];
-    memcpy(buff, string, len);
-    char *end = strchr(buff, ',');
-    if (end == NULL)
-    {
-        printf("ERROR unexpected test vector %s\n", string);
-        exit(EXIT_FAILURE);
-    }
-    end[0] = '\0';
-    OCT_fromHex(OCT, buff);
-}
 
 int main(int argc, char **argv)
 {
@@ -47,11 +33,10 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    int len = 0;
-    FILE *fp;
+    int test_run = 0;
 
+    FILE *fp;
     char line[LINE_LEN] = {0};
-    char *linePtr = NULL;
 
     const char *TESTline = "TEST = ";
     int testNo = 0;
@@ -68,12 +53,15 @@ int main(int argc, char **argv)
     octet X = {0, sizeof(x), x};
     const char *Xline = "X = ";
 
-        char p_golden[SGS_SECP256K1];
+    char p_golden[SGS_SECP256K1];
     octet P_GOLDEN = {0, sizeof(p_golden), p_golden};
     const char *Pline = "P = ";
 
     char p[SGS_SECP256K1];
     octet P = {0, sizeof(p), p};
+
+    // Line terminating a test vector
+    const char *last_line = Pline;
 
     fp = fopen(argv[1], "r");
     if (fp == NULL)
@@ -83,54 +71,34 @@ int main(int argc, char **argv)
     }
 
     while (fgets(line, LINE_LEN, fp) != NULL)
-    {    
-        // Read TEST number
-        if (!strncmp(line, TESTline, strlen(TESTline)))
-        {
-            len = strlen(TESTline);
-            linePtr = line + len;
-            sscanf(linePtr, "%d\n", &testNo);
-        }
+    {
+        scan_int(&testNo, line, TESTline);
 
-        // Read R
-        if (!strncmp(line, Rline, strlen(Rline)))
-        {
-            len = strlen(Rline);
-            linePtr = line + len;
-            read_OCTET(&R, linePtr);
-        }
+        // Read input
+        scan_OCTET(fp, &R, line, Rline);
+        scan_OCTET(fp, &E, line, Eline);
+        scan_OCTET(fp, &X, line, Xline);
 
-        // Read E
-        if (!strncmp(line, Eline, strlen(Eline)))
-        {
-            len = strlen(Eline);
-            linePtr = line + len;
-            read_OCTET(&E, linePtr);
-        }
-
-        // Read X
-        if (!strncmp(line, Xline, strlen(Xline)))
-        {
-            len = strlen(Xline);
-            linePtr = line + len;
-            read_OCTET(&X, linePtr);
-        }
+        // Read ground truth
+        scan_OCTET(fp, &P_GOLDEN, line, Pline);
 
         // Read P and run test
-        if (!strncmp(line, Pline, strlen(Pline)))
+        if (!strncmp(line, last_line, strlen(last_line)))
         {
-            len = strlen(Pline);
-            linePtr = line + len;
-            read_OCTET(&P_GOLDEN, linePtr);
-
             SCHNORR_prove(&R, &E, &X, &P);
+            compare_OCT(fp, testNo, "SCHNORR_prove", &P, &P_GOLDEN);
 
-            if (!OCT_comp(&P, &P_GOLDEN))
-            {
-                printf("FAILURE SCHNORR_prove. Test %d\n", testNo);
-                exit(EXIT_FAILURE);
-            }
+            // Mark that at least one test vector was executed
+            test_run = 1;
         }
+    }
+
+    fclose(fp);
+
+    if (test_run == 0)
+    {
+        printf("ERROR no test vector was executed\n");
+        exit(EXIT_FAILURE);
     }
 
     printf("SUCCESS\n");

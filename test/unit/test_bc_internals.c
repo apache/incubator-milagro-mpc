@@ -18,6 +18,7 @@
 */
 
 #include <string.h>
+#include "test.h"
 #include "commitments.c"
 
 /* BC Commitment internals unit tests */
@@ -29,6 +30,8 @@ char *X1hex = "1241075d9b641c4f3da110d5c0fb5b7e7334e7d826c6a4ee76ebb1ae780ef1d78
 
 int main()
 {
+    int rc;
+
     char o[HFS_2048];
     octet O = {0, sizeof(o), o};
 
@@ -60,63 +63,40 @@ int main()
     // and is not squared
     RAND_seed(&RNG, 32, seed);
     bc_generator(&RNG, x, p, P, HFLEN_2048);
-
-    if (FF_2048_comp(x, x0, HFLEN_2048) != 0)
-    {
-        printf("FAILURE bc_generator. Seed 0\n");
-        exit(EXIT_FAILURE);
-    }
+    compare_FF_2048(NULL, 0, "bc_generator. Seed 0", x, x0, HFLEN_2048);
 
     // Using seed 1 the generated number has order 2p
     // and is squared
     seed[0]+=1;
     RAND_seed(&RNG, 32, seed);
     bc_generator(&RNG, x, p, P, HFLEN_2048);
-
-    if (FF_2048_comp(x, x1, HFLEN_2048) != 0)
-    {
-        printf("FAILURE bc_generator. Seed 1\n");
-        exit(EXIT_FAILURE);
-    }
+    compare_FF_2048(NULL, 0, "bc_generator. Seed 1", x, x1, HFLEN_2048);
 
     /* Test safe prime primality test */
 
     // Test OK
-    if (!is_safe_prime(p, P, &RNG, HFLEN_2048))
-    {
-        printf("FAILURE is_safe_prime OK\n");
-        exit(EXIT_FAILURE);
-    }
+    rc = is_safe_prime(p, P, &RNG, HFLEN_2048);
+    assert(NULL, "is_safe_prime OK", rc);
 
     // Test FAIL - p not prime
     FF_2048_dec(p, 1, HFLEN_2048);
-    if(is_safe_prime(p, P, &RNG, HFLEN_2048))
-    {
-        printf("FAILURE is_safe_prime FAIL - p small factor\n");
-        exit(EXIT_FAILURE);
-    }
+    rc = !is_safe_prime(p, P, &RNG, HFLEN_2048);
+    assert(NULL, "is_safe_prime FAIL - p small factor", rc);
 
     FF_2048_inc(p, 1, HFLEN_2048);
 
     // Test FAIL - P has small factor
     FF_2048_dec(P, 1, HFLEN_2048);
-    if(is_safe_prime(p, P, &RNG, HFLEN_2048))
-    {
-        printf("FAILURE is_safe_prime FAIL - P small factor\n");
-        exit(EXIT_FAILURE);
-    }
+    rc = !is_safe_prime(p, P, &RNG, HFLEN_2048);
+    assert(NULL, "is_safe_prime FAIL - P small factor", rc);
 
     FF_2048_inc(P, 1, HFLEN_2048);
 
     // Test FAIL - P not passing Fermat base 2 test
     // Increase P by 2 * 3 * ... * 19 + 1
     FF_2048_inc(P, 4849846, HFLEN_2048);
-
-    if(is_safe_prime(p, P, &RNG, HFLEN_2048))
-    {
-        printf("FAILURE is_safe_prime FAIL - P small factor\n");
-        exit(EXIT_FAILURE);
-    }
+    rc = !is_safe_prime(p, P, &RNG, HFLEN_2048);
+    assert(NULL, "is_safe_prime FAIL - P fails Fermat", rc);
 
     FF_2048_dec(P, 4849846, HFLEN_2048);
 

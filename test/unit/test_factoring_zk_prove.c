@@ -20,34 +20,10 @@ under the License.
 /* ZKP of factoring prove unit test */
 
 #include <string.h>
+#include "test.h"
 #include "amcl/factoring_zk.h"
 
 #define LINE_LEN 2000
-
-void read_OCTET(octet *OCT, char *string)
-{
-    int len = strlen(string);
-    char buff[len];
-    memcpy(buff, string, len);
-    char *end = strchr(buff, ',');
-    if (end == NULL)
-    {
-        printf("ERROR unexpected test vector %s\n", string);
-        exit(EXIT_FAILURE);
-    }
-    end[0] = '\0';
-    OCT_fromHex(OCT, buff);
-}
-
-void read_FF_2048(BIG_1024_58 *x, char *string, int n)
-{
-    int len = strlen(string);
-    char oct[len / 2];
-    octet OCT = {0, len / 2, oct};
-
-    read_OCTET(&OCT, string);
-    FF_2048_fromOctet(x, &OCT, n);
-}
 
 int main(int argc, char **argv)
 {
@@ -57,11 +33,10 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    int len = 0;
-    FILE *fp;
+    int test_run = 0;
 
+    FILE *fp;
     char line[LINE_LEN] = {0};
-    char *linePtr = NULL;
 
     const char *TESTline = "TEST = ";
     int testNo = 0;
@@ -89,6 +64,9 @@ int main(int argc, char **argv)
     char y[FS_2048];
     octet Y = {0, sizeof(y), y};
 
+    // Line terminating a test vector
+    const char *last_line = Yline;
+
     fp = fopen(argv[1], "r");
     if (fp == NULL)
     {
@@ -98,75 +76,39 @@ int main(int argc, char **argv)
 
     while (fgets(line, LINE_LEN, fp) != NULL)
     {
-        // Read TEST Number
-        if (!strncmp(line, TESTline, strlen(TESTline)))
-        {
-            len = strlen(TESTline);
-            linePtr = line + len;
-            sscanf(linePtr, "%d\n", &testNo);
-            printf("TEST = %d\n", testNo);
-        }
+        scan_int(&testNo, line, TESTline);
 
-        // Read N
-        if (!strncmp(line, Nline, strlen(Nline)))
-        {
-            len = strlen(Nline);
-            linePtr = line + len;
-            read_FF_2048(m.n, linePtr, FFLEN_2048);
-        }
+        // Read modulus
+        scan_FF_2048(fp, m.p, line, Pline, HFLEN_2048);
+        scan_FF_2048(fp, m.q, line, Qline, HFLEN_2048);
+        scan_FF_2048(fp, m.n, line, Nline, FFLEN_2048);
 
-        // Read P
-        if (!strncmp(line, Pline, strlen(Pline)))
-        {
-            len = strlen(Pline);
-            linePtr = line + len;
-            read_FF_2048(m.p, linePtr, HFLEN_2048);
-        }
+        // Read non-random R
+        scan_OCTET(fp, &R, line, Rline);
 
-        // Read Q
-        if (!strncmp(line, Qline, strlen(Qline)))
-        {
-            len = strlen(Qline);
-            linePtr = line + len;
-            read_FF_2048(m.q, linePtr, HFLEN_2048);
-        }
-
-        // Read R
-        if (!strncmp(line, Rline, strlen(Rline)))
-        {
-            len = strlen(Rline);
-            linePtr = line + len;
-            read_OCTET(&R, linePtr);
-        }
-
-        // Read E
-        if (!strncmp(line, Eline, strlen(Eline)))
-        {
-            len = strlen(Eline);
-            linePtr = line + len;
-            read_OCTET(&EGOLDEN, linePtr);
-        }
+        // Read ground truth
+        scan_OCTET(fp, &EGOLDEN, line, Eline);
+        scan_OCTET(fp, &YGOLDEN, line, Yline);
 
         // Read Y and run test
-        if (!strncmp(line, Yline, strlen(Yline)))
+        if (!strncmp(line, last_line, strlen(last_line)))
         {
-            len = strlen(Yline);
-            linePtr = line + len;
-            read_OCTET(&YGOLDEN, linePtr);
-
             FACTORING_ZK_prove(&m, NULL, &R, &E, &Y);
-            if (!OCT_comp(&EGOLDEN, &E))
-            {
-                printf("FAILURE FACTORING_ZK_prove E. Test %d\n", testNo);
-                exit(EXIT_FAILURE);
-            }
 
-            if (!OCT_comp(&YGOLDEN, &Y))
-            {
-                printf("FAILURE FACTORING_ZK_prove Y. Test %d\n", testNo);
-                exit(EXIT_FAILURE);
-            }
+            compare_OCT(fp, testNo, "FACTORING_ZK_prove E", &E, &EGOLDEN);
+            compare_OCT(fp, testNo, "FACTORING_ZK_prove Y", &Y, &YGOLDEN);
+
+            // Mark that at least one test vector was executed
+            test_run = 1;
         }
+    }
+
+    fclose(fp);
+
+    if (test_run == 0)
+    {
+        printf("ERROR no test vector was executed\n");
+        exit(EXIT_FAILURE);
     }
 
     printf("SUCCESS\n");

@@ -18,45 +18,12 @@
 */
 
 #include <string.h>
+#include "test.h"
 #include "amcl/commitments.h"
 
 /* BC Commitment setup unit tests */
 
 #define LINE_LEN 1024
-
-void read_OCTET(octet *OCT, char *string)
-{
-    int len = strlen(string);
-    char buff[len];
-    memcpy(buff, string, len);
-    char *end = strchr(buff, ',');
-    if (end == NULL)
-    {
-        printf("ERROR unexpected test vector %s\n", string);
-        exit(EXIT_FAILURE);
-    }
-    end[0] = '\0';
-    OCT_fromHex(OCT, buff);
-}
-
-void read_FF_2048(BIG_1024_58 *x, char *string, int n)
-{
-    int len = strlen(string);
-    char oct[len / 2];
-    octet OCT = {0, len / 2, oct};
-
-    read_OCTET(&OCT, string);
-    FF_2048_fromOctet(x, &OCT, n);
-}
-
-void compare_FF_2048(int testNo, char* name, BIG_1024_58 *x, BIG_1024_58 *y, int n)
-{
-    if(FF_2048_comp(x, y, n))
-    {
-        fprintf(stderr, "FAILURE COMMITMENTS_BC_setup %s. Test %d\n", name, testNo);
-        exit(EXIT_FAILURE);
-    }
-}
 
 int main(int argc, char **argv)
 {
@@ -66,11 +33,10 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    int len = 0;
-    FILE *fp;
+    int test_run = 0;
 
+    FILE *fp;
     char line[LINE_LEN] = {0};
-    char *linePtr = NULL;
 
     const char *TESTline = "TEST = ";
     int testNo = 0;
@@ -99,6 +65,9 @@ int main(int argc, char **argv)
     const char *IALPHAline = "IALPHA = ";
     const char *B1line = "B1 = ";
 
+    // Line terminating a test vector
+    const char *last_line = B1line;
+
     fp = fopen(argv[1], "r");
     if (fp == NULL)
     {
@@ -108,100 +77,49 @@ int main(int argc, char **argv)
 
     while (fgets(line, LINE_LEN, fp) != NULL)
     {
-        // Read TEST Number
-        if (!strncmp(line, TESTline, strlen(TESTline)))
+        scan_int(&testNo, line, TESTline);
+
+        // Test input
+        scan_OCTET(fp, &P, line, Pline);
+        scan_OCTET(fp, &Q, line, Qline);
+        scan_OCTET(fp, &ALPHA, line, ALPHAline);
+        scan_OCTET(fp, &B0, line, B0line);
+
+        // Ground truth
+        scan_FF_2048(fp, m_golden.P, line, Pline, HFLEN_2048);
+        scan_FF_2048(fp, m_golden.Q, line, Qline, HFLEN_2048);
+        scan_FF_2048(fp, m_golden.pq, line, PQline, FFLEN_2048);
+        scan_FF_2048(fp, m_golden.N, line, Nline, FFLEN_2048);
+        scan_FF_2048(fp, m_golden.alpha, line, ALPHAline, FFLEN_2048);
+        scan_FF_2048(fp, m_golden.ialpha, line, IALPHAline, FFLEN_2048);
+        scan_FF_2048(fp, m_golden.b0, line, B0line, FFLEN_2048);
+        scan_FF_2048(fp, m_golden.b1, line, B1line, FFLEN_2048);
+
+        // Run test when the whole test vector has been read
+        if (!strncmp(line, last_line, strlen(last_line)))
         {
-            len = strlen(TESTline);
-            linePtr = line + len;
-            sscanf(linePtr, "%d\n", &testNo);
+            COMMITMENTS_BC_setup(NULL, &m, &P, &Q, &B0, &ALPHA);
+
+            compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup P",      m.P,      m_golden.P,      HFLEN_2048);
+            compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup Q",      m.Q,      m_golden.Q,      HFLEN_2048);
+            compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup N",      m.N,      m_golden.N,      FFLEN_2048);
+            compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup pq",     m.pq,     m_golden.pq,     FFLEN_2048);
+            compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup alpha",  m.alpha,  m_golden.alpha,  FFLEN_2048);
+            compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup ialpha", m.ialpha, m_golden.ialpha, FFLEN_2048);
+            compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup b0",     m.b0,     m_golden.b0,     FFLEN_2048);
+            compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup b1",     m.b1,     m_golden.b1,     FFLEN_2048);
+
+            // Mark that at least one test vector has been executed
+            test_run = 1;
         }
+    }
 
-        // Read P
-        if (!strncmp(line, Pline, strlen(Pline)))
-        {
-            len = strlen(Pline);
-            linePtr = line + len;
-            read_OCTET(&P, linePtr);
-            FF_2048_fromOctet(m_golden.P, &P, HFLEN_2048);
-        }
+    fclose(fp);
 
-        // Read Q
-        if (!strncmp(line, Qline, strlen(Qline)))
-        {
-            len = strlen(Qline);
-            linePtr = line + len;
-            read_OCTET(&Q, linePtr);
-            FF_2048_fromOctet(m_golden.Q, &Q, HFLEN_2048);
-        }
-
-        // Read PQ
-        if (!strncmp(line, PQline, strlen(PQline)))
-        {
-            len = strlen(PQline);
-            linePtr = line + len;
-            read_FF_2048(m.pq, linePtr, FFLEN_2048);
-            FF_2048_copy(m_golden.pq, m.pq, FFLEN_2048);
-        }
-
-        // Read N
-        if (!strncmp(line, Nline, strlen(Nline)))
-        {
-            len = strlen(Nline);
-            linePtr = line + len;
-            read_FF_2048(m.N, linePtr, FFLEN_2048);
-            FF_2048_copy(m_golden.N, m.N, FFLEN_2048);
-        }
-
-        // Read ALPHA
-        if (!strncmp(line, ALPHAline, strlen(ALPHAline)))
-        {
-            len = strlen(ALPHAline);
-            linePtr = line + len;
-            read_OCTET(&ALPHA, linePtr);
-            FF_2048_fromOctet(m_golden.alpha, &ALPHA, FFLEN_2048);
-        }
-
-        // Read B0
-        if (!strncmp(line, B0line, strlen(B0line)))
-        {
-            len = strlen(B0line);
-            linePtr = line + len;
-            read_OCTET(&B0, linePtr);
-            FF_2048_fromOctet(m_golden.b0, &B0, FFLEN_2048);
-        }
-
-
-        // Read IALPHA
-        if (!strncmp(line, IALPHAline, strlen(IALPHAline)))
-        {
-            len = strlen(IALPHAline);
-            linePtr = line + len;
-            read_FF_2048(m_golden.ialpha, linePtr, FFLEN_2048);
-        }
-
-        // Read B1 and run test
-        if (!strncmp(line, B1line, strlen(B1line)))
-        {
-            len = strlen(B1line);
-            linePtr = line + len;
-            read_FF_2048(m_golden.b1, linePtr, FFLEN_2048);
-
-            csprng RNG;
-            char seed[32] = {0};
-            RAND_seed(&RNG, 32, seed);
-
-            // Run test
-            COMMITMENTS_BC_setup(&RNG, &m, &P, &Q, &B0, &ALPHA);
-
-            compare_FF_2048(testNo, "P",      m.P,      m_golden.P,      HFLEN_2048);
-            compare_FF_2048(testNo, "Q",      m.Q,      m_golden.Q,      HFLEN_2048);
-            compare_FF_2048(testNo, "N",      m.N,      m_golden.N,      FFLEN_2048);
-            compare_FF_2048(testNo, "pq",     m.pq,     m_golden.pq,     FFLEN_2048);
-            compare_FF_2048(testNo, "alpha",  m.alpha,  m_golden.alpha,  FFLEN_2048);
-            compare_FF_2048(testNo, "ialpha", m.ialpha, m_golden.ialpha, FFLEN_2048);
-            compare_FF_2048(testNo, "b0",     m.b0,     m_golden.b0,     FFLEN_2048);
-            compare_FF_2048(testNo, "b1",     m.b1,     m_golden.b1,     FFLEN_2048);
-        }
+    if (test_run == 0)
+    {
+        printf("ERROR no test vector executed\n");
+        exit(EXIT_FAILURE);
     }
 
     printf("SUCCESS\n");

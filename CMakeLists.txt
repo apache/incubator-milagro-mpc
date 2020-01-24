@@ -52,7 +52,7 @@ log(BUILD_DOXYGEN)
 log(BUILD_SHARED_LIBS)
 log(BUILD_TESTS)
 log(BUILD_EXAMPLES)
-log(BUILD_BENCHMARK) 
+log(BUILD_BENCHMARK)
 log(BUILD_PYTHON)
 
 # Allow the developer to select if Dynamic or Static libraries are built
@@ -96,7 +96,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
         set(CMAKE_C_FLAGS_DEBUG       "-static -O0 -g3 -D DEBUG")
         set(CMAKE_C_FLAGS_COVERAGE    "-static -O0 -g3 --coverage")
     endif(BUILD_SHARED_LIBS)
-    
+
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
@@ -121,8 +121,7 @@ endif()
 
 if(BUILD_TESTS)
   message(STATUS "Build tests")
-  add_subdirectory(test/smoke)
-  add_subdirectory(test/unit)  
+  add_subdirectory(test)
 endif()
 
 if(BUILD_BENCHMARK)

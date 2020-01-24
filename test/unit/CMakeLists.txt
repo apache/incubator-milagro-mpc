@@ -21,12 +21,13 @@ link_directories (${PROJECT_BINARY_DIR}/src
 
 include_directories (${PROJECT_SOURCE_DIR}/src
                      ${PROJECT_SOURCE_DIR}/include
+                     ${PROJECT_SOURCE_DIR}/test
                      /usr/local/include)
 
 function(amcl_test name source dependencies expected_response)
   add_executable(${name} "${source}")
 
-  target_link_libraries(${name} PRIVATE ${dependencies})
+  target_link_libraries(${name} PRIVATE ${dependencies} mpc_test_utils)
 
   add_test(NAME ${name}
     COMMAND ${TARGET_SYSTEM_EMULATOR} $<TARGET_FILE:${name}> ${ARGN}
