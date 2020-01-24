@@ -29,10 +29,12 @@ file(COPY "${PROJECT_SOURCE_DIR}/testVectors/mpc/MTA.json" DESTINATION "${PROJEC
 file(COPY "${PROJECT_SOURCE_DIR}/testVectors/mpc/R.json" DESTINATION "${PROJECT_BINARY_DIR}/python/")
 file(COPY "${PROJECT_SOURCE_DIR}/testVectors/mpc/S.json" DESTINATION "${PROJECT_BINARY_DIR}/python/")
 
-add_test(test_python_mpc_mta python3 test_mta.py)
-add_test(test_python_mpc_r python3 test_r.py)
-add_test(test_python_mpc_s python3 test_s.py)
-add_test(test_python_mpc_ecdsa python3 test_ecdsa.py)
+if(NOT CMAKE_BUILD_TYPE STREQUAL "ASan")
+  add_test(test_python_mpc_mta python3 test_mta.py)
+  add_test(test_python_mpc_r python3 test_r.py)
+  add_test(test_python_mpc_s python3 test_s.py)
+  add_test(test_python_mpc_ecdsa python3 test_ecdsa.py)
+endif(NOT CMAKE_BUILD_TYPE STREQUAL "ASan")
 
 # Set the LD_LIBRARY_PATH or equivalent to the libraries can be loaded when
 # running the test.

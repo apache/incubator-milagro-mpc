@@ -50,7 +50,7 @@ void SCHNORR_commit(csprng *RNG, octet *R, octet *C)
     {
         BIG_256_56_fromBytesLen(r, R->val, R->len);
     }
-    
+
     // Generate commitment r.G
     ECP_SECP256K1_generator(&G);
     ECP_SECP256K1_mul(&G,r);

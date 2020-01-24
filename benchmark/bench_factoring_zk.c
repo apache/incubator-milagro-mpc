@@ -82,7 +82,8 @@ int main()
         FACTORING_ZK_prove(&m, NULL, &R, &E, &Y);
         iterations++;
         elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
-    } while (elapsed < MIN_TIME || iterations < MIN_ITERS);
+    }
+    while (elapsed < MIN_TIME || iterations < MIN_ITERS);
 
     elapsed = MILLISECOND * elapsed / iterations;
     printf("\tFACTORING_ZK_prove\t%8d iterations\t", iterations);
@@ -95,7 +96,8 @@ int main()
         rc = FACTORING_ZK_verify(&N, &E, &Y);
         iterations++;
         elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
-    } while (elapsed < MIN_TIME || iterations < MIN_ITERS);
+    }
+    while (elapsed < MIN_TIME || iterations < MIN_ITERS);
 
     if (!rc)
     {
