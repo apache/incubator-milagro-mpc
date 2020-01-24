@@ -25,9 +25,9 @@ include_directories (${PROJECT_SOURCE_DIR}/src
                      /usr/local/include)
 
 function(amcl_test name source dependencies expected_response)
-  add_executable(${name} "${source}")
+  add_executable(${name} "${source}" $<TARGET_OBJECTS:mpc_test_utils>)
 
-  target_link_libraries(${name} PRIVATE ${dependencies} mpc_test_utils)
+  target_link_libraries(${name} PRIVATE ${dependencies})
 
   add_test(NAME ${name}
     COMMAND ${TARGET_SYSTEM_EMULATOR} $<TARGET_FILE:${name}> ${ARGN}

@@ -38,7 +38,7 @@ foreach(bench ${SRCS})
   # Extract the filename without an extension
   get_filename_component(target ${bench} NAME_WE)
 
-  add_executable(${target} ${target}.c)
+  add_executable(${target} ${bench} $<TARGET_OBJECTS:mpc_bench_utils>)
 
-  target_link_libraries(${target} amcl_mpc mpc_bench_utils)
+  target_link_libraries(${target} amcl_mpc)
 endforeach(bench)
