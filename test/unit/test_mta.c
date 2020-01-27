@@ -18,8 +18,7 @@
 */
 
 #include <string.h>
-#include <amcl/paillier.h>
-#include <amcl/mpc.h>
+#include <amcl/mta.h>
 #include "test.h"
 
 #define LINE_LEN 2000

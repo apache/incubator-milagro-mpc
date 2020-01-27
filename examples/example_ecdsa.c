@@ -19,16 +19,10 @@ under the License.
 
 // MPC ECDSA calculation
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
 #include <amcl/randapi.h>
 #include <amcl/ecdh_SECP256K1.h>
-#include <amcl/ecdh_support.h>
-#include <amcl/paillier.h>
+#include <amcl/mta.h>
 #include <amcl/mpc.h>
-
 
 int test(csprng *RNG)
 {
