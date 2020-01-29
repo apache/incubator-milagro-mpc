@@ -181,7 +181,7 @@ if __name__ == "__main__":
         alice["mta_mult_share"],
         alice["paillier_g"],
         alice["zk_b0"], alice["zk_b1"],
-        curve.r, alice["paillier_n"], alice["zk_N"])
+        curve.r, alice["paillier_p"], alice["paillier_q"], alice["zk_N"])
 
     alice["mta_rp_alpha"] = alpha
     alice["mta_rp_beta"]  = beta
@@ -192,29 +192,34 @@ if __name__ == "__main__":
     alice["mta_rp_u"] = u
     alice["mta_rp_w"] = w
 
-    bob["mta_rp_e"] = mta.rp_challenge(curve.r)
+    # Both generate the same
+    bob["mta_rp_e"] = mta.rp_challenge(
+        alice["paillier_g"],
+        bob["zk_N"], bob["zk_b0"], bob["zk_b1"],
+        curve.r,
+        alice["mta_CA"],
+        alice["mta_rp_z"], alice["mta_rp_u"], alice["mta_rp_w"])
 
     s, s1, s2 = mta.rp_prove(
         alice["mta_mult_share"], alice["mta_r"], alice["mta_CA"],
         bob["mta_rp_e"],
         alice["mta_rp_alpha"], alice["mta_rp_beta"], alice["mta_rp_gamma"], alice["mta_rp_rho"],
-        alice["paillier_n"])
+        alice["paillier_p"], alice["paillier_q"])
 
     alice["mta_rp_s"]  = s
     alice["mta_rp_s1"] = s1
     alice["mta_rp_s2"] = s2
 
     if not mta.rp_verify(
-        alice["mta_CA"],
         alice["mta_rp_s"], alice["mta_rp_s1"], alice["mta_rp_s2"],
         alice["mta_rp_z"], alice["mta_rp_u"],  alice["mta_rp_w"],
         bob["mta_rp_e"],
         alice["paillier_g"],
         alice["zk_b0"], alice["zk_b1"],
-        curve.r, alice["paillier_n"], alice["zk_N"]):
+        curve.r, alice["paillier_n"], alice["zk_P"], alice["zk_Q"]):
         
         dumpgame(alice, bob)
-        print("Range Rroof Failed")
+        print("Range Proof Failed")
         sys.exit(1)
 
     print("Done!\n")

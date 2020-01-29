@@ -1,9 +1,9 @@
-import sec256k1.big as big
-import sec256k1.ecp as ecp
-import sec256k1.curve as curve
-import sec256k1.paillier as paillier
+import hashlib
+from sec256k1 import big, ecp, curve, paillier
+
 
 DEBUG = False
+
 
 def initiate(n, g, a, r=None):
     '''
@@ -65,16 +65,33 @@ def complete(p, q, lp, mp, lq, mq, n, cb):
 ## Range proof
 
 
-def rp_commit(m, Gamma, h1, h2, q, N, Nt):
+FS_2048 = 2048 // 8
+DFS_2048 = 2 * FS_2048
+
+
+def rp_commit(m, Gamma, h1, h2, q, P, Q, Nt, alpha=None, beta=None, gamma=None, rho=None):
     q3 = q**3
-    N2 = N**2
 
-    alpha = big.rand(q3)
-    beta  = big.rand(N)
-    gamma = big.rand(q3*Nt)
-    rho   = big.rand(q*Nt)
+    N = P * Q
+    P2 = P**2
+    Q2 = Q**2
 
-    u = big.modmul(pow(Gamma, alpha, N2), pow(beta, N, N2), N2)
+    if alpha is None:
+        alpha = big.rand(q3)
+
+    if beta is None:
+        beta = big.rand(N)
+    
+    if gamma is None:
+        gamma = big.rand(q3*Nt)
+    
+    if rho is None:
+        rho = big.rand(q*Nt)
+
+    # Compute u using CRT
+    up = big.modmul(pow(Gamma, alpha, P2), pow(beta, N, P2), P2)
+    uq = big.modmul(pow(Gamma, alpha, Q2), pow(beta, N, Q2), Q2)
+    u = big.crt(up, uq, P2, Q2)
 
     z = big.modmul(pow(h1, m,     Nt), pow(h2, rho,   Nt), Nt)
     w = big.modmul(pow(h1, alpha, Nt), pow(h2, gamma, Nt), Nt)
@@ -82,19 +99,65 @@ def rp_commit(m, Gamma, h1, h2, q, N, Nt):
     return alpha, beta, gamma, rho, z, u, w
 
 
-def rp_challenge(q):
-    return big.rand(q)
+def rp_challenge(Gamma, Nt, h1, h2, q, c, z, u, w):
+    '''
+        Use Fiat-Shamir to make this NIZK.
+
+        Bind to public parameters:
+         * Gamma (Paillier)
+         * Nt, h1, h2 (BC commitment setup)
+         * q - range
+         * c - E_Gamma(m)
+
+        Bind to commitment:
+         * z, u, w
+
+        Returns e = H(Gamma, Nt, h1, h2, q, c, z, u, w) mod q
+    '''
+    sha = hashlib.new('sha256')
+
+    q_bytes = big.to_bytes(q)
+    
+    Gamma_bytes = Gamma.to_bytes(FS_2048, byteorder='big')
+    Nt_bytes    = Nt.to_bytes(FS_2048,    byteorder='big')
+    h1_bytes    = h1.to_bytes(FS_2048,    byteorder='big')
+    h2_bytes    = h2.to_bytes(FS_2048,    byteorder='big')
+    c_bytes     = c.to_bytes(DFS_2048,    byteorder='big')
+    
+    z_bytes = z.to_bytes(FS_2048,  byteorder='big')
+    u_bytes = u.to_bytes(DFS_2048, byteorder='big')
+    w_bytes = w.to_bytes(FS_2048,  byteorder='big')
+    
+    sha.update(Gamma_bytes)
+    sha.update(Nt_bytes)
+    sha.update(h1_bytes)
+    sha.update(h2_bytes)
+    sha.update(q_bytes)
+    sha.update(c_bytes)
+
+    sha.update(z_bytes)
+    sha.update(u_bytes)
+    sha.update(w_bytes)
+
+    e_bytes = sha.digest()
+    e = big.from_bytes(e_bytes)
+
+    return e % q
 
 
-def rp_prove(m,r,c,e,alpha,beta,gamma,rho,N):
-    s  = big.modmul(pow(r,e,N),beta,N)
+def rp_prove(m, r, e, alpha, beta, gamma, rho, P, Q):
+    # Compute s usig CRT
+    sp = big.modmul(pow(r % P, e, P), beta % P, P)
+    sq = big.modmul(pow(r % Q, e, Q), beta % Q, Q)
+    s  = big.crt(sp, sq, P, Q)
+
     s1 = e * m + alpha
     s2 = e * rho + gamma
 
     return s, s1, s2
 
 
-def rp_verify(c,s,s1,s2,z,u,w,e,Gamma,h1,h2,q,N,Nt):
+def rp_verify(c,s,s1,s2,z,u,w,e,Gamma,h1,h2,q,N,Pt, Qt):
     if s1 > q**3:
         return False
 
@@ -105,8 +168,15 @@ def rp_verify(c,s,s1,s2,z,u,w,e,Gamma,h1,h2,q,N,Nt):
     if u_gt != u_proof:
         return False
 
-    w_proof = big.modmul(pow(h1, s1, Nt), pow(h2, s2, Nt), Nt)
-    w_gt = big.modmul(w, pow(z, e, Nt), Nt)
+    # Compute w_proof using CRT
+    w_proof_p = big.modmul(pow(h1 % Pt, s1, Pt), pow(h2 % Pt, s2 % (Pt-1), Pt), Pt)
+    w_proof_q = big.modmul(pow(h1 % Qt, s1, Qt), pow(h2 % Qt, s2 % (Qt-1), Qt), Qt)
+    w_proof = big.crt(w_proof_p, w_proof_q, Pt, Qt)
+
+    # Compute w_gt using CRT
+    w_gt_p = big.modmul(w % Pt, pow(z % Pt, e, Pt), Pt)
+    w_gt_q = big.modmul(w % Qt, pow(z % Qt, e, Qt), Qt)
+    w_gt = big.crt(w_gt_p, w_gt_q, Pt, Qt)
 
     return w_gt == w_proof
 
@@ -154,20 +224,16 @@ def mta_prove(x,y,r,e,alpha,beta,gamma,rho,rho1,sigma,tau,N):
 
 def mta_verify(c1, c2, s, s1, s2, t1, t2, z, z1, t, v, w, e, Gamma, h1, h2, q, N, Nt):
     if s1 > q**3:
-        print("a")
         return False
 
     s_proof = big.modmul(pow(h1, s1, Nt), pow(h2, s2, Nt), Nt)
     s_gt = big.modmul(pow(z, e, Nt),  z1, Nt)
     if s_proof != s_gt:
-        print("b")
         return False
 
     t_proof = big.modmul(pow(h1, t1, Nt), pow(h2, t2, Nt), Nt)
     t_gt = big.modmul(pow(t, e, Nt),  w, Nt)
     if t_proof != t_gt:
-        print(t_gt)
-        print(t_proof)
         return False
 
     N2 = N**2
