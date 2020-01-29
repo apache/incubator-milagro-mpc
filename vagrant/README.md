@@ -9,7 +9,7 @@ management of virtual machines (VMs) in code.
 sudo apt install vagrant*
 ```
 
-Virtual box is required. Download the AMD64 verson from here;
+Virtual box is required. Download the AMD64 version from here;
 
 ```
 https://www.virtualbox.org/wiki/Linux_Downloads
@@ -18,7 +18,7 @@ https://www.virtualbox.org/wiki/Linux_Downloads
 ## Configuration
 
 The VM is configured in the Vagrantfile. This file
-also call a bootstrap.sh script which installs the
+also calls a bootstrap.sh script which installs the
 required software.
 
 When the VM is started there is a shared directory

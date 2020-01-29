@@ -2,7 +2,7 @@
 
 echo "install packages"
 sudo apt-get update
-sudo apt-get install -y gcc g++ git cmake doxygen autoconf automake libtool curl make unzip wget libssl-dev xsltproc lcov emacs
+sudo apt-get install -y build-essential cmake doxygen lcov python3-dev python3-pip wget git emacs
 sudo apt-get clean
 
 echo "install docker"
@@ -19,7 +19,7 @@ git clone https://github.com/apache/incubator-milagro-crypto-c.git
 cd incubator-milagro-crypto-c
 mkdir build
 cd build
-cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D AMCL_CHUNK=64 -D AMCL_CURVE="" -D AMCL_RSA="2048,4096,8192" -D BUILD_PYTHON=OFF -D BUILD_BLS=OFF -D BUILD_WCC=OFF -D BUILD_MPIN=OFF -D BUILD_X509=OFF -D CMAKE_INSTALL_PREFIX=/usr/local .. 
+cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D AMCL_CHUNK=64 -D AMCL_CURVE="BLS381,SECP256K1" -D AMCL_RSA="" -D BUILD_PAILLIER=ON -D BUILD_PYTHON=ON -D BUILD_BLS=ON -D BUILD_WCC=OFF -D BUILD_MPIN=OFF -D BUILD_X509=OFF -D CMAKE_INSTALL_PREFIX=/usr/local .. 
 make
 make test
 sudo make install
