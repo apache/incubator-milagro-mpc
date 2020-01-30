@@ -26,6 +26,7 @@ under the License.
 
 #include "amcl/amcl.h"
 #include "amcl/ff_2048.h"
+#include "amcl/ff_4096.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -40,7 +41,7 @@ extern "C"
  */
 void read_OCTET(FILE *fp, octet *OCT, char *string);
 
-/*! \brief Read string into an octet
+/*! \brief Read string into an ff_2048
  *
  *  @param  fp      TV file pointer to close in case of error
  *  @param  x       Output ff element
@@ -48,6 +49,15 @@ void read_OCTET(FILE *fp, octet *OCT, char *string);
  *  @param  n       Length of x in BIGs
  */
 extern void read_FF_2048(FILE *fp, BIG_1024_58 *x, char *string, int n);
+
+/*! \brief Read string into an ff_4096
+ *
+ *  @param  fp      TV file pointer to close in case of error
+ *  @param  x       Output ff element
+ *  @param  string  Input string
+ *  @param  n       Length of x in BIGs
+ */
+extern void read_FF_4096(FILE *fp, BIG_512_60 *x, char *string, int n);
 
 /*! \brief Read integer if the line has the correct prefix
  *
@@ -76,6 +86,16 @@ extern void scan_OCTET(FILE *fp, octet *OCT, char *line, const char *prefix);
  */
 extern void scan_FF_2048(FILE *fp, BIG_1024_58 *x, char *line, const char *prefix, int n);
 
+/*! \brief Read ff_4096 element if the line has the correct prefix
+ *
+ *  @param  fp      TV file pointer to close in case of error
+ *  @param  x       Output ff element
+ *  @param  line    TV line
+ *  @param  prefix  Line prefix for the element to read
+ *  @param  n       Length of x in BIGs
+ */
+extern void scan_FF_4096(FILE *fp, BIG_512_60 *x, char *line, const char *prefix, int n);
+
 /* Assertion utilities */
 
 /*! \brief Compare two octets
@@ -102,6 +122,20 @@ extern void compare_OCT(FILE *fp, int testNo, char *name, octet *X, octet *Y);
  *  @param  n       Length of x, y in BIGs
  */
 extern void compare_FF_2048(FILE *fp, int testNo, char* name, BIG_1024_58 *x, BIG_1024_58 *y, int n);
+
+/*! \brief Compare two ff_4096 elements
+ *
+ *  Compare two ff_4096 elements and fail the test if they are not equal
+ *
+ *  @param  fp      TV file pointer to close in case of failure
+ *  @param  testNo  Test Vector identifier
+ *  @param  name    Descriptor for the elements compared
+ *  @param  X       First element to compare
+ *  @param  Y       Second element to compare
+ *  @param  n       Length of x, y in BIGs
+ */
+extern void compare_FF_4096(FILE *fp, int testNo, char* name, BIG_512_60 *x, BIG_512_60 *y, int n);
+
 
 /*! \brief Assert boolean statement
  *

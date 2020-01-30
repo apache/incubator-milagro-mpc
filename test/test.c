@@ -24,6 +24,8 @@ under the License.
 #include <string.h>
 #include "test.h"
 
+// #define DEBUG
+
 /* TV reading Utilities */
 
 void read_OCTET(FILE *fp, octet *OCT, char *string)
@@ -53,6 +55,16 @@ void read_FF_2048(FILE *fp, BIG_1024_58 *x, char *string, int n)
     FF_2048_fromOctet(x, &OCT, n);
 }
 
+void read_FF_4096(FILE *fp, BIG_512_60 *x, char *string, int n)
+{
+    int len = strlen(string);
+    char oct[len / 2];
+    octet OCT = {0, len / 2, oct};
+
+    read_OCTET(fp, &OCT, string);
+    FF_4096_fromOctet(x, &OCT, n);
+}
+
 void scan_int(int *v, char *line, const char *prefix)
 {
     if (!strncmp(line, prefix, strlen(prefix)))
@@ -68,6 +80,11 @@ void scan_OCTET(FILE *fp, octet *OCT, char *line, const char *prefix)
     {
         line+=strlen(prefix);
         read_OCTET(fp, OCT, line);
+
+#ifdef DEBUG
+        printf("%s", prefix);
+        OCT_output(OCT);
+#endif
     }
 }
 
@@ -77,6 +94,27 @@ void scan_FF_2048(FILE *fp, BIG_1024_58 *x, char *line, const char *prefix, int 
     {
         line+=strlen(prefix);
         read_FF_2048(fp, x, line, n);
+
+#ifdef DEBUG
+        printf("%s", prefix);
+        FF_2048_output(x, n);
+        printf("\n");
+#endif
+    }
+}
+
+void scan_FF_4096(FILE *fp, BIG_512_60 *x, char *line, const char *prefix, int n)
+{
+    if (!strncmp(line, prefix, strlen(prefix)))
+    {
+        line+=strlen(prefix);
+        read_FF_4096(fp, x, line, n);
+
+#ifdef DEBUG
+        printf("%s", prefix);
+        FF_4096_output(x, n);
+        printf("\n");
+#endif
     }
 }
 
@@ -106,6 +144,38 @@ void compare_FF_2048(FILE* fp, int testNo, char* name, BIG_1024_58 *x, BIG_1024_
         }
 
         fprintf(stderr, "FAILURE %s. Test %d\n", name, testNo);
+
+#ifdef DEBUG
+        printf("x = ");
+        FF_2048_output(x, n);
+        printf("\ny = ");
+        FF_2048_output(y,n);
+        printf("\n");
+#endif
+
+        exit(EXIT_FAILURE);
+    }
+}
+
+void compare_FF_4096(FILE* fp, int testNo, char* name, BIG_512_60 *x, BIG_512_60 *y, int n)
+{
+    if(FF_4096_comp(x, y, n))
+    {
+        if (fp != NULL)
+        {
+            fclose(fp);
+        }
+
+        fprintf(stderr, "FAILURE %s. Test %d\n", name, testNo);
+
+#ifdef DEBUG
+        printf("x = ");
+        FF_4096_output(x, n);
+        printf("\ny = ");
+        FF_4096_output(y,n);
+        printf("\n");
+#endif
+
         exit(EXIT_FAILURE);
     }
 }
