@@ -81,8 +81,8 @@ typedef struct
     BIG_1024_58 mq[1]; /**< Precomputed \f$ L(g^{lq} \pmod{q^2})^{-1} \f$ */
 } PAILLIER_private_key;
 
-extern void CREATE_CSPRNG(csprng *R,octet *S);
-extern void KILL_CSPRNG(csprng *R);
+extern void RAND_seed(csprng *R,int n,char *b);
+extern void RAND_clean(csprng *R);
 extern void OCT_clear(octet *O);
 
 extern void PAILLIER_KEY_PAIR(csprng *RNG, octet *P, octet* Q, PAILLIER_public_key *PUB, PAILLIER_private_key *PRIV);
@@ -210,12 +210,12 @@ def create_csprng(seed):
     Raises:
 
     """
-    seed_oct, seed_val = make_octet(None, seed)
+    seed_val = ffi.new("char [%s]" % len(seed), seed)
+    seed_len = len(seed)
 
     # random number generator
     rng = ffi.new('csprng*')
-    libamcl_core.CREATE_CSPRNG(rng, seed_oct)
-    libamcl_core.OCT_clear(seed_oct)
+    libamcl_core.RAND_seed(rng, seed_len, seed_val)
 
     return rng
 
@@ -234,7 +234,7 @@ def kill_csprng(rng):
     Raises:
 
     """
-    libamcl_core.KILL_CSPRNG(rng)
+    libamcl_core.RAND_clean(rng)
 
     return 0
 
