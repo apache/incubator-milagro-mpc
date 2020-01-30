@@ -56,12 +56,14 @@ extern int COMMITMENTS_NM_decommit(octet* X, octet* R, octet* C);
 
 /* Bit Commitment Setup API */
 
+#ifndef FS_2048
 #define FS_2048 MODBYTES_1024_58 * FFLEN_2048  /**< 2048 field size in bytes */
+#endif
+#ifndef HFS_2048
 #define HFS_2048 MODBYTES_1024_58 * HFLEN_2048 /**< Half 2048 field size in bytes */
+#endif
 
-/*!
- * \brief RSA modulus for Bit Commitment
- */
+/*! \brief RSA modulus for Bit Commitment */
 typedef struct
 {
     BIG_1024_58 P[HFLEN_2048];      /**< Safe prime P = 2p+1 */
@@ -73,6 +75,14 @@ typedef struct
     BIG_1024_58 b0[FFLEN_2048];     /**< Generator of G_pq as subgroup of Z/PQZ */
     BIG_1024_58 b1[FFLEN_2048];     /**< Generator of G_pq as subgroup of Z/PQZ */
 } COMMITMENTS_BC_priv_modulus;
+
+/*! \brief Public RSA modulus for Bit Commitment */
+typedef struct
+{
+    BIG_1024_58 N[FFLEN_2048];      /**< Modulus */
+    BIG_1024_58 b0[FFLEN_2048];     /**< Generator of G_pq as subgroup of Z/PQZ */
+    BIG_1024_58 b1[FFLEN_2048];     /**< Generator of G_pq as subgroup of Z/PQZ */
+} COMMITMENTS_BC_pub_modulus;
 
 /*! \brief Set up an RSA modulus and the necessary values.
  *
@@ -97,6 +107,13 @@ extern void COMMITMENTS_BC_setup(csprng *RNG, COMMITMENTS_BC_priv_modulus *m, oc
  * @param m     The modulus to clean
  */
 extern void COMMITMENTS_BC_kill_priv_modulus(COMMITMENTS_BC_priv_modulus *m);
+
+/*! \brief Export the public part of the modulus
+ *
+ * @param pub   The destination public modulus
+ * @param priv  The source private modulus
+ */
+extern void COMMITMENTS_BC_export_public_modulus(COMMITMENTS_BC_pub_modulus *pub, COMMITMENTS_BC_priv_modulus *priv);
 
 #ifdef __cplusplus
 }

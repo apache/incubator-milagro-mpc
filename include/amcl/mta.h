@@ -28,10 +28,17 @@ under the License.
 
 #include "amcl/amcl.h"
 #include "amcl/paillier.h"
+#include "amcl/commitments.h"
+#include "amcl/ecdh_SECP256K1.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define MTA_OK 0    /**< Proof successfully verified */
+#define MTA_FAIL 61 /**< Invalid proof */
+
+/* MTA protocol API */
 
 /*! \brief Client MTA first pass
  *
@@ -97,6 +104,155 @@ void MPC_MTA_SERVER(csprng *RNG, PAILLIER_public_key *PUB, octet *B, octet *CA, 
  *  @param SUM                The sum of all values
  */
 void MPC_SUM_MTA(octet *A, octet *B, octet *ALPHA, octet *BETA, octet *SUM);
+
+/* MTA Zero Knowledge Proofs API*/
+
+// The protocol requires a BC modulus (Pt, Qt, Nt, h1, h2) and a Paillier PK (N, g)
+
+/** \brief Secret random values for the Range Proof commitment */
+typedef struct
+{
+    BIG_1024_58 alpha[FFLEN_2048];              /**< Random value in \f$ [0, \ldots, q^3]          \f$ */
+    BIG_1024_58 beta[FFLEN_2048];               /**< Random value in \f$ [0, \ldots, N]            \f$ */
+    BIG_1024_58 gamma[FFLEN_2048 + HFLEN_2048]; /**< Random value in \f$ [0, \ldots, \tilde{N}q^3] \f$ */
+    BIG_1024_58 rho[FFLEN_2048 + HFLEN_2048];   /**< Random value in \f$ [0, \ldots, \tilde{N}q]   \f$ */
+} MTA_RP_commitment_rv;
+
+/** \brief Public commitment for the Range Proof */
+typedef struct
+{
+    BIG_1024_58 z[FFLEN_2048];  /**< Commitment to h1, h2, m using rho */
+    BIG_512_60  u[FFLEN_4096];  /**< Commitment to paillier PK using alpha and beta */
+    BIG_1024_58 w[FFLEN_2048];  /**< Commitment to h1, h2, m using gamma */
+} MTA_RP_commitment;
+
+/** \brief Range Proof */
+typedef struct
+{
+    BIG_512_60  s[FFLEN_4096];                /**< Proof of knowledge of the Paillier r value */
+    BIG_1024_58 s1[FFLEN_2048];               /**< Proof of knowledge of the message. It must be less than q^3 */
+    BIG_1024_58 s2[FFLEN_2048 + HFLEN_2048];  /**< Auxiliary proof of knowledge for the message */
+} MTA_RP_proof;
+
+/** \brief Commitment Generation
+ *
+ *  Generate a commitment for the message M
+ *
+ *  <ol>
+ *  <li> \f$ \alpha \in_R [0, \ldots, q^3]\f$
+ *  <li> \f$ \beta  \in_R [0, \ldots, N]\f$
+ *  <li> \f$ \gamma \in_R [0, \ldots, q^{3}\tilde{N}]\f$
+ *  <li> \f$ \rho   \in_R [0, \ldots, q\tilde{N}]\f$
+ *  <li> \f$ z = h_1^{m}h_2^{\rho}        \text{ }\mathrm{mod}\text{ }\tilde{N} \f$
+ *  <li> \f$ u = h_1^{\alpha}h_2^{\gamma} \text{ }\mathrm{mod}\text{ }\tilde{N} \f$
+ *  <li> \f$ w = g^{\alpha}\beta^{N} \text{ }\mathrm{mod}\text{ }N^2 \f$
+ *  </ol>
+ *
+ *  @param RNG         csprng for random generation
+ *  @param key         Paillier key used to encrypt M
+ *  @param mod         Public BC modulus of the verifier
+ *  @param M           Message to prove knowledge and range
+ *  @param c           Destinaton commitment
+ *  @param rv          Random values associated to the commitment. If RNG is NULL this is read
+ */
+extern void MTA_RP_commit(csprng *RNG, PAILLIER_private_key *key, COMMITMENTS_BC_pub_modulus *mod,  octet *M, MTA_RP_commitment *c, MTA_RP_commitment_rv *rv);
+
+/** \brief Deterministic Challenge generations
+ *
+ *  Generate a challenge binding together public parameters and commitment
+ *
+ *  <ol>
+ *  <li> \f$ e = H( g | \tilde{N} | h1 | h2 | q | CT | z | u | w ) \f$
+ *  </ol>
+ *
+ *  @param key         Public Paillier key of the prover
+ *  @param mod         Public BC modulus of the verifier
+ *  @param CT          Encrypted Message to prove knowledge and range
+ *  @param c           Commitment of the prover
+ *  @param E           Destination challenge
+ */
+extern void MTA_RP_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod, octet *CT, MTA_RP_commitment *c, octet *E);
+
+/** \brief Proof generation
+ *
+ *  Generate a proof of knowledge of m and of its range
+ *
+ *  <ol>
+ *  <li> \f$ s  = \beta r^e \text{ }\mathrm{mod}\text{ }N \f$
+ *  <li> \f$ s1 = em + \alpha \f$
+ *  <li> \f$ s2 = e\rho + \gamma \f$
+ *  </ol>
+ *
+ *  @param key         Private Paillier key of the prover
+ *  @param rv          Random values associated to the commitment
+ *  @param M           Message to prove knowledge and range
+ *  @param R           Random value used in the Paillier encryption of M
+ *  @param E           Generated challenge
+ *  @param p           Destination proof
+ */
+extern void MTA_RP_prove(PAILLIER_private_key *key, MTA_RP_commitment_rv *rv, octet *M, octet *R, octet *E, MTA_RP_proof *p);
+
+/** \brief Verify a Proof
+ *
+ *  Verify the proof of knowledge of m associated to CT and of its range
+ *
+ *  <ol>
+ *  <li> \f$ s1 \stackrel{?}{\leq} q^3 \f$
+ *  <li> \f$ w \stackrel{?}{=} h_1^{s_1}h_2^{s_2}z^{-e} \text{ }\mathrm{mod}\text{ }\tilde{N} \f$
+ *  <li> \f$ u \stackrel{?}{=} g^{s_1}s^{N}c^{-e} \text{ }\mathrm{mod}\text{ }N^2 \f$
+ *  </ol>
+ *
+ *  @param key         Public Paillier key of the prover
+ *  @param mod         Private BC modulus of the verifier
+ *  @param CT          Encrypted Message to prove knowledge and range
+ *  @param E           Generated challenge
+ *  @param c           Received commitment
+ *  @param p           Received proof
+ *  @return            MTA_OK if the proof is valid, MTA_FAIL otherwise
+ */
+extern int MTA_RP_verify(PAILLIER_public_key *key, COMMITMENTS_BC_priv_modulus *mod, octet *CT, octet *E, MTA_RP_commitment *c, MTA_RP_proof *p);
+
+/** \brief Dump the commitment to octets
+ *
+ *  @param Z           Destination Octet for the z component of the commitment. FS_2048 long
+ *  @param U           Destination Octet for the u component of the commitment. FS_4096 long
+ *  @param W           Destination Octet for the w component of the commitment. FS_2048 long
+ *  @param c           Commitment to export
+ */
+extern void MTA_RP_commitment_toOctets(octet *Z, octet *U, octet *W, MTA_RP_commitment *c);
+
+/** \brief Read the commitments from octets
+ *
+ *  @param c           Destination commitment
+ *  @param Z           Octet with the z component of the proof
+ *  @param U           Octet with the u component of the proof
+ *  @param W           Octet with the w component of the proof
+ */
+extern void MTA_RP_commitment_fromOctets(MTA_RP_commitment *c, octet *Z, octet *U, octet *W);
+
+/** \brief Dump the proof to octets
+ *
+ *  @param S           Destination Octet for the s component of the proof. FS_2048 long
+ *  @param S1          Destination Octet for the s1 component of the proof. HFS_2048 long
+ *  @param S2          Destination Octet for the s2 component of the proof. FS_2048 + HFS_2048 long
+ *  @param p           Proof to export
+ */
+extern void MTA_RP_proof_toOctets(octet *S, octet *S1, octet *S2, MTA_RP_proof *p);
+
+/** \brief Read the commitments from octets
+ *
+ *  @param p           Destination proof
+ *  @param S           Octet with the s component of the proof
+ *  @param S1          Octet with the s1 component of the proof
+ *  @param S2          Octet with the s2 component of the proof
+ */
+extern void MTA_RP_proof_fromOctets(MTA_RP_proof *p, octet *S, octet *S1, octet *S2);
+
+/** \brief Clean the memory containing the random values
+ *
+ *   @param rv         Random values to clean
+ */
+extern void MTA_RP_commitment_rv_kill(MTA_RP_commitment_rv *rv);
 
 #ifdef __cplusplus
 }
