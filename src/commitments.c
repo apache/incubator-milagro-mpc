@@ -281,3 +281,10 @@ void COMMITMENTS_BC_kill_priv_modulus(COMMITMENTS_BC_priv_modulus *m)
     FF_2048_zero(m->alpha, FFLEN_2048);
     FF_2048_zero(m->ialpha, FFLEN_2048);
 }
+
+void COMMITMENTS_BC_export_public_modulus(COMMITMENTS_BC_pub_modulus *pub, COMMITMENTS_BC_priv_modulus *priv)
+{
+    FF_2048_copy(pub->b0, priv->b0, FFLEN_2048);
+    FF_2048_copy(pub->b1, priv->b1, FFLEN_2048);
+    FF_2048_copy(pub->N, priv->N, FFLEN_2048);
+}

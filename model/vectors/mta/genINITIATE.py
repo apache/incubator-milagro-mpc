@@ -9,7 +9,7 @@
 import sys
 import json
 from Crypto.Util import number
-from genVector import genVector
+from genVector import genMTAVector
 
 vector_fields = {
     "TEST": "TEST",
@@ -39,7 +39,7 @@ if __name__ == '__main__':
         # Generate random prime for multiplicative shares
         ps = number.getStrongPrime(512)
 
-        vector = genVector(i, p, q, ps)
+        vector = genMTAVector(i, p, q, ps)
 
         # Prune test vector
         vector = {vector_fields[k]: vector[k] for k in vector_fields}

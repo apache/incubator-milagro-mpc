@@ -22,15 +22,8 @@ under the License.
    Final summation is not done.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <amcl/randapi.h>
 #include <amcl/ecdh_SECP256K1.h>
-#include <amcl/ecdh_support.h>
-#include <amcl/paillier.h>
-#include <amcl/mpc.h>
+#include <amcl/mta.h>
 
 char* P1_hex = "94f689d07ba20cf7c7ca7ccbed22ae6b40c426db74eaee4ce0ced2b6f52a5e136663f5f1ef379cdbb0c4fdd6e4074d6cff21082d4803d43d89e42fd8dfa82b135aa31a8844ffea25f255f956cbc1b9d8631d01baf1010d028a190b94ce40f3b72897e8196df19edf1ff62e6556f2701d52cef1442e3301db7608ecbdcca703db";
 

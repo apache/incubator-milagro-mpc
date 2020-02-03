@@ -1,6 +1,5 @@
 language: c
 compiler: gcc
-sudo: true
 dist: trusty
 
 install:

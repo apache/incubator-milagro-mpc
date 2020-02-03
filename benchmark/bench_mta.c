@@ -23,8 +23,7 @@ under the License.
 
 #include "bench.h"
 #include <amcl/randapi.h>
-#include <amcl/paillier.h>
-#include <amcl/mpc.h>
+#include <amcl/mta.h>
 
 #define MIN_TIME 5.0
 #define MIN_ITERS 10
@@ -128,7 +127,3 @@ int main()
 
     exit(EXIT_SUCCESS);
 }
-
-
-
-

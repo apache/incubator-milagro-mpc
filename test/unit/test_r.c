@@ -17,9 +17,9 @@
     under the License.
 */
 
+#include <string.h>
 #include <amcl/ecdh_SECP256K1.h>
-#include <amcl/ecdh_support.h>
-#include <amcl/paillier.h>
+#include <amcl/mta.h>
 #include <amcl/mpc.h>
 #include "test.h"
 
