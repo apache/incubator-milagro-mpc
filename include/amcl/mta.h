@@ -162,7 +162,7 @@ extern void MTA_RP_commit(csprng *RNG, PAILLIER_private_key *key, COMMITMENTS_BC
  *  Generate a challenge binding together public parameters and commitment
  *
  *  <ol>
- *  <li> \f$ e = H( g | \tilde{N} | h1 | h2 | q | CT | z | u | w ) \f$
+ *  <li> \f$ e = H( g | \tilde{N} | h_1 | h_2 | q | CT | z | u | w ) \f$
  *  </ol>
  *
  *  @param key         Public Paillier key of the prover
@@ -179,8 +179,8 @@ extern void MTA_RP_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulu
  *
  *  <ol>
  *  <li> \f$ s  = \beta r^e \text{ }\mathrm{mod}\text{ }N \f$
- *  <li> \f$ s1 = em + \alpha \f$
- *  <li> \f$ s2 = e\rho + \gamma \f$
+ *  <li> \f$ s_1 = em + \alpha \f$
+ *  <li> \f$ s_2 = e\rho + \gamma \f$
  *  </ol>
  *
  *  @param key         Private Paillier key of the prover

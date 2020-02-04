@@ -64,8 +64,6 @@ void OCT_truncate(octet *y,octet *x)
  * These might be nice additions to milagro-crypto-c ff API
  *
  * TODO in milagro-crypto-c
- *  - Implement a non constant time pow2 that takes FF exponents
- *  - Implement a non constant time pow that takes BIG exponents
  *  - Add asymmetric mul/mod using the internal ff api
  */
 
@@ -118,6 +116,36 @@ void FF_2048_amod(BIG_1024_58 *r, BIG_1024_58 *x, int xlen, BIG_1024_58 *p, int 
 
     FF_2048_copy(r, t, plen);
 }
+
+/* Utilities to hash data for the RP/ZK challenge functions */
+
+// Update the provided has with the public parameters for a RP/ZK run
+void hash_RP_params(hash256 *sha, PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod, BIG_256_56 q)
+{
+    char oct[FS_2048];
+    octet OCT = {0, sizeof(oct), oct};
+
+    // Process Paillier Public key
+    FF_4096_toOctet(&OCT, key->g, HFLEN_4096);
+    OCT_hash(sha, &OCT);
+
+    // Process Bit Commitment modulus
+    FF_2048_toOctet(&OCT, mod->N, FFLEN_2048);
+    OCT_hash(sha, &OCT);
+
+    FF_2048_toOctet(&OCT, mod->b0, FFLEN_2048);
+    OCT_hash(sha, &OCT);
+
+    FF_2048_toOctet(&OCT, mod->b1, FFLEN_2048);
+    OCT_hash(sha, &OCT);
+
+    // Process curve orer
+    BIG_256_56_toBytes(OCT.val, q);
+    OCT.len = MODBYTES_256_56;
+    OCT_hash(sha, &OCT);
+}
+
+/* MTA descriptions */
 
 // Client MTA first pass
 void MPC_MTA_CLIENT1(csprng *RNG,  PAILLIER_public_key *PUB, octet *A, octet *CA, octet *R)
@@ -367,28 +395,13 @@ void MTA_RP_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod,
     BIG_256_56 q;
     BIG_256_56 t;
 
+    // Load curve order
+    BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
+
     HASH256_init(&sha);
 
     /* Bind to public parameters */
-
-    // Process Paillier Public key
-    FF_4096_toOctet(&OCT, key->g, HFLEN_4096);
-    OCT_hash(&sha, &OCT);
-
-    // Process Bit Commitment modulus
-    FF_2048_toOctet(&OCT, mod->N, FFLEN_2048);
-    OCT_hash(&sha, &OCT);
-
-    FF_2048_toOctet(&OCT, mod->b0, FFLEN_2048);
-    OCT_hash(&sha, &OCT);
-
-    FF_2048_toOctet(&OCT, mod->b1, FFLEN_2048);
-    OCT_hash(&sha, &OCT);
-
-    // Process curve orer
-    OCT_fromHex(&OCT, curve_order_hex);
-    BIG_256_56_fromBytesLen(q, OCT.val, OCT.len);
-    OCT_hash(&sha, &OCT);
+    hash_RP_params(&sha, key, mod, q);
 
     /* Bind to proof input */
 
@@ -473,7 +486,6 @@ void MTA_RP_prove(PAILLIER_private_key *key, MTA_RP_commitment_rv *rv, octet *M,
     FF_2048_norm(p->s1, FFLEN_2048);
 
     // Compute s2 = e*rho + gamma
-    FF_2048_zero(r, 2 * FFLEN_2048);
     FF_2048_amul(r, e, HFLEN_2048, rv->rho, FFLEN_2048 + HFLEN_2048);
     FF_2048_copy(p->s2, rv->gamma, FFLEN_2048 + HFLEN_2048);
     FF_2048_add(p->s2, p->s2, r, FFLEN_2048 + HFLEN_2048);
@@ -486,37 +498,67 @@ void MTA_RP_prove(PAILLIER_private_key *key, MTA_RP_commitment_rv *rv, octet *M,
     FF_2048_zero(m, HFLEN_2048);
 }
 
+// Utility function to compute the triple power for verification
+// purposes. It is NOT side channel resistant
+// h1^s1 * h2^s2 * z^(-e) mod P
+//
+// h1, h2 are reduced modulo P
+// s1 is reduced modulo P-1 if indicated
+// s2 is reduced modulo P-1
+// z is reduced and inverted modulo P
+// e is left as is
+void MTA_triple_power(BIG_1024_58 *proof, BIG_1024_58 *h1, BIG_1024_58 *h2, BIG_1024_58 *s1, BIG_1024_58 *s2, BIG_1024_58 *z, BIG_1024_58 *e, BIG_1024_58 *p, int reduce_s1)
+{
+    BIG_1024_58 hws1[HFLEN_2048];
+    BIG_1024_58 hws2[HFLEN_2048];
+    BIG_1024_58 hws3[HFLEN_2048];
+    BIG_1024_58 hws4[HFLEN_2048];
+
+    FF_2048_copy(hws1, p, HFLEN_2048);
+    FF_2048_dec(hws1, 1, HFLEN_2048);
+    FF_2048_amod(hws4, s2, FFLEN_2048 + HFLEN_2048, hws1, HFLEN_2048);
+
+    if (reduce_s1)
+    {
+        FF_2048_dmod(hws3, s1, hws1, HFLEN_2048);
+    }
+    else
+    {
+        FF_2048_copy(hws3, s1, HFLEN_2048);
+    }
+
+    FF_2048_dmod(hws1, h1, p, HFLEN_2048);
+    FF_2048_dmod(hws2, h2, p, HFLEN_2048);
+
+    FF_2048_dmod(proof, z, p, HFLEN_2048);
+    FF_2048_invmodp(proof, proof, p, HFLEN_2048);
+    FF_2048_pow3(proof, hws1, hws3, hws2, hws4, proof, e, p, HFLEN_2048, HFLEN_2048);
+}
+
 int MTA_RP_verify(PAILLIER_public_key *key, COMMITMENTS_BC_priv_modulus *mod, octet *CT, octet *E, MTA_RP_commitment *co, MTA_RP_proof *p)
 {
     BIG_1024_58 ws[FFLEN_2048];
     BIG_1024_58 hws1[HFLEN_2048];
     BIG_1024_58 hws2[HFLEN_2048];
-    BIG_1024_58 hws3[HFLEN_2048];
 
-    BIG_1024_58 wp[HFLEN_2048];
-    BIG_1024_58 wq[HFLEN_2048];
-    BIG_1024_58 wp_gt[HFLEN_2048];
-    BIG_1024_58 wq_gt[HFLEN_2048];
+    BIG_1024_58 wp_proof[HFLEN_2048];
+    BIG_1024_58 wq_proof[HFLEN_2048];
 
     BIG_1024_58 e[HFLEN_2048];
 
-    BIG_512_60 e4;
-    BIG_512_60 c[FFLEN_4096];
+    BIG_512_60 e_4096[HFLEN_4096];
     BIG_512_60 s1[HFLEN_4096];
-    BIG_512_60 ws2_4096[FFLEN_4096];
-    BIG_512_60 ws1_4096[FFLEN_4096];
-    BIG_512_60 dws[2 * FFLEN_4096];
+    BIG_512_60 ws_4096[FFLEN_4096];
 
-    char oct[2*FS_2048];
+    char oct[FS_2048];
     octet OCT = {0, sizeof(oct), oct};
 
-    // Read input
-    FF_4096_fromOctet(c, CT, FFLEN_4096);
-
+    // Read challenge
     OCT_copy(&OCT, E);
     OCT_pad(&OCT, HFS_2048);
     FF_2048_fromOctet(e, &OCT, HFLEN_2048);
-    BIG_512_60_fromBytesLen(e4, E->val, E->len);;
+    OCT_pad(&OCT, HFS_4096);
+    FF_4096_fromOctet(e_4096, &OCT, HFLEN_4096);
 
     // Read q and compute q^3
     OCT_fromHex(&OCT, curve_order_hex);
@@ -530,57 +572,33 @@ int MTA_RP_verify(PAILLIER_public_key *key, COMMITMENTS_BC_priv_modulus *mod, oc
         return MTA_FAIL;
     }
 
-    // Compute proof for w using CRT.
-    // w_p = h1^s1 * h2^s2 mod N
-    FF_2048_copy(hws1, mod->P, HFLEN_2048);
-    FF_2048_dec(hws1, 1, HFLEN_2048);
-    FF_2048_amod(hws3, p->s2, FFLEN_2048 + HFLEN_2048, hws1, HFLEN_2048);
-    FF_2048_dmod(hws1, mod->b0, mod->P, HFLEN_2048);
-    FF_2048_dmod(hws2, mod->b1, mod->P, HFLEN_2048);
-    FF_2048_skpow2(wp, hws1, p->s1, hws2, hws3, mod->P, HFLEN_2048, HFLEN_2048);
+    // Split computation of proof for w using CRT.
+    MTA_triple_power(wp_proof, mod->b0, mod->b1, p->s1, p->s2, co->z, e, mod->P, 0);
+    MTA_triple_power(wq_proof, mod->b0, mod->b1, p->s1, p->s2, co->z, e, mod->Q, 0);
 
-    FF_2048_copy(hws1, mod->Q, HFLEN_2048);
-    FF_2048_dec(hws1, 1, HFLEN_2048);
-    FF_2048_amod(hws3, p->s2, FFLEN_2048 + HFLEN_2048, hws1, HFLEN_2048);
-    FF_2048_dmod(hws1, mod->b0, mod->Q, HFLEN_2048);
-    FF_2048_dmod(hws2, mod->b1, mod->Q, HFLEN_2048);
-    FF_2048_skpow2(wq, hws1, p->s1, hws2, hws3, mod->Q, HFLEN_2048, HFLEN_2048);
-
-    // Compute ground truth for w using CRT
-    // w_gt = w * z^e mod N
-    FF_2048_dmod(hws1, co->z, mod->P, HFLEN_2048);
-    FF_2048_dmod(hws2, co->w, mod->P, HFLEN_2048);
-    FF_2048_pow(hws1, hws1, e, mod->P, HFLEN_2048);
-    FF_2048_mul(ws, hws1, hws2, HFLEN_2048);
-    FF_2048_dmod(wp_gt, ws, mod->P, HFLEN_2048);
-
-    FF_2048_dmod(hws1, co->z, mod->Q, HFLEN_2048);
+    // Reduce w mod P and Q for comparison
+    FF_2048_dmod(hws1, co->w, mod->P, HFLEN_2048);
     FF_2048_dmod(hws2, co->w, mod->Q, HFLEN_2048);
-    FF_2048_pow(hws1, hws1, e, mod->Q, HFLEN_2048);
-    FF_2048_mul(ws, hws1, hws2, HFLEN_2048);
-    FF_2048_dmod(wq_gt, ws, mod->Q, HFLEN_2048);
 
     // Compare the results modulo P and Q
     // since w == w' mod PQ <==> w == w' mod P & w == w' mod Q
-    if ((FF_2048_comp(wp, wp_gt, HFLEN_2048) != 0) || (FF_2048_comp(wq, wq_gt, HFLEN_2048) != 0))
+    if ((FF_2048_comp(hws1, wp_proof, HFLEN_2048) != 0) || (FF_2048_comp(hws2, wq_proof, HFLEN_2048) != 0))
     {
         return MTA_FAIL;
     }
 
-    // Compute ground truth and proof for u
-    // u_gt = u * c^e mod N^2
-    FF_4096_skpow(ws1_4096, c, &e4, key->n2, FFLEN_4096, 1);
-    FF_4096_mul(dws, ws1_4096, co->u, FFLEN_4096);
-    FF_4096_dmod(ws2_4096, dws, key->n2, FFLEN_4096);
-
+    // Compute verification for u
     FF_2048_toOctet(&OCT, p->s1, HFLEN_2048);
     OCT_pad(&OCT, HFS_4096);
     FF_4096_fromOctet(s1, &OCT, HFLEN_4096);
 
-    // u_proof = g^s1 * s^N mod N^2
-    FF_4096_skpow2(ws1_4096, key->g, s1, p->s, key->n, key->n2, FFLEN_4096, HFLEN_4096);
+    FF_4096_fromOctet(ws_4096, CT, FFLEN_4096);
+    FF_4096_invmodp(ws_4096, ws_4096, key->n2, FFLEN_4096);
 
-    if(FF_4096_comp(ws1_4096, ws2_4096, FFLEN_4096) != 0)
+    // u_proof = g^s1 * s^N * c^(-e) mod N^2
+    FF_4096_pow3(ws_4096, key->g, s1, p->s, key->n, ws_4096, e_4096, key->n2, FFLEN_4096, HFLEN_4096);
+
+    if(FF_4096_comp(ws_4096, co->u, FFLEN_4096) != 0)
     {
         return MTA_FAIL;
     }
