@@ -33,10 +33,13 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
+    int rc;
     int test_run = 0;
 
     FILE *fp;
     char line[LINE_LEN] = {0};
+
+    char err_msg[128];
 
     const char *TESTline = "TEST = ";
     int testNo = 0;
@@ -111,7 +114,9 @@ int main(int argc, char **argv)
         {
             // Dump and reload commitment
             MTA_ZKWC_commitment_toOctets(&OCTECP, &OCT1, &OCT2, &OCT3, &OCT4, &OCT5, &c);
-            MTA_ZKWC_commitment_fromOctets(&c_reloaded, &OCTECP, &OCT1, &OCT2, &OCT3, &OCT4, &OCT5);
+            rc = MTA_ZKWC_commitment_fromOctets(&c_reloaded, &OCTECP, &OCT1, &OCT2, &OCT3, &OCT4, &OCT5);
+            sprintf(err_msg, "FAILURE MTA_ZKWC_commitment_fromOctets. rc = %d.", rc);
+            assert_tv(fp, testNo, err_msg, rc == MTA_OK);
 
             compare_FF_2048(fp, testNo, "c.z",  c.zkc.z,  c_reloaded.zkc.z,  FFLEN_2048);
             compare_FF_2048(fp, testNo, "c.z1", c.zkc.z1, c_reloaded.zkc.z1, FFLEN_2048);
@@ -142,6 +147,13 @@ int main(int argc, char **argv)
         printf("ERROR no test vector was executed\n");
         exit(EXIT_FAILURE);
     }
+
+    // Test invalid U
+    OCT_clear(&OCTECP);
+    OCTECP.len = OCTECP.max;
+    rc = MTA_ZKWC_commitment_fromOctets(&c_reloaded, &OCTECP, &OCT1, &OCT2, &OCT3, &OCT4, &OCT5);
+    sprintf(err_msg, "FAILURE MTA_ZKWC_commitment_fromOctets invalid U. rc = %d.", rc);
+    assert_tv(fp, testNo, err_msg, rc == MTA_INVALID_ECP);
 
     printf("SUCCESS");
     exit(EXIT_SUCCESS);
