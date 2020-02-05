@@ -47,29 +47,11 @@ int main(int argc, char **argv)
     const char *Uline = "U = ";
     const char *Wline = "W = ";
 
-    COMMITMENTS_BC_priv_modulus mod;
-    const char *PTline = "PT = ";
-    const char *QTline = "QT = ";
-    const char *H1line = "H1 = ";
-    const char *H2line = "H2 = ";
-
     MTA_RP_proof proof;
     MTA_RP_proof proof_reloaded;
     const char *Sline =  "S = ";
     const char *S1line = "S1 = ";
     const char *S2line = "S2 = ";
-
-    char c[2*FS_2048];
-    octet C = {0, sizeof(c), c};
-    const char *Cline = "C = ";
-
-    char e[MODBYTES_256_56];
-    octet E = {0, sizeof(e), e};
-    const char *Eline = "E = ";
-
-    char n[FS_2048];
-    octet N = {0, sizeof(n), n};
-    const char *Nline = "N = ";
 
     char oct1[FS_2048];
     octet OCT1 = {0, sizeof(oct1), oct1};
@@ -87,7 +69,7 @@ int main(int argc, char **argv)
     FF_2048_zero(proof.s1, FFLEN_2048);
 
     // Line terminating a test vector
-    const char *last_line = QTline;
+    const char *last_line = Wline;
 
     fp = fopen(argv[1], "r");
     if (fp == NULL)
@@ -101,15 +83,6 @@ int main(int argc, char **argv)
         scan_int(&testNo, line, TESTline);
 
         // Read inputs
-        scan_OCTET(fp, &C, line, Cline);
-        scan_OCTET(fp, &E, line, Eline);
-        scan_OCTET(fp, &N, line, Nline);
-
-        scan_FF_2048(fp, mod.b0, line, H1line, FFLEN_2048);
-        scan_FF_2048(fp, mod.b1, line, H2line, FFLEN_2048);
-        scan_FF_2048(fp, mod.P, line, PTline, HFLEN_2048);
-        scan_FF_2048(fp, mod.Q, line, QTline, HFLEN_2048);
-
         scan_FF_2048(fp, co.z, line, Zline, FFLEN_2048);
         scan_FF_4096(fp, co.u, line, Uline, FFLEN_4096);
         scan_FF_2048(fp, co.w, line, Wline, FFLEN_2048);
@@ -120,8 +93,6 @@ int main(int argc, char **argv)
 
         if (!strncmp(line, last_line, strlen(last_line)))
         {
-            PAILLIER_PK_fromOctet(&pub, &N);
-
             // Dump and reload commitment
             MTA_RP_commitment_toOctets(&OCT1, &OCT2, &OCT3, &co);
             MTA_RP_commitment_fromOctets(&co_reloaded, &OCT1, &OCT2, &OCT3);

@@ -21,7 +21,7 @@
 #include "test.h"
 #include "amcl/mta.h"
 
-/* MTA Receiver ZK Proof proof unit tests */
+/* MTA Receiver ZK Proof with check proof unit tests */
 
 #define LINE_LEN 2048
 
@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 {
     if (argc != 2)
     {
-        printf("usage: ./test_mta_zk_prove [path to test vector file]\n");
+        printf("usage: ./test_mta_zkwc_prove [path to test vector file]\n");
         exit(EXIT_FAILURE);
     }
 
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     const char *TESTline = "TEST = ";
     int testNo = 0;
 
-    MTA_ZK_commitment_rv rv;
+    MTA_ZKWC_commitment_rv rv;
     const char *ALPHAline = "ALPHA = ";
     const char *BETAline  = "BETA = ";
     const char *GAMMAline = "GAMMA = ";
@@ -72,8 +72,8 @@ int main(int argc, char **argv)
 
     PAILLIER_public_key key;
 
-    MTA_ZK_proof proof;
-    MTA_ZK_proof proof_golden;
+    MTA_ZKWC_proof proof;
+    MTA_ZKWC_proof proof_golden;
     const char *Sline  = "S = ";
     const char *S1line = "S1 = ";
     const char *S2line = "S2 = ";
@@ -124,13 +124,13 @@ int main(int argc, char **argv)
         {
             PAILLIER_PK_fromOctet(&key, &N);
 
-            MTA_ZK_prove(&key, &rv, &X, &Y, &R, &E, &proof);
+            MTA_ZKWC_prove(&key, &rv, &X, &Y, &R, &E, &proof);
 
-            compare_FF_2048(fp, testNo, "MTA_ZK_proof p.s",  proof.s,  proof_golden.s,  FFLEN_2048);
-            compare_FF_2048(fp, testNo, "MTA_ZK_proof p.s1", proof.s1, proof_golden.s1, FFLEN_2048);
-            compare_FF_2048(fp, testNo, "MTA_ZK_proof p.s2", proof.s2, proof_golden.s2, FFLEN_2048 + HFLEN_2048);
-            compare_FF_2048(fp, testNo, "MTA_ZK_proof p.t1", proof.t1, proof_golden.t1, FFLEN_2048);
-            compare_FF_2048(fp, testNo, "MTA_ZK_proof p.t2", proof.t2, proof_golden.t2, FFLEN_2048 + HFLEN_2048);
+            compare_FF_2048(fp, testNo, "MTA_ZKWC_proof p.s",  proof.s,  proof_golden.s,  FFLEN_2048);
+            compare_FF_2048(fp, testNo, "MTA_ZKWC_proof p.s1", proof.s1, proof_golden.s1, FFLEN_2048);
+            compare_FF_2048(fp, testNo, "MTA_ZKWC_proof p.s2", proof.s2, proof_golden.s2, FFLEN_2048 + HFLEN_2048);
+            compare_FF_2048(fp, testNo, "MTA_ZKWC_proof p.t1", proof.t1, proof_golden.t1, FFLEN_2048);
+            compare_FF_2048(fp, testNo, "MTA_ZKWC_proof p.t2", proof.t2, proof_golden.t2, FFLEN_2048 + HFLEN_2048);
 
             // Mark that at least one test vector was executed
             test_run = 1;

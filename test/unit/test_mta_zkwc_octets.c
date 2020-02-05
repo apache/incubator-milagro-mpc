@@ -21,7 +21,7 @@
 #include "test.h"
 #include "amcl/mta.h"
 
-/* MTA Receiver ZK Proof dump/load to octets unit tests */
+/* MTA Receiver ZK Proof with check dump/load to octets unit tests */
 
 #define LINE_LEN 2048
 
@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 {
     if (argc != 2)
     {
-        printf("usage: ./test_mta_zk_octets [path to test vector file]\n");
+        printf("usage: ./test_mta_zkwc_octets [path to test vector file]\n");
         exit(EXIT_FAILURE);
     }
 
@@ -41,16 +41,17 @@ int main(int argc, char **argv)
     const char *TESTline = "TEST = ";
     int testNo = 0;
 
-    MTA_ZK_commitment c;
-    MTA_ZK_commitment c_reloaded;
+    MTA_ZKWC_commitment c;
+    MTA_ZKWC_commitment c_reloaded;
+    const char *Uline  = "U = ";
     const char *Zline  = "Z = ";
     const char *Z1line = "Z1 = ";
     const char *Tline  = "T = ";
     const char *Vline  = "V = ";
     const char *Wline  = "W = ";
 
-    MTA_ZK_proof proof;
-    MTA_ZK_proof proof_reloaded;
+    MTA_ZKWC_proof proof;
+    MTA_ZKWC_proof proof_reloaded;
     const char *Sline  = "S = ";
     const char *S1line = "S1 = ";
     const char *S2line = "S2 = ";
@@ -72,11 +73,14 @@ int main(int argc, char **argv)
     char oct5[2 * FS_2048];
     octet OCT5 = {0, sizeof(oct5), oct5};
 
+    char octECP[EFS_SECP256K1 + 1];
+    octet OCTECP = {0, sizeof(octECP), octECP};
+
     // Make sure proof is properly zeroed before starting test
     FF_2048_zero(proof.s1, FFLEN_2048);
 
     // Line terminating a test vector
-    const char *last_line = Wline;
+    const char *last_line = Uline;
 
     fp = fopen(argv[1], "r");
     if (fp == NULL)
@@ -89,11 +93,13 @@ int main(int argc, char **argv)
     {
         scan_int(&testNo, line, TESTline);
 
-        scan_FF_2048(fp, c.z,  line, Zline,  FFLEN_2048);
-        scan_FF_2048(fp, c.z1, line, Z1line, FFLEN_2048);
-        scan_FF_2048(fp, c.t,  line, Tline,  FFLEN_2048);
-        scan_FF_2048(fp, c.v,  line, Vline,  2 * FFLEN_2048);
-        scan_FF_2048(fp, c.w,  line, Wline,  FFLEN_2048);
+        scan_FF_2048(fp, c.zkc.z,  line, Zline,  FFLEN_2048);
+        scan_FF_2048(fp, c.zkc.z1, line, Z1line, FFLEN_2048);
+        scan_FF_2048(fp, c.zkc.t,  line, Tline,  FFLEN_2048);
+        scan_FF_2048(fp, c.zkc.v,  line, Vline,  2 * FFLEN_2048);
+        scan_FF_2048(fp, c.zkc.w,  line, Wline,  FFLEN_2048);
+
+        scan_ECP_SECP256K1(fp, &(c.U), line, Uline);
 
         scan_FF_2048(fp, proof.s,  line, Sline,  FFLEN_2048);
         scan_FF_2048(fp, proof.s1, line, S1line, HFLEN_2048);
@@ -104,17 +110,19 @@ int main(int argc, char **argv)
         if (!strncmp(line, last_line, strlen(last_line)))
         {
             // Dump and reload commitment
-            MTA_ZK_commitment_toOctets(&OCT1, &OCT2, &OCT3, &OCT4, &OCT5, &c);
-            MTA_ZK_commitment_fromOctets(&c_reloaded, &OCT1, &OCT2, &OCT3, &OCT4, &OCT5);
+            MTA_ZKWC_commitment_toOctets(&OCTECP, &OCT1, &OCT2, &OCT3, &OCT4, &OCT5, &c);
+            MTA_ZKWC_commitment_fromOctets(&c_reloaded, &OCTECP, &OCT1, &OCT2, &OCT3, &OCT4, &OCT5);
 
-            compare_FF_2048(fp, testNo, "c.z",  c.z,  c_reloaded.z,  FFLEN_2048);
-            compare_FF_2048(fp, testNo, "c.z1", c.z1, c_reloaded.z1, FFLEN_2048);
-            compare_FF_2048(fp, testNo, "c.t",  c.t,  c_reloaded.t,  FFLEN_2048);
-            compare_FF_2048(fp, testNo, "c.v",  c.v,  c_reloaded.v,  2 * FFLEN_2048);
-            compare_FF_2048(fp, testNo, "c.w",  c.w,  c_reloaded.w,  FFLEN_2048);
+            compare_FF_2048(fp, testNo, "c.z",  c.zkc.z,  c_reloaded.zkc.z,  FFLEN_2048);
+            compare_FF_2048(fp, testNo, "c.z1", c.zkc.z1, c_reloaded.zkc.z1, FFLEN_2048);
+            compare_FF_2048(fp, testNo, "c.t",  c.zkc.t,  c_reloaded.zkc.t,  FFLEN_2048);
+            compare_FF_2048(fp, testNo, "c.v",  c.zkc.v,  c_reloaded.zkc.v,  2 * FFLEN_2048);
+            compare_FF_2048(fp, testNo, "c.w",  c.zkc.w,  c_reloaded.zkc.w,  FFLEN_2048);
 
-            MTA_ZK_proof_toOctets(&OCT1, &OCT2, &OCT3, &OCT4, &OCT5, &proof);
-            MTA_ZK_proof_fromOctets(&proof_reloaded, &OCT1, &OCT2, &OCT3, &OCT4, &OCT5);
+            compare_ECP_SECP256K1(fp, testNo, "c.U", &(c.U), &(c_reloaded.U));
+
+            MTA_ZKWC_proof_toOctets(&OCT1, &OCT2, &OCT3, &OCT4, &OCT5, &proof);
+            MTA_ZKWC_proof_fromOctets(&proof_reloaded, &OCT1, &OCT2, &OCT3, &OCT4, &OCT5);
 
             compare_FF_2048(fp, testNo, "proof.s",  proof.s,  proof_reloaded.s,  FFLEN_2048);
             compare_FF_2048(fp, testNo, "proof.s1", proof.s1, proof_reloaded.s1, FFLEN_2048);

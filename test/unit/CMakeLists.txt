@@ -74,3 +74,10 @@ amcl_test(test_mta_zk_challenge test_mta_zk_challenge.c amcl_mpc "SUCCESS" "mta/
 amcl_test(test_mta_zk_prove     test_mta_zk_prove.c     amcl_mpc "SUCCESS" "mta/mta_prove.txt")
 amcl_test(test_mta_zk_verify    test_mta_zk_verify.c    amcl_mpc "SUCCESS" "mta/mta_verify.txt")
 amcl_test(test_mta_zk_octets    test_mta_zk_octets.c    amcl_mpc "SUCCESS" "mta/mta_verify.txt")
+
+# MTAWC Receiver ZK Proof
+amcl_test(test_mta_zkwc_commit    test_mta_zkwc_commit.c    amcl_mpc "SUCCESS" "mta/mtawc_commit.txt")
+amcl_test(test_mta_zkwc_challenge test_mta_zkwc_challenge.c amcl_mpc "SUCCESS" "mta/mtawc_challenge.txt")
+amcl_test(test_mta_zkwc_prove     test_mta_zkwc_prove.c     amcl_mpc "SUCCESS" "mta/mtawc_prove.txt")
+amcl_test(test_mta_zkwc_verify    test_mta_zkwc_verify.c    amcl_mpc "SUCCESS" "mta/mtawc_verify.txt")
+amcl_test(test_mta_zkwc_octets    test_mta_zkwc_octets.c    amcl_mpc "SUCCESS" "mta/mtawc_verify.txt")
