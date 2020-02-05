@@ -141,7 +141,7 @@ void hash_RP_params(hash256 *sha, PAILLIER_public_key *key, COMMITMENTS_BC_pub_m
 
     // Process curve orer
     BIG_256_56_toBytes(OCT.val, q);
-    OCT.len = MODBYTES_256_56;
+    OCT.len = EGS_SECP256K1;
     OCT_hash(sha, &OCT);
 }
 
@@ -450,7 +450,7 @@ void MTA_RP_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod,
     BIG_256_56_mod(t, q);
 
     BIG_256_56_toBytes(E->val, t);
-    E->len = MODBYTES_256_56;
+    E->len = EGS_SECP256K1;
 }
 
 void MTA_RP_prove(PAILLIER_private_key *key, MTA_RP_commitment_rv *rv, octet *M, octet *R, octet *E, MTA_RP_proof *p)
@@ -628,7 +628,6 @@ int MTA_RP_verify(PAILLIER_public_key *key, COMMITMENTS_BC_priv_modulus *mod, oc
     return MTA_OK;
 }
 
-
 void MTA_RP_commitment_toOctets(octet *Z, octet *U, octet *W, MTA_RP_commitment *c)
 {
     FF_2048_toOctet(Z, c->z, FFLEN_2048);
@@ -777,9 +776,7 @@ void MTA_ZK_commit(csprng *RNG, PAILLIER_public_key *key, COMMITMENTS_BC_pub_mod
 void MTA_ZK_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod, octet *C1, octet *C2, MTA_ZK_commitment *c, octet *E)
 {
     hash256 sha;
-
-    char oct[2*FS_2048];
-    octet OCT = {0, sizeof(oct), oct};
+    char digest[SHA256];
 
     BIG_256_56 q;
     BIG_256_56 t;
@@ -800,12 +797,12 @@ void MTA_ZK_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod,
     hash_ZK_commitment(&sha, c);
 
     /* Output */
-    HASH256_hash(&sha, OCT.val);
-    BIG_256_56_fromBytesLen(t, OCT.val, SHA256);
+    HASH256_hash(&sha, digest);
+    BIG_256_56_fromBytesLen(t, digest, SHA256);
     BIG_256_56_mod(t, q);
 
     BIG_256_56_toBytes(E->val, t);
-    E->len = MODBYTES_256_56;
+    E->len = EGS_SECP256K1;
 }
 
 void MTA_ZK_prove(PAILLIER_public_key *key, MTA_ZK_commitment_rv *rv, octet *X, octet *Y, octet *R, octet *E, MTA_ZK_proof *p)
@@ -1013,4 +1010,179 @@ void MTA_ZK_commitment_rv_kill(MTA_ZK_commitment_rv *rv)
     FF_2048_zero(rv->rho1,  FFLEN_2048 + HFLEN_2048);
     FF_2048_zero(rv->sigma, FFLEN_2048 + HFLEN_2048);
     FF_2048_zero(rv->tau,   FFLEN_2048 + HFLEN_2048);
+}
+
+void MTA_ZKWC_commit(csprng *RNG, PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod,  octet *X, octet *Y, octet *C1, MTA_ZKWC_commitment *c, MTA_ZKWC_commitment_rv *rv)
+{
+    BIG_1024_58 ff_alpha[HFLEN_2048];
+    BIG_1024_58 ff_q[HFLEN_2048];
+
+    BIG_256_56 alpha;
+
+    char oct[HFS_2048];
+    octet OCT = {0, sizeof(oct), oct};
+
+    char oct_alpha[EGS_SECP256K1];
+    octet ALPHA = {0, sizeof(oct_alpha), oct_alpha};
+
+    /* Compute base commitment for the range and knowledge ZKP */
+
+    MTA_ZK_commit(RNG, key, mod, X, Y, C1, &(c->zkc), rv);
+
+    /* Compute commitment for DLOG knowledge ZKP */
+
+    // Reduce alpha modulo curve order
+    OCT_fromHex(&OCT, curve_order_hex);
+    FF_2048_zero(ff_q, HFLEN_2048);
+    BIG_1024_58_fromBytesLen(ff_q[0], OCT.val, OCT.len);
+
+    FF_2048_copy(ff_alpha, rv->alpha, HFLEN_2048);
+    FF_2048_mod(ff_alpha, ff_q, HFLEN_2048);
+    FF_2048_toOctet(&OCT, ff_alpha, HFLEN_2048);
+    OCT_chop(&OCT, &ALPHA, HFS_2048 - EGS_SECP256K1);
+    BIG_256_56_fromBytesLen(alpha, ALPHA.val, ALPHA.len);
+
+    // Commit to U = alpha.G
+    ECP_SECP256K1_generator(&(c->U));
+    ECP_SECP256K1_mul(&(c->U), alpha);
+}
+
+void MTA_ZKWC_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod, octet *C1, octet *C2, octet *X, MTA_ZKWC_commitment *c, octet *E)
+{
+    hash256 sha;
+    char digest[SHA256];
+
+    char oct[EFS_SECP256K1 + 1];
+    octet OCT = {0, sizeof(oct), oct};
+
+    BIG_256_56 q;
+    BIG_256_56 t;
+
+    // Load curve order
+    BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
+
+    HASH256_init(&sha);
+
+    /* Bind to public parameters */
+    hash_RP_params(&sha, key, mod, q);
+
+    /* Bind to proof input */
+    OCT_hash(&sha, C1);
+    OCT_hash(&sha, C2);
+    OCT_hash(&sha, X);
+
+    /* Bind to proof commitment for DLOG */
+    ECP_SECP256K1_toOctet(&OCT, &(c->U), 1);
+    OCT_hash(&sha, &OCT);
+
+    /* Bind to proof commitment for Receiver ZK */
+    hash_ZK_commitment(&sha, &(c->zkc));
+
+    /* Output */
+    HASH256_hash(&sha, digest);
+    BIG_256_56_fromBytesLen(t, digest, SHA256);
+    BIG_256_56_mod(t, q);
+
+    BIG_256_56_toBytes(E->val, t);
+    E->len = EGS_SECP256K1;
+}
+
+void MTA_ZKWC_prove(PAILLIER_public_key *key, MTA_ZKWC_commitment_rv *rv, octet *X, octet *Y, octet *R, octet *E, MTA_ZKWC_proof *p)
+{
+    MTA_ZK_prove(key, rv, X, Y, R, E, p);
+}
+
+int MTA_ZKWC_verify(PAILLIER_private_key *key, COMMITMENTS_BC_priv_modulus *mod, octet *C1, octet *C2, octet *X, octet *E, MTA_ZKWC_commitment *c, MTA_ZKWC_proof *p)
+{
+    int rc;
+
+    BIG_256_56 e;
+    BIG_256_56 s1;
+
+    ECP_SECP256K1 x;
+    ECP_SECP256K1 g;
+
+    BIG_1024_58 ff_s1[HFLEN_2048];
+    BIG_1024_58 ff_q[HFLEN_2048];
+
+    char oct[HFS_2048];
+    octet OCT = {0, sizeof(oct), oct};
+
+    char oct_s1[EGS_SECP256K1];
+    octet S1 = {0, sizeof(oct_s1), oct_s1};
+
+    // Terminate early in case of invalid input
+    rc = ECP_SECP256K1_fromOctet(&x, X);
+    if (rc != 1)
+    {
+        return MTA_INVALID_ECP;
+    }
+
+    /* Verify base Receiver ZKP */
+
+    rc = MTA_ZK_verify(key, mod, C1, C2, E, &(c->zkc), p);
+    if (rc != MTA_OK)
+    {
+        return MTA_FAIL;
+    }
+
+    /* Verify knowldege of DLOG X = x.G */
+
+    BIG_256_56_fromBytesLen(e, E->val, E->len);
+
+    // Reduce s1 modulo curve order
+    OCT_fromHex(&OCT, curve_order_hex);
+    FF_2048_zero(ff_q, HFLEN_2048);
+    BIG_1024_58_fromBytesLen(ff_q[0], OCT.val, OCT.len);
+
+    FF_2048_copy(ff_s1, p->s1, HFLEN_2048);
+    FF_2048_mod(ff_s1, ff_q, HFLEN_2048);
+    FF_2048_toOctet(&OCT, ff_s1, HFLEN_2048);
+    OCT_chop(&OCT, &S1, HFS_2048 - EGS_SECP256K1);
+    BIG_256_56_fromBytesLen(s1, S1.val, S1.len);
+
+    // Check U = s1.G - e.X
+    ECP_SECP256K1_neg(&x);
+    ECP_SECP256K1_generator(&g);
+    ECP_SECP256K1_mul2(&x, &g, e, s1);
+
+    if (!ECP_SECP256K1_equals(&x, &(c->U)))
+    {
+        return MTA_FAIL;
+    }
+
+    return MTA_OK;
+}
+
+void MTA_ZKWC_commitment_toOctets(octet *U, octet *Z, octet *Z1, octet *T, octet *V, octet *W, MTA_ZKWC_commitment *c)
+{
+    MTA_ZK_commitment_toOctets(Z, Z1, T, V, W, &(c->zkc));
+    ECP_SECP256K1_toOctet(U, &(c->U), 1);
+}
+
+int MTA_ZKWC_commitment_fromOctets(MTA_ZKWC_commitment *c, octet *U, octet *Z, octet *Z1, octet *T, octet *V, octet *W)
+{
+    if (ECP_SECP256K1_fromOctet(&(c->U), U) != 1)
+    {
+        return MTA_INVALID_ECP;
+    }
+
+    MTA_ZK_commitment_fromOctets(&(c->zkc), Z, Z1, T, V, W);
+
+    return MTA_OK;
+}
+
+void MTA_ZKWC_proof_toOctets(octet *S, octet *S1, octet *S2, octet *T1, octet *T2, MTA_ZKWC_proof *p)
+{
+    MTA_ZK_proof_toOctets(S, S1, S2, T1, T2, p);
+}
+
+void MTA_ZKWC_proof_fromOctets(MTA_ZKWC_proof *p, octet *S, octet *S1, octet *S2, octet *T1, octet *T2)
+{
+    MTA_ZK_proof_fromOctets(p, S, S1, S2, T1, T2);
+}
+
+void MTA_ZKWC_commitment_rv_kill(MTA_ZKWC_commitment_rv *rv)
+{
+    MTA_ZK_commitment_rv_kill(rv);
 }
