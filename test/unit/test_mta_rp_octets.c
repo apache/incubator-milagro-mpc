@@ -62,8 +62,6 @@ int main(int argc, char **argv)
     char oct3[2 * FS_2048];
     octet OCT3 = {0, sizeof(oct3), oct3};
 
-    PAILLIER_public_key pub;
-
     // Make sure proof is properly zeroed before starting test
     FF_4096_zero(proof.s,  FFLEN_4096);
     FF_2048_zero(proof.s1, FFLEN_2048);
