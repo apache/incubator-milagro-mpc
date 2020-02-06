@@ -44,6 +44,14 @@ extern "C"
 #define SCHNORR_FAIL	      51  /**< Invalid proof */
 #define SCHNORR_INVALID_ECP 52  /**< Not a valid point on the curve */
 
+/*! \brief Generate random challenge for any Schnorr Proof
+ *
+ * Generate a random challenge that can be used to make any
+ * of the following Schnorr Proofs interactive. This can be used
+ * to be interoperable with other implementations.
+ */
+extern void SCHNORR_random_challenge(csprng *RNG, octet *E);
+
 /* Classic Schnorr's proofs API */
 
 /*! \brief Generate a commitment for the proof

@@ -52,13 +52,19 @@ amcl_test(test_factoring_zk_prove  test_factoring_zk_prove.c  amcl_mpc "SUCCESS"
 amcl_test(test_factoring_zk_verify test_factoring_zk_verify.c amcl_mpc "SUCCESS" "factoring_zk/verify.txt")
 
 # Classic Schnorr tests
-amcl_test(test_schnorr_commit    test_schnorr_commit.c amcl_mpc "SUCCESS" "schnorr/commit.txt")
+amcl_test(test_schnorr_commit    test_schnorr_commit.c    amcl_mpc "SUCCESS" "schnorr/commit.txt")
 amcl_test(test_schnorr_challenge test_schnorr_challenge.c amcl_mpc "SUCCESS" "schnorr/challenge.txt")
-amcl_test(test_schnorr_prove     test_schnorr_prove.c amcl_mpc "SUCCESS" "schnorr/prove.txt")
-amcl_test(test_schnorr_verify    test_schnorr_verify.c amcl_mpc "SUCCESS" "schnorr/verify.txt")
+amcl_test(test_schnorr_prove     test_schnorr_prove.c     amcl_mpc "SUCCESS" "schnorr/prove.txt")
+amcl_test(test_schnorr_verify    test_schnorr_verify.c    amcl_mpc "SUCCESS" "schnorr/verify.txt")
+
+# Double Schnorr tests
+amcl_test(test_d_schnorr_commit    test_d_schnorr_commit.c    amcl_mpc "SUCCESS" "schnorr/dcommit.txt")
+amcl_test(test_d_schnorr_challenge test_d_schnorr_challenge.c amcl_mpc "SUCCESS" "schnorr/dchallenge.txt")
+amcl_test(test_d_schnorr_prove     test_d_schnorr_prove.c     amcl_mpc "SUCCESS" "schnorr/dprove.txt")
+amcl_test(test_d_schnorr_verify    test_d_schnorr_verify.c    amcl_mpc "SUCCESS" "schnorr/dverify.txt")
 
 # BC Commitment tests
-amcl_test(test_bc_setup test_bc_setup.c amcl_mpc "SUCCESS" "commitments/bc_setup.txt")
+amcl_test(test_bc_setup     test_bc_setup.c     amcl_mpc "SUCCESS" "commitments/bc_setup.txt")
 amcl_test(test_bc_internals test_bc_internals.c amcl_mpc "SUCCESS")
 
 # MTA Range Proof tests

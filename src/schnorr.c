@@ -29,6 +29,19 @@ void hash_octet(hash256 *sha, octet *O)
     }
 }
 
+void SCHNORR_random_challenge(csprng *RNG, octet *E)
+{
+    BIG_256_56 e;
+    BIG_256_56 q;
+
+    BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
+
+    BIG_256_56_randomnum(e, q, RNG);
+
+    BIG_256_56_toBytes(E->val, e);
+    E->len = SGS_SECP256K1;
+}
+
 /* Classic Schnorr's Proof Definitions */
 
 void SCHNORR_commit(csprng *RNG, octet *R, octet *C)
