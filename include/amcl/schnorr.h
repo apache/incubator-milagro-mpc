@@ -41,7 +41,7 @@ extern "C"
 #define SFS_SECP256K1 MODBYTES_256_56  /**< Schnorr Field Size */
 
 #define SCHNORR_OK          0   /**< Valid proof */
-#define SCHNORR_FAIL	    51  /**< Invalid proof */
+#define SCHNORR_FAIL	      51  /**< Invalid proof */
 #define SCHNORR_INVALID_ECP 52  /**< Not a valid point on the curve */
 
 /* Classic Schnorr's proofs API */
@@ -82,6 +82,58 @@ extern void SCHNORR_prove(octet *R, octet *E, octet *X, octet *P);
  * @return      SCHNORR_OK if the prove is valid or an error code
  */
 extern int SCHNORR_verify(octet *V, octet *C, octet *E, octet *P);
+
+/* Double Schnorr's proofs API */
+
+// The double Schnorr Proof allows to prove knwoldedge of
+// s,l s.t. V = s.R + l.G for some R ECP
+
+/*! \brief Generate a commitment for the proof
+ *
+ * @param RNG   CSPRNG to use for commitment
+ * @param R     Public ECP base of the DLOG. Compressed form
+ * @param A     Secret value used for the commitment. If RNG is NULL this is read
+ * @param B     Secret value used for the commitment. If RNG is NULL this is read
+ * @param C     Public commitment value. An ECP in compressed form
+ * @return      SCHNORR_INVALID_ECP if R is not a valid ECP, SCHNORR_OK otherwise
+ */
+extern int SCHNORR_D_commit(csprng *RNG, octet *R, octet *A, octet *B, octet *C);
+
+/*! \brief Generate the challenge for the proof
+ *
+ * Compute the challenge for the proof. RFC8235#section-3.3 can not be applied
+ * here, but we try to follow closely by treating R like a secondary generator.
+ * Returns H(G, R, C, V)
+ *
+ * @param V     Public ECP result of the DLOG. V = s.R + l.G. Compressed form
+ * @param R     Public ECP base of the DLOG. Compressed form
+ * @param C     Public commitment value. Compressed form
+ * @param E     Challenge generated
+ */
+extern void SCHNORR_D_challenge(octet *R, octet *V, octet *C, octet *E);
+
+/*! \brief Generate the proof for the given commitment and challenge
+ *
+ * @param A     Secret value used for the commitment
+ * @param B     Secret value used for the commitment
+ * @param E     Challenge received from the verifier
+ * @param S     Secret exponent of the DLOG. V = s.R + l.G
+ * @param L     Secret exponent of the DLOG. V = s.R + l.G
+ * @param T     First component of the proof of knowldege of the DLOG
+ * @param U     Second component of the proof of knowldege of the DLOG
+ */
+extern void SCHNORR_D_prove(octet *A, octet *B, octet *E, octet *S, octet *L, octet *T, octet *U);
+
+/*! \brief Verify the proof of knowledge for the DLOG
+ *
+ * @param R     Public ECP base of the DLOG. Compressed form
+ * @param V     Public ECP of the DLOG. V = s.R + l.G. Compressed form
+ * @param C     Commitment value received from the prover
+ * @param E     Challenge for the Schnorr Proof
+ * @param P     Proof received from the prover
+ * @return      SCHNORR_OK if the prove is valid or an error code
+ */
+extern int SCHNORR_D_verify(octet *R, octet *V, octet *C, octet *E, octet *T, octet *U);
 
 #ifdef __cplusplus
 }
