@@ -111,6 +111,22 @@ void MPC_SUM_MTA(octet *A, octet *B, octet *ALPHA, octet *BETA, octet *SUM);
 
 // The protocols require a BC modulus (Pt, Qt, Nt, h1, h2) and a Paillier PK (N, g)
 
+/** \brief Random challenge for any of the ZK Proofs
+ *
+ *  Generate a random challenge for any of the ZK Proofs
+ *  below. This can be used instead of the deterministic challenges
+ *  produced for each specific proof to make any of the proofs
+ *  interactive and be interoperable with other implementations.
+ *
+ *  <ol>
+ *  <li> \f$ e \in_R [0, \ldots, q] \f$
+ *  <ol>
+ *
+ *  @param RNG               csprng for random generation
+ *  @param E                 Destination octet for the challenge.
+ */
+void MTA_ZK_random_challenge(csprng *RNG, octet *E);
+
 /* Range Proof API */
 
 /** \brief Secret random values for the Range Proof commitment */

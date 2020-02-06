@@ -336,6 +336,18 @@ void MPC_SUM_MTA(octet *A, octet *B, octet *ALPHA, octet *BETA,  octet *SUM)
     BIG_256_56_toBytes(SUM->val,sum);
 }
 
+void MTA_ZK_random_challenge(csprng *RNG, octet *E)
+{
+    BIG_256_56 e;
+    BIG_256_56 q;
+
+    BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
+    BIG_256_56_randomnum(e, q, RNG);
+
+    BIG_256_56_toBytes(E->val, e);
+    E->len = EGS_SECP256K1;
+}
+
 void MTA_RP_commit(csprng *RNG, PAILLIER_private_key *key, COMMITMENTS_BC_pub_modulus *mod,  octet *M, MTA_RP_commitment *c, MTA_RP_commitment_rv *rv)
 {
     BIG_1024_58 n[FFLEN_2048];
