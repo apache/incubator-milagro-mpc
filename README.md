@@ -1,16 +1,58 @@
-# libmpc - MPC Crypto library
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
 
-[![Build Status](https://travis-ci.com/qredo/libmpc.svg?token=7HZyp2nWewcVHbgDxjjg&branch=master)](https://travis-ci.com/qredo/libmpc)
+    http://www.apache.org/licenses/LICENSE-2.0
 
-This is a library that implements the MPC
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+
+# *Apache Milagro Multi-Party Computation Library*
+
+[![Master Branch](https://img.shields.io/badge/-master:-gray.svg)](https://github.com/apache/incubator-milagro-MPC/tree/master)
+[![Master Build Status](https://travis-ci.org/apache/incubator-milagro-MPC.svg?branch=master)](https://travis-ci.org/apache/incubator-milagro-MPC)
+[![Master Coverage Status](https://coveralls.io/repos/github/apache/incubator-milagro-MPC/badge.svg?branch=master)](https://coveralls.io/github/apache/incubator-milagro-MPC?branch=master)
+
+[![Develop Branch](https://img.shields.io/badge/-develop:-gray.svg)](https://github.com/apache/incubator-milagro-MPC/tree/develop)
+[![Develop Build Status](https://travis-ci.org/apache/incubator-milagro-MPC.svg?branch=develop)](https://travis-ci.org/apache/incubator-milagro-MPC)
+[![Develop Coverage Status](https://coveralls.io/repos/github/apache/incubator-milagro-MPC/badge.svg?branch=develop)](https://coveralls.io/github/apache/incubator-milagro-MPC?branch=develop)
+
+* **category**:    Library
+* **copyright**:   2020 The Apache Software Foundation
+* **license**:     ASL 2.0 ([Apache License Version 2.0, January 2004](http://www.apache.org/licenses/LICENSE-2.0))
+* **link**:        https://github.com/apache/incubator-milagro-MPC
+
+## Description
+
+*AMCL - Apache Milagro Crypto Multi-Party Computation*
+
+This library implements Multi-Party Computation (MPC) using the milargo crypto library.
 
 ## Dependencies
 
-To correctly build the C library you need to install the following.
+In order to build this library, the following packages are required:
+
+* [CMake](https://cmake.org/) is required to build the source code.
+* [CFFI](https://cffi.readthedocs.org/en/release-0.8/), the C Foreign Function Interface for the Python wrapper
+* [Doxygen](http://doxygen.org) is required to build the source code documentation.
+* [Python](https://www.python.org/) language is required to build the Python language wrapper.
+
+On Ubuntu 18.04 these packages are installed with the following commands;
 
 ```
 sudo apt-get update
-sudo apt-get install -y build-essential cmake doxygen lcov python3-dev python3-pip wget git 
+sudo apt-get install -y build-essential cmake doxygen lcov python3-dev python3-pip wget git
+pip3 install cffi
 ```
 
 ### AMCL
@@ -47,7 +89,7 @@ sudo make install
 
 or build and run test on all builds
 
-```
+```sh
 ./scripts/build.sh
 ./scripts/test.sh
 ```
@@ -84,11 +126,6 @@ docker logs $CONTAINER_ID
 docker cp ${CONTAINER_ID}:"/root/target/Coverage/coverage" ./
 docker rm -f ${CONTAINER_ID} || true
 ```
-
-## Model
-
-There is a model of the MPC protocol written in Python in ./model. This is
-used for development and will be removed in the final release.
 
 ## Python
 
