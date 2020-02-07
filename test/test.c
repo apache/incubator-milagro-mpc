@@ -169,6 +169,14 @@ void compare_OCT(FILE* fp, int testNo, char *name, octet *X, octet *Y)
 #endif
 
         printf("FAILURE %s. Test %d\n", name, testNo);
+
+#ifdef DEBUG
+        printf("X = ");
+        OCT_output(X);
+        printf("Y = ");
+        OCT_output(Y);
+#endif
+
         exit(EXIT_FAILURE);
     }
 }

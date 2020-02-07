@@ -40,9 +40,12 @@ function(amcl_test name source dependencies expected_response)
 endfunction()
 
 # MPC tests
-amcl_test(test_mta test_mta.c amcl_mpc "SUCCESS" "mpc/MTA.txt")
-amcl_test(test_r   test_r.c   amcl_mpc "SUCCESS" "mpc/R.txt")
-amcl_test(test_s   test_s.c   amcl_mpc "SUCCESS" "mpc/S.txt")
+amcl_test(test_mta           test_mta.c           amcl_mpc "SUCCESS" "mpc/MTA.txt")
+amcl_test(test_r             test_r.c             amcl_mpc "SUCCESS" "mpc/R.txt")
+amcl_test(test_s             test_s.c             amcl_mpc "SUCCESS" "mpc/S.txt")
+amcl_test(test_phase5_commit test_phase5_commit.c amcl_mpc "SUCCESS" "mpc/phase5_commit.txt")
+amcl_test(test_phase5_prove  test_phase5_prove.c  amcl_mpc "SUCCESS" "mpc/phase5_prove.txt")
+amcl_test(test_phase5_verify test_phase5_verify.c amcl_mpc "SUCCESS" "mpc/phase5_verify.txt")
 
 # NM Commitment tests
 amcl_test(test_nm_commit test_nm_commit.c amcl_mpc "SUCCESS" "commitments/nm_commit.txt")
