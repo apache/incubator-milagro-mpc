@@ -347,6 +347,164 @@ int MPC_SUM_PK(octet *PK1, octet *PK2, octet *PK)
     return 0;
 }
 
+int MPC_PHASE5_commit(csprng *RNG, octet *R, octet *S, octet *PHI, octet *RHO, octet *V, octet *A)
+{
+    BIG_256_56 ws;
+    BIG_256_56 phi;
+    BIG_256_56 rho;
+
+    ECP_SECP256K1 P1;
+    ECP_SECP256K1 P2;
+
+    if (!ECP_SECP256K1_fromOctet(&P1, R))
+    {
+        return MPC_INVALID_ECP;
+    }
+
+    if (RNG != NULL)
+    {
+        BIG_256_56_rcopy(ws, CURVE_Order_SECP256K1);
+        BIG_256_56_randomnum(phi, ws, RNG);
+        BIG_256_56_randomnum(rho, ws, RNG);
+
+        BIG_256_56_toBytes(PHI->val, phi);
+        BIG_256_56_toBytes(RHO->val, rho);
+        PHI->len = EGS_SECP256K1;
+        RHO->len = EGS_SECP256K1;
+    }
+    else
+    {
+        BIG_256_56_fromBytesLen(phi, PHI->val, PHI->len);
+        BIG_256_56_fromBytesLen(rho, RHO->val, RHO->len);
+    }
+
+    // Compute V = phi.G + s.R
+    BIG_256_56_fromBytesLen(ws, S->val, S->len);
+    ECP_SECP256K1_generator(&P2);
+
+    ECP_SECP256K1_mul2(&P1, &P2, ws, phi);
+
+    // Compute A = rho.G
+    ECP_SECP256K1_mul(&P2, rho);
+
+    // Output ECPs
+    ECP_SECP256K1_toOctet(V, &P1, 1);
+    ECP_SECP256K1_toOctet(A, &P2, 1);
+
+    // Clean memory
+    BIG_256_56_zero(phi);
+    BIG_256_56_zero(rho);
+    BIG_256_56_zero(ws);
+
+    return MPC_OK;
+}
+
+int MPC_PHASE5_prove(octet *PHI, octet *RHO, octet *V[2], octet *A[2], octet *PK, octet *HM, octet *RX, octet *U, octet *T)
+{
+    BIG_256_56 m;
+    BIG_256_56 r;
+    BIG_256_56 ws;
+
+    ECP_SECP256K1 V1;
+    ECP_SECP256K1 V2;
+    ECP_SECP256K1 A1;
+    ECP_SECP256K1 A2;
+    ECP_SECP256K1 K;
+
+    if (!ECP_SECP256K1_fromOctet(&A1, A[0]))
+    {
+        return MPC_INVALID_ECP;
+    }
+
+    if (!ECP_SECP256K1_fromOctet(&A2, A[1]))
+    {
+        return MPC_INVALID_ECP;
+    }
+
+    if (!ECP_SECP256K1_fromOctet(&V1, V[0]))
+    {
+        return MPC_INVALID_ECP;
+    }
+
+    if (!ECP_SECP256K1_fromOctet(&V2, V[1]))
+    {
+        return MPC_INVALID_ECP;
+    }
+
+    if (!ECP_SECP256K1_fromOctet(&K, PK))
+    {
+        return MPC_INVALID_ECP;
+    }
+
+    // Compute A = phi.(A1 + A2)
+    BIG_256_56_fromBytesLen(ws, PHI->val, PHI->len);
+    ECP_SECP256K1_add(&A1, &A2);
+    ECP_SECP256K1_mul(&A1, ws);
+
+    ECP_SECP256K1_toOctet(T, &A1, 1);
+
+    // Compute V = rho.(V1 + V2 - m.G - r.PK)
+    BIG_256_56_fromBytesLen(m,  HM->val,  HM->len);
+    BIG_256_56_fromBytesLen(r,  RX->val,  RX->len);
+    BIG_256_56_fromBytesLen(ws, RHO->val, RHO->len);
+
+    // K = - m.G - r.PK
+    ECP_SECP256K1_generator(&A1);
+    ECP_SECP256K1_neg(&A1);
+    ECP_SECP256K1_neg(&K);
+    ECP_SECP256K1_mul2(&K, &A1, r, m);
+
+    // V = rho.(V1 + V2 + K)
+    ECP_SECP256K1_add(&V1, &V2);
+    ECP_SECP256K1_add(&V1, &K);
+    ECP_SECP256K1_mul(&V1, ws);
+
+    ECP_SECP256K1_toOctet(U, &V1, 1);
+
+    // Clean memory
+    BIG_256_56_zero(ws);
+
+    return MPC_OK;
+}
+
+int MPC_PHASE5_verify(octet *U[2], octet *T[2])
+{
+    ECP_SECP256K1 U1;
+    ECP_SECP256K1 U2;
+    ECP_SECP256K1 T1;
+    ECP_SECP256K1 T2;
+
+    if (!ECP_SECP256K1_fromOctet(&U1, U[0]))
+    {
+        return MPC_INVALID_ECP;
+    }
+
+    if (!ECP_SECP256K1_fromOctet(&U2, U[1]))
+    {
+        return MPC_INVALID_ECP;
+    }
+
+    if (!ECP_SECP256K1_fromOctet(&T1, T[0]))
+    {
+        return MPC_INVALID_ECP;
+    }
+
+    if (!ECP_SECP256K1_fromOctet(&T2, T[1]))
+    {
+        return MPC_INVALID_ECP;
+    }
+
+    ECP_SECP256K1_add(&U1, &U2);
+    ECP_SECP256K1_add(&T1, &T2);
+
+    if (!ECP_SECP256K1_equals(&U1, &T1))
+    {
+        return MPC_FAIL;
+    }
+
+    return MPC_OK;
+}
+
 // Write Paillier public key to octets
 void MPC_DUMP_PAILLIER_PK(PAILLIER_public_key *PUB, octet *N, octet *G, octet *N2)
 {
