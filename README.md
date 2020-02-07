@@ -129,7 +129,7 @@ docker rm -f ${CONTAINER_ID} || true
 
 ## Python
 
-There is a Python wrapper in the ./python.
+There is a Python wrapper in ./python.
 
 ## Virtual machine
 
