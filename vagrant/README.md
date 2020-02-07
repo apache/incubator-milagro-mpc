@@ -29,7 +29,7 @@ will be available on /vagrant.
 For example to have this repo available on the VM.
 
 ```
-git clone git@gitlab.com:qredo/libmpc.git
+git clone git@github.com:apache/incubator-milagro-MPC.git
 ```
 
 in this directory and then on the VM

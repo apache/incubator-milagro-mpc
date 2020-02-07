@@ -24,8 +24,8 @@ jobs:
   #  - docker logs $CONTAINER_ID
   #  - docker cp ${CONTAINER_ID}:"/root/target/Coverage/coverage" ./
   #  - docker rm -f ${CONTAINER_ID} || true
-  #  - sed -i "s|root|home/travis/build/qredo/libmpc|" ./coverage/libmpc.info
-  #  - coveralls-lcov /home/travis/build/qredo/libmpc/coverage/libmpc.info
+  #  - sed -i "s|root|home/travis/build/apache/libmpc|" ./coverage/libmpc.info
+  #  - coveralls-lcov /home/travis/build/apache/libmpc/coverage/libmpc.info
 
 
 
