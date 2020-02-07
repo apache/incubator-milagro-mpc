@@ -138,7 +138,8 @@ extern void SCHNORR_D_prove(octet *A, octet *B, octet *E, octet *S, octet *L, oc
  * @param V     Public ECP of the DLOG. V = s.R + l.G. Compressed form
  * @param C     Commitment value received from the prover
  * @param E     Challenge for the Schnorr Proof
- * @param P     Proof received from the prover
+ * @param T     First component of the proof received
+ * @param U     Second component of the proof received
  * @return      SCHNORR_OK if the prove is valid or an error code
  */
 extern int SCHNORR_D_verify(octet *R, octet *V, octet *C, octet *E, octet *T, octet *U);
