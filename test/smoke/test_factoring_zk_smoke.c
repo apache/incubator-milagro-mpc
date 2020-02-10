@@ -66,7 +66,7 @@ int main()
     FF_2048_toOctet(&N, m.n, FFLEN_2048);
 
     // Verify proof
-    if (!FACTORING_ZK_verify(&N, &E, &Y))
+    if (FACTORING_ZK_verify(&N, &E, &Y) != FACTORING_ZK_OK)
     {
         printf("FAILURE FACTORING_ZK_verify\n");
         exit(EXIT_FAILURE);

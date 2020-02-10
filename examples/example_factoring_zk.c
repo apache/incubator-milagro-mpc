@@ -79,7 +79,7 @@ int main()
 
     // Verify proof
     printf("\nVerify prove (E, Y) for integer N\n");
-    if(FACTORING_ZK_verify(&N, &E, &Y))
+    if(FACTORING_ZK_verify(&N, &E, &Y) == FACTORING_ZK_OK)
     {
         printf("\tSuccess!\n");
     }

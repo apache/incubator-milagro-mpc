@@ -54,7 +54,7 @@ void generator(hash256 *sha, int k, octet *O)
 
     hash256 shai;
 
-    OCT_clear(O);
+    OCT_empty(O);
 
     // Complete SEED with I2OSP(k, 4)
     c[0] = (k >> 24) & 0xFF;
@@ -179,10 +179,10 @@ void FACTORING_ZK_prove(FACTORING_ZK_modulus *m, csprng *RNG, octet *R, octet *E
 
     // Compute e = H(N, Z1, Z2, X)
     hash_oct(&sha_prime, &W);
-    HASH256_hash(&sha_prime, E->val);
-    E->len = FACTORING_ZK_B;
+    HASH256_hash(&sha_prime, W.val);
+    W.len = FACTORING_ZK_B;
 
-    OCT_copy(&W, E);
+    OCT_copy(E, &W);
     OCT_pad(&W, HFS_2048);
     FF_2048_fromOctet(e, &W, HFLEN_2048);
 
@@ -199,13 +199,12 @@ void FACTORING_ZK_prove(FACTORING_ZK_modulus *m, csprng *RNG, octet *R, octet *E
     FF_2048_norm(ws, FFLEN_2048);
     FF_2048_toOctet(Y, ws, FFLEN_2048);
 
-    if (R != NULL)
-    {
-        FF_2048_toOctet(R, r, FFLEN_2048);
-    }
-
     // Clear memory
-    FF_2048_zero(r, FFLEN_2048);
+    FF_2048_zero(r,   FFLEN_2048);
+    FF_2048_zero(rp,  HFLEN_2048);
+    FF_2048_zero(rq,  HFLEN_2048);
+    FF_2048_zero(zrp, HFLEN_2048);
+    FF_2048_zero(zrq, HFLEN_2048);
 }
 
 int FACTORING_ZK_verify(octet *N, octet *E, octet *Y)
@@ -284,7 +283,12 @@ int FACTORING_ZK_verify(octet *N, octet *E, octet *Y)
     HASH256_hash(&sha_prime, W.val);
     W.len = FACTORING_ZK_B;
 
-    return OCT_comp(&W, E);
+    if (!OCT_comp(&W, E))
+    {
+        return FACTORING_ZK_FAIL;
+    }
+
+    return FACTORING_ZK_OK;
 }
 
 void FACTORING_ZK_kill_modulus(FACTORING_ZK_modulus *m)
