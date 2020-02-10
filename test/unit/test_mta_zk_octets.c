@@ -21,7 +21,7 @@
 #include "test.h"
 #include "amcl/mta.h"
 
-/* MTA Range Proof dump/load to octets unit tests */
+/* MTA Receiver ZK Proof dump/load to octets unit tests */
 
 #define LINE_LEN 2048
 
@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 {
     if (argc != 2)
     {
-        printf("usage: ./test_mta_rp_octets [path to test vector file]\n");
+        printf("usage: ./test_mta_zk_octets [path to test vector file]\n");
         exit(EXIT_FAILURE);
     }
 
@@ -41,17 +41,21 @@ int main(int argc, char **argv)
     const char *TESTline = "TEST = ";
     int testNo = 0;
 
-    MTA_RP_commitment co;
-    MTA_RP_commitment co_reloaded;
-    const char *Zline = "Z = ";
-    const char *Uline = "U = ";
-    const char *Wline = "W = ";
+    MTA_ZK_commitment c;
+    MTA_ZK_commitment c_reloaded;
+    const char *Zline  = "Z = ";
+    const char *Z1line = "Z1 = ";
+    const char *Tline  = "T = ";
+    const char *Vline  = "V = ";
+    const char *Wline  = "W = ";
 
-    MTA_RP_proof proof;
-    MTA_RP_proof proof_reloaded;
-    const char *Sline =  "S = ";
+    MTA_ZK_proof proof;
+    MTA_ZK_proof proof_reloaded;
+    const char *Sline  = "S = ";
     const char *S1line = "S1 = ";
     const char *S2line = "S2 = ";
+    const char *T1line = "T1 = ";
+    const char *T2line = "T2 = ";
 
     char oct1[FS_2048];
     octet OCT1 = {0, sizeof(oct1), oct1};
@@ -62,8 +66,13 @@ int main(int argc, char **argv)
     char oct3[2 * FS_2048];
     octet OCT3 = {0, sizeof(oct3), oct3};
 
+    char oct4[2 * FS_2048];
+    octet OCT4 = {0, sizeof(oct4), oct4};
+
+    char oct5[2 * FS_2048];
+    octet OCT5 = {0, sizeof(oct5), oct5};
+
     // Make sure proof is properly zeroed before starting test
-    FF_4096_zero(proof.s,  FFLEN_4096);
     FF_2048_zero(proof.s1, FFLEN_2048);
 
     // Line terminating a test vector
@@ -80,31 +89,38 @@ int main(int argc, char **argv)
     {
         scan_int(&testNo, line, TESTline);
 
-        // Read inputs
-        scan_FF_2048(fp, co.z, line, Zline, FFLEN_2048);
-        scan_FF_4096(fp, co.u, line, Uline, FFLEN_4096);
-        scan_FF_2048(fp, co.w, line, Wline, FFLEN_2048);
+        scan_FF_2048(fp, c.z,  line, Zline,  FFLEN_2048);
+        scan_FF_2048(fp, c.z1, line, Z1line, FFLEN_2048);
+        scan_FF_2048(fp, c.t,  line, Tline,  FFLEN_2048);
+        scan_FF_2048(fp, c.v,  line, Vline,  2 * FFLEN_2048);
+        scan_FF_2048(fp, c.w,  line, Wline,  FFLEN_2048);
 
-        scan_FF_4096(fp, proof.s,  line, Sline,  HFLEN_4096);
+        scan_FF_2048(fp, proof.s,  line, Sline,  FFLEN_2048);
         scan_FF_2048(fp, proof.s1, line, S1line, HFLEN_2048);
         scan_FF_2048(fp, proof.s2, line, S2line, FFLEN_2048 + HFLEN_2048);
+        scan_FF_2048(fp, proof.t1, line, T1line, FFLEN_2048);
+        scan_FF_2048(fp, proof.t2, line, T2line, FFLEN_2048 + HFLEN_2048);
 
         if (!strncmp(line, last_line, strlen(last_line)))
         {
             // Dump and reload commitment
-            MTA_RP_commitment_toOctets(&OCT1, &OCT2, &OCT3, &co);
-            MTA_RP_commitment_fromOctets(&co_reloaded, &OCT1, &OCT2, &OCT3);
+            MTA_ZK_commitment_toOctets(&OCT1, &OCT2, &OCT3, &OCT4, &OCT5, &c);
+            MTA_ZK_commitment_fromOctets(&c_reloaded, &OCT1, &OCT2, &OCT3, &OCT4, &OCT5);
 
-            compare_FF_2048(fp, testNo, "co.z", co.z, co_reloaded.z, FFLEN_2048);
-            compare_FF_4096(fp, testNo, "co.u", co.u, co_reloaded.u, FFLEN_4096);
-            compare_FF_2048(fp, testNo, "co.w", co.w, co_reloaded.w, FFLEN_2048);
+            compare_FF_2048(fp, testNo, "c.z",  c.z,  c_reloaded.z,  FFLEN_2048);
+            compare_FF_2048(fp, testNo, "c.z1", c.z1, c_reloaded.z1, FFLEN_2048);
+            compare_FF_2048(fp, testNo, "c.t",  c.t,  c_reloaded.t,  FFLEN_2048);
+            compare_FF_2048(fp, testNo, "c.v",  c.v,  c_reloaded.v,  2 * FFLEN_2048);
+            compare_FF_2048(fp, testNo, "c.w",  c.w,  c_reloaded.w,  FFLEN_2048);
 
-            MTA_RP_proof_toOctets(&OCT1, &OCT2, &OCT3, &proof);
-            MTA_RP_proof_fromOctets(&proof_reloaded, &OCT1, &OCT2, &OCT3);
+            MTA_ZK_proof_toOctets(&OCT1, &OCT2, &OCT3, &OCT4, &OCT5, &proof);
+            MTA_ZK_proof_fromOctets(&proof_reloaded, &OCT1, &OCT2, &OCT3, &OCT4, &OCT5);
 
-            compare_FF_4096(fp, testNo, "proof.s",  proof.s,  proof_reloaded.s,  FFLEN_4096);
+            compare_FF_2048(fp, testNo, "proof.s",  proof.s,  proof_reloaded.s,  FFLEN_2048);
             compare_FF_2048(fp, testNo, "proof.s1", proof.s1, proof_reloaded.s1, FFLEN_2048);
             compare_FF_2048(fp, testNo, "proof.s2", proof.s2, proof_reloaded.s2, FFLEN_2048 + HFLEN_2048);
+            compare_FF_2048(fp, testNo, "proof.t1", proof.t1, proof_reloaded.t1, FFLEN_2048);
+            compare_FF_2048(fp, testNo, "proof.t2", proof.t2, proof_reloaded.t2, FFLEN_2048 + HFLEN_2048);
 
             // Mark that at least one test vector was executed
             test_run = 1;
