@@ -67,13 +67,18 @@ int COMMITMENTS_NM_decommit(octet *X, octet *R, octet *C)
     // to make the scheme non malleable
     if (R->len != SHA256)
     {
-        return 0;
+        return COMMITMENTS_FAIL;
     }
 
     // Verify the commitment
     hash(X, R, &D);
 
-    return OCT_comp(C, &D);
+    if (!OCT_comp(C, &D))
+    {
+        return COMMITMENTS_FAIL;
+    }
+
+    return COMMITMENTS_OK;
 }
 
 /* Bit Commitment Setup Definitions */
@@ -175,12 +180,11 @@ void bc_generator(csprng *RNG, BIG_1024_58* x, BIG_1024_58 *p, BIG_1024_58 *P, i
     }
 
     // If ord(x) = 2p, square it.
-    FF_2048_pow(e, x, p, P, n);
+    FF_2048_skpow(e, x, p, P, n, n);
     FF_2048_dec(e, 1, n);
     if (!FF_2048_iszilch(e, n))
     {
         FF_2048_power(x, x, 2, P, n);
-        FF_2048_mod(x, P, n);
     }
 }
 
@@ -271,6 +275,14 @@ void COMMITMENTS_BC_setup(csprng *RNG, COMMITMENTS_BC_priv_modulus *m, octet *P,
     FF_2048_skpow(gq, gq, aq, m->Q, HFLEN_2048, HFLEN_2048);
 
     FF_2048_crt(m->b1, gp, gq, m->P, m->Q, HFLEN_2048);
+
+    // Clean memory
+    FF_2048_zero(p,  HFLEN_2048);
+    FF_2048_zero(q,  HFLEN_2048);
+    FF_2048_zero(gp, HFLEN_2048);
+    FF_2048_zero(gq, HFLEN_2048);
+    FF_2048_zero(ap, HFLEN_2048);
+    FF_2048_zero(aq, HFLEN_2048);
 }
 
 void COMMITMENTS_BC_kill_priv_modulus(COMMITMENTS_BC_priv_modulus *m)

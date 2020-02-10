@@ -7,7 +7,7 @@ to you under the Apache License, Version 2.0 (the
 "License"); you may not use this file except in compliance
 with the License.  You may obtain a copy of the License at
 
-  http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing,
 software distributed under the License is distributed on an
@@ -58,10 +58,12 @@ int main()
 
     printf("\nTransmit R, X to decommit the value.\n");
     rc = COMMITMENTS_NM_decommit(&X, &R, &C);
-    if (!rc)
+    if (rc != COMMITMENTS_OK)
     {
-        fprintf(stderr, "FAILURE COMMITMENTS_NM_decommit: %d\n", rc);
-        exit(EXIT_FAILURE);
+        printf("\tFailure\n\n");
     }
-    printf("\tDecommitment successful.\n\n");
+    else
+    {
+        printf("\rSuccess\n\n");
+    }
 }
