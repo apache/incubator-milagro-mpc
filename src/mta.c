@@ -38,27 +38,6 @@ void OCT_hash(hash256 *sha, octet *O)
     }
 }
 
-// Truncates an octet string
-void OCT_truncate(octet *y,octet *x)
-{
-    /* y < x */
-    int i=0;
-    int j=0;
-    if (x==NULL) return;
-    if (y==NULL) return;
-
-    for (i=0; i<y->len; i++)
-    {
-        j=x->len+i;
-        if (i>=y->max)
-        {
-            y->len=y->max;
-            return;
-        }
-        y->val[i]=x->val[j];
-    }
-}
-
 /* FF manipulation utilities
  *
  * These might be nice additions to milagro-crypto-c ff API
@@ -172,60 +151,55 @@ void hash_ZK_commitment(hash256 *sha, MTA_ZK_commitment *c)
 // Client MTA first pass
 void MPC_MTA_CLIENT1(csprng *RNG,  PAILLIER_public_key *PUB, octet *A, octet *CA, octet *R)
 {
-    // Read A
     char a1[FS_2048];
     octet A1 = {0,sizeof(a1),a1};
-    OCT_clear(&A1);
-    A1.len = FS_2048 - EGS_SECP256K1;
-    OCT_joctet(&A1,A);
+
+    OCT_copy(&A1, A);
+    OCT_pad(&A1, FS_2048);
 
     PAILLIER_ENCRYPT(RNG, PUB, &A1, CA, R);
+
+    // Clean memory
+    OCT_clear(&A1);
 }
 
 // Client MtA second pass
 void MPC_MTA_CLIENT2(PAILLIER_private_key *PRIV, octet *CB, octet *ALPHA)
 {
-    BIG_512_60 q[FFLEN_4096];
-    BIG_512_60 alpha[FFLEN_4096];
-
-    char co[EGS_SECP256K1];
-    octet CO = {0,sizeof(co),co};
+    BIG_1024_58 q[HFLEN_2048];
+    BIG_1024_58 alpha[HFLEN_2048];
 
     char t[FS_2048];
     octet T = {0,sizeof(t),t};
 
     // Curve order
-    OCT_fromHex(&CO,curve_order_hex);
-    FF_4096_zero(q, FFLEN_4096);
-    BIG_512_60_fromBytesLen(q[0],CO.val,CO.len);
+    OCT_fromHex(&T, curve_order_hex);
+    OCT_pad(&T, HFS_2048);
+    FF_2048_fromOctet(q, &T, HFLEN_2048);
 
     PAILLIER_DECRYPT(PRIV, CB, &T);
 
-    FF_4096_zero(alpha, FFLEN_4096);
-    FF_4096_fromOctet(alpha,&T,HFLEN_4096);
+    // alpha < q^3
+    OCT_shl(&T, HFS_2048);
+    FF_2048_fromOctet(alpha, &T, HFLEN_2048);
 
     // alpha = alpha mod q
-    FF_4096_mod(alpha, q, FFLEN_4096);
+    FF_2048_mod(alpha, q, HFLEN_2048);
 
     // Output alpha
-    char alpha1[FS_4096];
-    octet ALPHA1 = {0,sizeof(alpha1),alpha1};
-    FF_4096_toOctet(&ALPHA1, alpha, FFLEN_4096);
-    OCT_clear(ALPHA);
-    ALPHA->len = EGS_SECP256K1;
-    ALPHA1.len = FS_4096 - EGS_SECP256K1;
-    OCT_truncate(ALPHA,&ALPHA1);
+    FF_2048_toOctet(&T, alpha, HFLEN_2048);
+    OCT_chop(&T, ALPHA, HFS_2048 - EGS_SECP256K1);
+
+    // Clean memory
+    FF_2048_zero(alpha, FFLEN_2048);
+    OCT_clear(&T);
 }
 
 // MtA server
 void MPC_MTA_SERVER(csprng *RNG, PAILLIER_public_key *PUB, octet *B, octet *CA, octet *ZO, octet *R, octet *CB, octet *BETA)
 {
-    BIG_512_60 q[FFLEN_4096];
-    BIG_512_60 z[FFLEN_4096];
-    BIG_512_60 beta[FFLEN_4096];
-
-    char co[EGS_SECP256K1];
-    octet CO = {0,sizeof(co),co};
+    BIG_256_56 q;
+    BIG_256_56 z;
 
     char zb[FS_2048];
     octet Z = {0,sizeof(zb),zb};
@@ -240,36 +214,30 @@ void MPC_MTA_SERVER(csprng *RNG, PAILLIER_public_key *PUB, octet *B, octet *CA, 
     octet B1 = {0,sizeof(b1),b1};
 
     // Curve order
-    OCT_fromHex(&CO,curve_order_hex);
-    FF_4096_zero(q, FFLEN_4096);
-    BIG_512_60_fromBytesLen(q[0],CO.val,CO.len);
+    BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
 
     // Read B
-    OCT_clear(&B1);
-    B1.len = FS_2048 - EGS_SECP256K1;
-    OCT_joctet(&B1,B);
+    OCT_copy(&B1, B);
+    OCT_pad(&B1, FS_2048);
 
     // Random z value
     if (RNG!=NULL)
     {
-        FF_4096_random(z,RNG,FFLEN_4096);
-        FF_4096_mod(z,q,FFLEN_4096);
+        BIG_256_56_randomnum(z, q, RNG);
+
+        BIG_256_56_toBytes(Z.val, z);
+        Z.len = EGS_SECP256K1;
     }
     else
     {
-        char z1[FS_4096];
-        octet Z1 = {0,sizeof(z1),z1};
-        OCT_clear(&Z1);
-        Z1.len = FS_4096 - EGS_SECP256K1;
-        ZO->len = EGS_SECP256K1;
-        OCT_joctet(&Z1,ZO);
-        FF_4096_zero(z, FFLEN_4096);
-        FF_4096_fromOctet(z,&Z1,FFLEN_4096);
+        BIG_256_56_fromBytesLen(z, ZO->val, ZO->len);
+        OCT_copy(&Z, ZO);
     }
-    FF_4096_toOctet(&Z, z, HFLEN_4096);
+
+    OCT_pad(&Z, FS_2048);
 
     // beta = -z mod q
-    FF_4096_sub(beta, q, z, FFLEN_4096);
+    BIG_256_56_sub(z, q, z);
 
     // CT = E_A(a.b)
     PAILLIER_MULT(PUB, CA, &B1, &CT);
@@ -283,23 +251,16 @@ void MPC_MTA_SERVER(csprng *RNG, PAILLIER_public_key *PUB, octet *B, octet *CA, 
     // Output Z for Debug
     if (ZO!=NULL)
     {
-        char z1[FS_4096];
-        octet Z1 = {0,sizeof(z1),z1};
-        FF_4096_toOctet(&Z1, z, FFLEN_4096);
-        OCT_clear(ZO);
-        ZO->len = EGS_SECP256K1;
-        Z1.len = FS_4096 - EGS_SECP256K1;
-        OCT_truncate(ZO,&Z1);
+        OCT_chop(&Z, ZO, FS_2048 - EGS_SECP256K1);
     }
 
     // Output beta
-    char beta1[FS_4096];
-    octet BETA1 = {0,sizeof(beta1),beta1};
-    FF_4096_toOctet(&BETA1, beta, FFLEN_4096);
-    OCT_clear(BETA);
+    BIG_256_56_toBytes(BETA->val, z);
     BETA->len = EGS_SECP256K1;
-    BETA1.len = FS_4096 - EGS_SECP256K1;
-    OCT_truncate(BETA,&BETA1);
+
+    // Clean memory
+    BIG_256_56_zero(z);
+    OCT_clear(&B1);
 }
 
 /* sum = a1.b1 + alpha + beta  */
@@ -334,6 +295,13 @@ void MPC_SUM_MTA(octet *A, octet *B, octet *ALPHA, octet *BETA,  octet *SUM)
     // Output result
     SUM->len=EGS_SECP256K1;
     BIG_256_56_toBytes(SUM->val,sum);
+
+    // Clean memory
+    BIG_256_56_zero(a);
+    BIG_256_56_zero(b);
+    BIG_256_56_zero(alpha);
+    BIG_256_56_zero(beta);
+    BIG_256_56_zero(sum);
 }
 
 void MTA_ZK_random_challenge(csprng *RNG, octet *E)

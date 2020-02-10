@@ -66,7 +66,7 @@ void SCHNORR_commit(csprng *RNG, octet *R, octet *C)
 
     // Generate commitment r.G
     ECP_SECP256K1_generator(&G);
-    ECP_SECP256K1_mul(&G,r);
+    ECP_SECP256K1_mul(&G, r);
 
     // Output C compressed
     ECP_SECP256K1_toOctet(C, &G, 1);
