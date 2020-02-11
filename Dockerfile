@@ -1,6 +1,6 @@
 # Dockerfile
 #
-# Ubuntu 18.04 (Bionic) 
+# Ubuntu 18.04 (Bionic)
 #
 # @author  Kealan McCusker <kealanmccusker@gmail.com>
 # ------------------------------------------------------------------------------
@@ -56,12 +56,13 @@ RUN mkdir -p /root/go/bin && \
 # install AMCL
 RUN git clone https://github.com/apache/incubator-milagro-crypto-c.git && \
     cd incubator-milagro-crypto-c && \
+    git checkout 86c33c63d34fd3b9024a5e5c32934d4103805b9c && \
     mkdir build && \
     cd build && \
     cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D AMCL_CHUNK=64 -D AMCL_CURVE="BLS381,SECP256K1" -D AMCL_RSA="" -D BUILD_PAILLIER=ON -D BUILD_PYTHON=ON -D BUILD_BLS=ON -D BUILD_WCC=OFF -D BUILD_MPIN=OFF -D BUILD_X509=OFF -D CMAKE_INSTALL_PREFIX=/usr/local .. && \
     make && \
     make test && \
-    make install 
+    make install
 
 ADD . /root
 

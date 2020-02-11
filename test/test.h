@@ -27,6 +27,7 @@ under the License.
 #include "amcl/amcl.h"
 #include "amcl/ff_2048.h"
 #include "amcl/ff_4096.h"
+#include "amcl/ecp_SECP256K1.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -58,6 +59,14 @@ extern void read_FF_2048(FILE *fp, BIG_1024_58 *x, char *string, int n);
  *  @param  n       Length of x in BIGs
  */
 extern void read_FF_4096(FILE *fp, BIG_512_60 *x, char *string, int n);
+
+/*! \brief Read string into an ECP_SECP256K1
+ *
+ *  @param  fp      TV file pointer to close in case of error
+ *  @param  P       Output ECP
+ *  @param  string  Input string
+ */
+extern void read_ECP_SECP256K1(FILE *fp, ECP_SECP256K1 *P, char *string);
 
 /*! \brief Read integer if the line has the correct prefix
  *
@@ -95,6 +104,15 @@ extern void scan_FF_2048(FILE *fp, BIG_1024_58 *x, char *line, const char *prefi
  *  @param  n       Length of x in BIGs
  */
 extern void scan_FF_4096(FILE *fp, BIG_512_60 *x, char *line, const char *prefix, int n);
+
+/*! \brief Read string into an ECP_SECP256K1
+ *
+ *  @param  fp      TV file pointer to close in case of error
+ *  @param  P       Output ECP
+ *  @param  line    TV line
+ *  @param  prefix  Line prefix for the element to read
+ */
+extern void scan_ECP_SECP256K1(FILE *fp, ECP_SECP256K1 *P, char *line, const char *prefix);
 
 /* Assertion utilities */
 
@@ -136,6 +154,17 @@ extern void compare_FF_2048(FILE *fp, int testNo, char* name, BIG_1024_58 *x, BI
  */
 extern void compare_FF_4096(FILE *fp, int testNo, char* name, BIG_512_60 *x, BIG_512_60 *y, int n);
 
+/*! \brief Compare two ECP_SECP256K1 elements
+ *
+ *  Compare two ECP and fail the test if they are not equal
+ *
+ *  @param  fp      TV file pointer to close in case of failure
+ *  @param  testNo  Test Vector identifier
+ *  @param  name    Descriptor for the elements compared
+ *  @param  P       First element to compare
+ *  @param  Q       Second element to compare
+ */
+extern void compare_ECP_SECP256K1(FILE *fp, int testNo, char* name, ECP_SECP256K1 *P, ECP_SECP256K1 *Q);
 
 /*! \brief Assert boolean statement
  *
