@@ -99,7 +99,7 @@ int main()
     }
     while (elapsed < MIN_TIME || iterations < MIN_ITERS);
 
-    if (!rc)
+    if (rc != FACTORING_ZK_OK)
     {
         printf("FAILURE FACTORING_ZK_verify: %d\n", rc);
         exit(EXIT_FAILURE);

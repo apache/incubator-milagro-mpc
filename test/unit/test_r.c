@@ -106,11 +106,11 @@ int main(int argc, char** argv)
     octet Z12 = {0,sizeof(z12),z12};
     const char* Z12line = "Z12 = ";
 
-    char gammapt1[2*EFS_SECP256K1+1];
+    char gammapt1[EFS_SECP256K1+1];
     octet GAMMAPT1 = {0,sizeof(gammapt1),gammapt1};
     const char* GAMMAPT1line = "GAMMAPT1 = ";
 
-    char gammapt2[2*EFS_SECP256K1+1];
+    char gammapt2[EFS_SECP256K1+1];
     octet GAMMAPT2 = {0,sizeof(gammapt2),gammapt2};
     const char* GAMMAPT2line = "GAMMAPT2 = ";
 

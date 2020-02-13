@@ -40,6 +40,9 @@ extern "C"
 
 #define FACTORING_ZK_B 16 /**< Security parameter, length in bytes */
 
+#define FACTORING_ZK_OK   0  /** < Proof successfully verified */
+#define FACTORING_ZK_FAIL 91 /** < Invalid proof */
+
 /*!
  * \brief RSA modulus for ZKP
  */

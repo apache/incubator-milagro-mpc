@@ -77,7 +77,7 @@ int main(int argc, char **argv)
         if (!strncmp(line, last_line, strlen(last_line)))
         {
             rc = FACTORING_ZK_verify(&N, &E, &Y);
-            assert_tv(fp, testNo, "FACTORING_ZK_verify", rc);
+            assert_tv(fp, testNo, "FACTORING_ZK_verify", rc == FACTORING_ZK_OK);
 
             // Mark that at least one test vector was executed
             test_run = 1;
@@ -95,8 +95,8 @@ int main(int argc, char **argv)
     /* Test unhappy path */
     E.val[0]++;
 
-    rc = !FACTORING_ZK_verify(&N, &E, &Y);
-    assert(NULL, "FACTORING_ZK_verify. Invalid E", rc);
+    rc = FACTORING_ZK_verify(&N, &E, &Y);
+    assert(NULL, "FACTORING_ZK_verify. Invalid E", rc == FACTORING_ZK_FAIL);
 
     printf("SUCCESS\n");
     exit(EXIT_SUCCESS);

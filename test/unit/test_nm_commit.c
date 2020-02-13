@@ -86,7 +86,7 @@ int main(int argc, char **argv)
             compare_OCT(fp, testNo, "COMMITMENT_NM_commit", &C_GOLDEN, &C);
 
             rc = COMMITMENTS_NM_decommit(&X_GOLDEN, &R_GOLDEN, &C_GOLDEN);
-            assert_tv(fp, testNo, "COMMITMENTS_NM_DECOMMIT", rc);
+            assert_tv(fp, testNo, "COMMITMENTS_NM_DECOMMIT", rc == COMMITMENTS_OK);
 
             // Mark that at least one test vector was executed
             test_run = 1;
@@ -107,15 +107,15 @@ int main(int argc, char **argv)
     OCT_copy(&R, &R_GOLDEN);
     R.len--;
 
-    rc = !COMMITMENTS_NM_decommit(&X_GOLDEN, &R, &C_GOLDEN);
-    assert(NULL, "COMMITMENTS_NM_decommit. Invalid R length", rc);
+    rc = COMMITMENTS_NM_decommit(&X_GOLDEN, &R, &C_GOLDEN);
+    assert(NULL, "COMMITMENTS_NM_decommit. Invalid R length", rc == COMMITMENTS_FAIL);
 
     // Test wrong decommitment
     OCT_copy(&R, &R_GOLDEN);
     R.val[0]--;
 
-    rc = !COMMITMENTS_NM_decommit(&X_GOLDEN, &R, &C_GOLDEN);
-    assert(NULL, "COMMITMENTS_NM_decommit. Invalid R", rc);
+    rc = COMMITMENTS_NM_decommit(&X_GOLDEN, &R, &C_GOLDEN);
+    assert(NULL, "COMMITMENTS_NM_decommit. Invalid R", rc == COMMITMENTS_FAIL);
 
     printf("SUCCESS");
     exit(EXIT_SUCCESS);

@@ -66,10 +66,10 @@ void SCHNORR_commit(csprng *RNG, octet *R, octet *C)
 
     // Generate commitment r.G
     ECP_SECP256K1_generator(&G);
-    ECP_SECP256K1_mul(&G,r);
+    ECP_SECP256K1_mul(&G, r);
 
     // Output C compressed
-    ECP_SECP256K1_toOctet(C, &G, 1);
+    ECP_SECP256K1_toOctet(C, &G, true);
 
     // Clean memory
     BIG_256_56_zero(r);
@@ -89,7 +89,7 @@ void SCHNORR_challenge(octet *V, octet *C, octet *E)
     BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
 
     ECP_SECP256K1_generator(&G);
-    ECP_SECP256K1_toOctet(&O, &G, 1);
+    ECP_SECP256K1_toOctet(&O, &G, true);
 
     // e = H(G,C,V) mod q
     HASH256_init(&sha);
@@ -210,7 +210,7 @@ int SCHNORR_D_commit(csprng *RNG, octet *R, octet *A, octet *B, octet *C)
 
     // Generate commitment C = a.R + b.G
     ECP_SECP256K1_mul2(&ECPR, &G, a, b);
-    ECP_SECP256K1_toOctet(C, &ECPR, 1);
+    ECP_SECP256K1_toOctet(C, &ECPR, true);
 
     // Clean memory
     BIG_256_56_zero(a);
@@ -233,7 +233,7 @@ void SCHNORR_D_challenge(octet *R, octet *V, octet *C, octet *E)
     BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
 
     ECP_SECP256K1_generator(&G);
-    ECP_SECP256K1_toOctet(&O, &G, 1);
+    ECP_SECP256K1_toOctet(&O, &G, true);
 
     // e = H(G,R,C,V) mod q
     HASH256_init(&sha);

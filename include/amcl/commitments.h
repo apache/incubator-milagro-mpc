@@ -34,6 +34,9 @@ extern "C"
 {
 #endif
 
+#define COMMITMENTS_OK   0   /** < Success */
+#define COMMITMENTS_FAIL 81  /** < Invalid Commitment */
+
 /* NM Commitment Scheme API */
 
 /*! \brief Generate a commitment for the value X
