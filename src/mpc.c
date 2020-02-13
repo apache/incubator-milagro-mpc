@@ -326,7 +326,7 @@ int MPC_SUM_PK(octet *PK1, octet *PK2, octet *PK)
     ECP_SECP256K1_add(&pk1, &pk2);
 
     // Output result
-    ECP_SECP256K1_toOctet(PK, &pk1, false);
+    ECP_SECP256K1_toOctet(PK, &pk1, true);
 
     return 0;
 }

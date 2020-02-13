@@ -103,26 +103,23 @@ int test(csprng *RNG)
     char invkgamma[EGS_SECP256K1];
     octet INVKGAMMA = {0,sizeof(invkgamma),invkgamma};
 
-    char gammapt1[2*EFS_SECP256K1+1];
+    char gammapt1[EFS_SECP256K1+1];
     octet GAMMAPT1 = {0,sizeof(gammapt1),gammapt1};
 
-    char gammapt2[2*EFS_SECP256K1+1];
+    char gammapt2[EFS_SECP256K1+1];
     octet GAMMAPT2 = {0,sizeof(gammapt2),gammapt2};
 
     char sig_r[EGS_SECP256K1];
     octet SIG_R = {0,sizeof(sig_r),sig_r};
 
-    char pk1[2*EFS_SECP256K1+1];
+    char pk1[EFS_SECP256K1+1];
     octet PK1 = {0,sizeof(pk1),pk1};
 
-    char pk2[2*EFS_SECP256K1+1];
+    char pk2[EFS_SECP256K1+1];
     octet PK2 = {0,sizeof(pk2),pk2};
 
-    char pk[2*EFS_SECP256K1+1];
+    char pk[EFS_SECP256K1+1];
     octet PK = {0,sizeof(pk),pk};
-
-    char t1[2*EFS_SECP256K1+1];
-    octet T1 = {0,sizeof(t1),t1};
 
     char sig_s1[EGS_SECP256K1];
     octet SIG_S1 = {0,sizeof(sig_s1),sig_s1};
@@ -139,6 +136,11 @@ int test(csprng *RNG)
     char hm[32];
     octet HM = {0,sizeof(hm),hm};
 
+    char nc_ecp[2 * EFS_SECP256K1 + 1];
+    octet NC_ECP = {0, sizeof(nc_ecp), nc_ecp};
+
+    ECP_SECP256K1 P;
+
     printf("Generating Paillier key pair one\n");
     PAILLIER_KEY_PAIR(RNG, NULL, NULL, &PUB1, &PRIV1);
 
@@ -146,7 +148,18 @@ int test(csprng *RNG)
     PAILLIER_KEY_PAIR(RNG, NULL, NULL, &PUB2, &PRIV2);
 
     printf("Generating ECDSA key pair one\n");
-    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&W1,&PK1);
+    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&W1,&NC_ECP);
+
+    // Convert to compressed form
+    rc=ECP_SECP256K1_fromOctet(&P, &NC_ECP);
+    if (!rc)
+    {
+        fprintf(stderr, "ERROR ECP_SECP256K1_fromOctet PK1 rc\n");
+        exit(EXIT_FAILURE);
+    }
+
+    ECP_SECP256K1_toOctet(&PK1, &P, true);
+
     rc=ECP_SECP256K1_PUBLIC_KEY_VALIDATE(&PK1);
     if (rc!=0)
     {
@@ -155,7 +168,18 @@ int test(csprng *RNG)
     }
 
     printf("Generating ECDSA key pair two\n");
-    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&W2,&PK2);
+    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&W2,&NC_ECP);
+    
+    // Convert to compressed form
+    rc=ECP_SECP256K1_fromOctet(&P, &NC_ECP);
+    if (!rc)
+    {
+        fprintf(stderr, "ERROR ECP_SECP256K1_fromOctet PK2 rc");
+        exit(EXIT_FAILURE);
+    }
+
+    ECP_SECP256K1_toOctet(&PK2, &P, true);
+
     rc=ECP_SECP256K1_PUBLIC_KEY_VALIDATE(&PK2);
     if (rc!=0)
     {
@@ -164,7 +188,18 @@ int test(csprng *RNG)
     }
 
     printf("Generating GAMMA pair one\n");
-    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&GAMMA1,&GAMMAPT1);
+    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&GAMMA1,&NC_ECP);
+    
+    // Convert to compressed form
+    rc=ECP_SECP256K1_fromOctet(&P, &NC_ECP);
+    if (!rc)
+    {
+        fprintf(stderr, "ERROR ECP_SECP256K1_fromOctet GAMMAPT1\n");
+        exit(EXIT_FAILURE);
+    }
+
+    ECP_SECP256K1_toOctet(&GAMMAPT1, &P, true);
+
     rc=ECP_SECP256K1_PUBLIC_KEY_VALIDATE(&GAMMAPT1);
     if (rc!=0)
     {
@@ -173,7 +208,18 @@ int test(csprng *RNG)
     }
 
     printf("Generating GAMMA pair two\n");
-    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&GAMMA2,&GAMMAPT2);
+    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&GAMMA2,&NC_ECP);
+    
+    // Convert to compressed form
+    rc=ECP_SECP256K1_fromOctet(&P, &NC_ECP);
+    if (!rc)
+    {
+        fprintf(stderr, "ERROR ECP_SECP256K1_fromOctet GAMMAPT2\n");
+        exit(EXIT_FAILURE);
+    }
+
+    ECP_SECP256K1_toOctet(&GAMMAPT2, &P, true);
+
     rc=ECP_SECP256K1_PUBLIC_KEY_VALIDATE(&GAMMAPT2);
     if (rc!=0)
     {
@@ -182,10 +228,10 @@ int test(csprng *RNG)
     }
 
     printf("Generating K1\n");
-    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&K1,&T1);
+    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&K1,&NC_ECP);
 
     printf("Generating K2\n");
-    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&K2,&T1);
+    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&K2,&NC_ECP);
 
     OCT_jstring(&M,"test message");
     printf("M: ");
