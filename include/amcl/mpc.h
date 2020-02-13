@@ -33,6 +33,10 @@ under the License.
 extern "C" {
 #endif
 
+#define MPC_OK          0    /**< Execution Successful */
+#define MPC_FAIL        71   /**< Failure */
+#define MPC_INVALID_ECP 72   /**< Input is not a valid point on the curve */
+
 /** \brief ECDSA Sign message
  *
  *  Generate the ECDSA signature on message, M, with outputs (R,S)
@@ -155,6 +159,73 @@ void MPC_SUM_S(octet *S1, octet *S2, octet *S);
  *  @return                   Returns 0 or else error code
  */
 int MPC_SUM_PK(octet *PK1, octet *PK2, octet *PK);
+
+/* MPC Phase 5 API */
+
+/** \brief Generate Commitment for the MPC Phase 5
+ *
+ *  Calculate player Commitment (A, V) for MPC Phase 5
+ *
+ *  <ol>
+ *  <li> \f$ \phi \in_R [0, \ldots, q] \f$
+ *  <li> \f$ \rho \in_R [0, \ldots, q] \f$
+ *  <li> \f$ V = \phi.G + s.R \f$
+ *  <li> \f$ A = \rho.G \f$
+ *  </ol>
+ *
+ *  @param RNG                csprng for random values generation
+ *  @param R                  Reconciled R for the signature
+ *  @param S                  Player signature share
+ *  @param PHI                Random value for the commitment. If RNG is null this is read
+ *  @param RHO                Random value for the commitment. If RNG is null this is read
+ *  @param V                  First component of the player commitment. An ECP in compressed form
+ *  @param A                  Second component of the player commitment. An ECP in compressed form
+ *  @return                   Returns MPC_OK or an error code
+ */
+extern int MPC_PHASE5_commit(csprng *RNG, octet *R, octet *S, octet *PHI, octet *RHO, octet *V, octet *A);
+
+/** \brief Generate Proof for the MPC Phase 5
+ *
+ *  Calculate player Proof (U, T) for MPC Phase 5
+ *
+ *  <ol>
+ *  <li> \f$ m = H(M) \f$
+ *  <li> \f$ A = A1 + A2 \f$
+ *  <li> \f$ V = V1 + V2 \f$
+ *  <li> \f$ U = \rho.(V - m.G - r.PK) \f$
+ *  <li> \f$ T = \phi.A \f$
+ *  </ol>
+ *
+ *  @param PHI                Random value used in the commitment
+ *  @param RHO                Random value used in the commitment
+ *  @param V                  Array with the commitments V from both players. ECPs in compressed form
+ *  @param A                  Array with the commitments A from both players. ECPs in compressed form
+ *  @param PK                 Shared public key for MPC
+ *  @param HM                 Hash of the message being signed
+ *  @param RX                 x component of the reconciled R for the signature
+ *  @param U                  First component of the player proof. An ECP in compressed form
+ *  @param T                  Second component of the player proof. An ECP in compressed form
+ *  @return                   Returns MPC_OK or an error code
+ */
+extern int MPC_PHASE5_prove(octet *PHI, octet *RHO, octet *V[2], octet *A[2], octet *PK, octet *HM, octet *RX, octet *U, octet *T);
+
+/** \brief Verify Proof for the MPC Phase 5
+ *
+ *  Combine player Proofs and verify the consistency of the signature shares
+ *  This does NOT prove that the signature is valid. It only verifies that
+ *  all players know the secret quantities used to generate their shares.
+ *
+ *  <ol>
+ *  <li> \f$ U = U1 + U2 \f$
+ *  <li> \f$ T = T1 + T2 \f$
+ *  <li> \f$ U \stackrel{?}{=} T \f$
+ *  </ol>
+ *
+ *  @param U                  Array with the proofs U from both players. ECPs in compressed form
+ *  @param T                  Array with the proofs T from both players. ECPs in compressed form
+ *  @return                   Returns MPC_OK or an error code
+ */
+extern int MPC_PHASE5_verify(octet *U[2], octet *T[2]);
 
 /*! \brief Write Paillier public key to octets
  *
