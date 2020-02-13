@@ -497,11 +497,12 @@ void MTA_RP_prove(PAILLIER_private_key *key, MTA_RP_commitment_rv *rv, octet *M,
     FF_2048_zero(r, 2*FFLEN_2048);
     FF_2048_zero(ws1, FFLEN_2048);
     FF_2048_zero(ws2, FFLEN_2048);
+    FF_2048_zero(sp, HFLEN_2048);
+    FF_2048_zero(sq, HFLEN_2048);
     FF_2048_zero(m, HFLEN_2048);
 }
 
-// Utility function to compute the triple power for verification
-// purposes. It is NOT side channel resistant
+// Utility function to compute the triple power for verification purposes.
 // h1^s1 * h2^s2 * z^(-e) mod P
 //
 // h1, h2 are reduced modulo P
@@ -534,11 +535,19 @@ void MTA_triple_power(BIG_1024_58 *proof, BIG_1024_58 *h1, BIG_1024_58 *h2, BIG_
 
     FF_2048_dmod(proof, z, p, HFLEN_2048);
     FF_2048_invmodp(proof, proof, p, HFLEN_2048);
-    FF_2048_pow3(proof, hws1, hws3, hws2, hws4, proof, e, p, HFLEN_2048, HFLEN_2048);
+    FF_2048_skpow3(proof, hws1, hws3, hws2, hws4, proof, e, p, HFLEN_2048, HFLEN_2048);
+
+    // Clean memory
+    FF_2048_zero(hws1, HFLEN_2048);
+    FF_2048_zero(hws2, HFLEN_2048);
+    FF_2048_zero(hws3, HFLEN_2048);
+    FF_2048_zero(hws4, HFLEN_2048);
 }
 
 int MTA_RP_verify(PAILLIER_public_key *key, COMMITMENTS_BC_priv_modulus *mod, octet *CT, octet *E, MTA_RP_commitment *co, MTA_RP_proof *p)
 {
+    int fail;
+
     BIG_1024_58 ws[FFLEN_2048];
     BIG_1024_58 hws1[HFLEN_2048];
     BIG_1024_58 hws2[HFLEN_2048];
@@ -575,8 +584,8 @@ int MTA_RP_verify(PAILLIER_public_key *key, COMMITMENTS_BC_priv_modulus *mod, oc
     }
 
     // Split computation of proof for w using CRT.
-    MTA_triple_power(wp_proof, mod->b0, mod->b1, p->s1, p->s2, co->z, e, mod->P, 0);
-    MTA_triple_power(wq_proof, mod->b0, mod->b1, p->s1, p->s2, co->z, e, mod->Q, 0);
+    MTA_triple_power(wp_proof, mod->b0, mod->b1, p->s1, p->s2, co->z, e, mod->P, false);
+    MTA_triple_power(wq_proof, mod->b0, mod->b1, p->s1, p->s2, co->z, e, mod->Q, false);
 
     // Reduce w mod P and Q for comparison
     FF_2048_dmod(hws1, co->w, mod->P, HFLEN_2048);
@@ -584,7 +593,15 @@ int MTA_RP_verify(PAILLIER_public_key *key, COMMITMENTS_BC_priv_modulus *mod, oc
 
     // Compare the results modulo P and Q
     // since w == w' mod PQ <==> w == w' mod P & w == w' mod Q
-    if ((FF_2048_comp(hws1, wp_proof, HFLEN_2048) != 0) || (FF_2048_comp(hws2, wq_proof, HFLEN_2048) != 0))
+    fail = (FF_2048_comp(hws1, wp_proof, HFLEN_2048) != 0) || (FF_2048_comp(hws2, wq_proof, HFLEN_2048) != 0);
+
+    // Clean memory
+    FF_2048_zero(hws1, HFLEN_2048);
+    FF_2048_zero(hws2, HFLEN_2048);
+    FF_2048_zero(wp_proof, HFLEN_2048);
+    FF_2048_zero(wq_proof, HFLEN_2048);
+
+    if(fail)
     {
         return MTA_FAIL;
     }
@@ -855,6 +872,8 @@ void MTA_ZK_prove(PAILLIER_public_key *key, MTA_ZK_commitment_rv *rv, octet *X, 
 
 int MTA_ZK_verify(PAILLIER_private_key *key, COMMITMENTS_BC_priv_modulus *mod, octet *C1, octet *C2, octet *E, MTA_ZK_commitment *c, MTA_ZK_proof *p)
 {
+    int fail;
+
     BIG_1024_58 e[FFLEN_2048];
     BIG_1024_58 q[HFLEN_2048];
     BIG_1024_58 n[FFLEN_2048];
@@ -891,14 +910,22 @@ int MTA_ZK_verify(PAILLIER_private_key *key, COMMITMENTS_BC_priv_modulus *mod, o
     FF_2048_fromOctet(e, &OCT, FFLEN_2048);
 
     // Split check b0^s1 * b1^s2 * z^(-e) == z1 mod PQ using CRT
-    MTA_triple_power(p_proof, mod->b0, mod->b1, p->s1, p->s2, c->z, e, mod->P, 0);
-    MTA_triple_power(q_proof, mod->b0, mod->b1, p->s1, p->s2, c->z, e, mod->Q, 0);
+    MTA_triple_power(p_proof, mod->b0, mod->b1, p->s1, p->s2, c->z, e, mod->P, false);
+    MTA_triple_power(q_proof, mod->b0, mod->b1, p->s1, p->s2, c->z, e, mod->Q, false);
 
     FF_2048_dmod(p_gt, c->z1, mod->P, HFLEN_2048);
     FF_2048_dmod(q_gt, c->z1, mod->Q, HFLEN_2048);
 
-    if ((FF_2048_comp(p_gt, p_proof, HFLEN_2048) != 0) || (FF_2048_comp(q_gt, q_proof, HFLEN_2048) != 0))
+    fail = (FF_2048_comp(p_gt, p_proof, HFLEN_2048) != 0) || (FF_2048_comp(q_gt, q_proof, HFLEN_2048) != 0);
+
+    if (fail)
     {
+        // Clean memory
+        FF_2048_zero(p_gt, HFLEN_2048);
+        FF_2048_zero(q_gt, HFLEN_2048);
+        FF_2048_zero(p_proof, HFLEN_2048);
+        FF_2048_zero(q_proof, HFLEN_2048);
+
         return MTA_FAIL;
     }
 
@@ -909,8 +936,16 @@ int MTA_ZK_verify(PAILLIER_private_key *key, COMMITMENTS_BC_priv_modulus *mod, o
     FF_2048_dmod(p_gt, c->w, mod->P, HFLEN_2048);
     FF_2048_dmod(q_gt, c->w, mod->Q, HFLEN_2048);
 
-    if ((FF_2048_comp(p_gt, p_proof, HFLEN_2048) != 0) || (FF_2048_comp(q_gt, q_proof, HFLEN_2048) != 0))
+    fail = (FF_2048_comp(p_gt, p_proof, HFLEN_2048) != 0) || (FF_2048_comp(q_gt, q_proof, HFLEN_2048) != 0);
+
+    if (fail);
     {
+        // Clean memory
+        FF_2048_zero(p_gt, HFLEN_2048);
+        FF_2048_zero(q_gt, HFLEN_2048);
+        FF_2048_zero(p_proof, HFLEN_2048);
+        FF_2048_zero(q_proof, HFLEN_2048);
+
         return MTA_FAIL;
     }
 
@@ -935,7 +970,15 @@ int MTA_ZK_verify(PAILLIER_private_key *key, COMMITMENTS_BC_priv_modulus *mod, o
     FF_2048_dmod(p_gt, c->v, key->p2, FFLEN_2048);
     FF_2048_dmod(q_gt, c->v, key->q2, FFLEN_2048);
 
-    if ((FF_2048_comp(p_gt, p_proof, FFLEN_2048) != 0) || (FF_2048_comp(q_gt, q_proof, FFLEN_2048) != 0))
+    fail = (FF_2048_comp(p_gt, p_proof, FFLEN_2048) != 0) || (FF_2048_comp(q_gt, q_proof, FFLEN_2048) != 0);
+
+    // Clean memory
+    FF_2048_zero(p_gt, FFLEN_2048);
+    FF_2048_zero(q_gt, FFLEN_2048);
+    FF_2048_zero(p_proof, FFLEN_2048);
+    FF_2048_zero(q_proof, FFLEN_2048);
+
+    if (fail)
     {
         return MTA_FAIL;
     }
@@ -1052,7 +1095,7 @@ void MTA_ZKWC_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mo
     OCT_hash(&sha, X);
 
     /* Bind to proof commitment for DLOG */
-    ECP_SECP256K1_toOctet(&OCT, &(c->U), 1);
+    ECP_SECP256K1_toOctet(&OCT, &(c->U), true);
     OCT_hash(&sha, &OCT);
 
     /* Bind to proof commitment for Receiver ZK */
@@ -1137,7 +1180,7 @@ int MTA_ZKWC_verify(PAILLIER_private_key *key, COMMITMENTS_BC_priv_modulus *mod,
 void MTA_ZKWC_commitment_toOctets(octet *U, octet *Z, octet *Z1, octet *T, octet *V, octet *W, MTA_ZKWC_commitment *c)
 {
     MTA_ZK_commitment_toOctets(Z, Z1, T, V, W, &(c->zkc));
-    ECP_SECP256K1_toOctet(U, &(c->U), 1);
+    ECP_SECP256K1_toOctet(U, &(c->U), true);
 }
 
 int MTA_ZKWC_commitment_fromOctets(MTA_ZKWC_commitment *c, octet *U, octet *Z, octet *Z1, octet *T, octet *V, octet *W)
