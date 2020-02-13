@@ -938,7 +938,7 @@ int MTA_ZK_verify(PAILLIER_private_key *key, COMMITMENTS_BC_priv_modulus *mod, o
 
     fail = (FF_2048_comp(p_gt, p_proof, HFLEN_2048) != 0) || (FF_2048_comp(q_gt, q_proof, HFLEN_2048) != 0);
 
-    if (fail);
+    if (fail)
     {
         // Clean memory
         FF_2048_zero(p_gt, HFLEN_2048);
