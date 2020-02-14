@@ -35,8 +35,13 @@ extern "C"
 {
 #endif
 
+#ifndef FS_2048
 #define FS_2048 MODBYTES_1024_58 * FFLEN_2048  /**< 2048 field size in bytes */
+#endif
+
+#ifndef HFS_2048
 #define HFS_2048 MODBYTES_1024_58 * HFLEN_2048 /**< Half 2048 field size in bytes */
+#endif
 
 #define FACTORING_ZK_B 16 /**< Security parameter, length in bytes */
 

@@ -78,7 +78,7 @@ class TestR(unittest.TestCase):
 
             # Calculate the R signature component
 
-            rc, sig_r = amcl_mpc.mpc_r(invkgamma, test['GAMMAPT1'], test['GAMMAPT2'])
+            rc, sig_r, _ = amcl_mpc.mpc_r(invkgamma, test['GAMMAPT1'], test['GAMMAPT2'])
             self.assertEqual(vector['SIG_R'], sig_r.hex())
             self.assertEqual(rc, 0)            
             
