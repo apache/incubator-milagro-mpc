@@ -866,7 +866,7 @@ void MTA_ZK_prove(PAILLIER_public_key *key, MTA_ZK_commitment_rv *rv, octet *X, 
 
     // Clean memory
     FF_2048_zero(hws, HFLEN_2048);
-    FF_2048_zero(ws , FFLEN_2048);
+    FF_2048_zero(ws, FFLEN_2048);
     FF_2048_zero(dws, 2 * FFLEN_2048);
 }
 

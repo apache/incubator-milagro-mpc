@@ -239,10 +239,10 @@ void compare_ECP_SECP256K1(FILE *fp, int testNo, char *name, ECP_SECP256K1 *P, E
         fprintf(stderr, "FAILURE %s. Test %d\n", name, testNo);
 
 #ifdef DEBUG
-    printf("P = ");
-    ECP_SECP256K1_output(P);
-    printf("Q = ");
-    ECP_SECP256K1_output(Q);
+        printf("P = ");
+        ECP_SECP256K1_output(P);
+        printf("Q = ");
+        ECP_SECP256K1_output(Q);
 #endif
 
         exit(EXIT_FAILURE);
