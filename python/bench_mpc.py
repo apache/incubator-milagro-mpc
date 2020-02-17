@@ -9,7 +9,7 @@ to you under the Apache License, Version 2.0 (the
 "License"); you may not use this file except in compliance
 with the License.  You may obtain a copy of the License at
 
-  http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing,
 software distributed under the License is distributed on an
@@ -21,12 +21,12 @@ under the License.
 
 import time
 import warnings
-import amcl_mpc
+from amcl import mpc
 
 warnings.filterwarnings("ignore")
 
 
-def time_func(fncall, n=10):
+def time_func(stmt, fncall, n=10):
     t = time.process_time()
     for i in range(1,i):
         fncall
@@ -50,28 +50,28 @@ b_hex = "0000000000000000000000000000000000000000000000000000000000000003"
 
 if __name__ == "__main__":
 
-    seed = bytes.fromhex(seed_hex)    
+    seed = bytes.fromhex(seed_hex)
     p = bytes.fromhex(P_hex)
     q = bytes.fromhex(Q_hex)
     a = bytes.fromhex(a_hex)
     b = bytes.fromhex(b_hex)
 
     ai = int(a_hex, 16)
-    bi = int(b_hex, 16)    
-    expected = ai * bi % amcl_mpc.curve_order
-    
+    bi = int(b_hex, 16)
+    expected = ai * bi % mpc.curve_order
+
     # random number generator
-    rng = amcl_mpc.create_csprng(seed)
-    
-    paillier_pk, paillier_sk = amcl_mpc.paillier_key_pair(rng)
+    rng = mpc.create_csprng(seed)
+
+    paillier_pk, paillier_sk = mpc.paillier_key_pair(rng)
 
     total_time=0
     for i in range(1,nIter):
         #t = time.process_time()
         t = time.time()
-        ca = amcl_mpc.mpc_mta_client1(rng, paillier_pk, a)
+        ca = mpc.mpc_mta_client1(rng, paillier_pk, a)
         # elapsed_time = time.process_time() - t
-        elapsed_time = time.time() - t        
+        elapsed_time = time.time() - t
         total_time = total_time + elapsed_time
     iter_time = int ((total_time * 1000) / nIter)
     print(f"mpc_mta_client1 iteractions: {nIter} total_time: {total_time} iter_time: {iter_time}")
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     total_time=0
     for i in range(1,nIter):
         t = time.time()
-        cb, beta = amcl_mpc.mpc_mta_server(rng, paillier_pk, b, ca)
+        cb, beta = mpc.mpc_mta_server(rng, paillier_pk, b, ca)
         elapsed_time = time.time() - t
         total_time = total_time + elapsed_time
     iter_time = int ((total_time * 1000) / nIter)
@@ -88,18 +88,17 @@ if __name__ == "__main__":
     total_time=0
     for i in range(1,nIter):
         t = time.time()
-        alpha = amcl_mpc.mpc_mta_client2(paillier_sk, cb)
+        alpha = mpc.mpc_mta_client2(paillier_sk, cb)
         elapsed_time = time.time() - t
         total_time = total_time + elapsed_time
     iter_time = int ((total_time * 1000) / nIter)
     print(f"mpc_mta_client2 iteractions: {nIter} total_time: {total_time} iter_time: {iter_time}")
-    
+
     alphai = int(alpha.hex(), 16)
     betai = int(beta.hex(), 16)
-    got = ( alphai + betai ) % amcl_mpc.curve_order
+    got = ( alphai + betai ) % mpc.curve_order
 
-    assert got == expected, f"expected {expected.hex()} got {got.hex()}"
-    
+    assert got == expected, f"expected {hex(expected)} got {hex(got)}"
+
     # Clear memory
-    amcl_mpc.kill_csprng(rng)
-
+    mpc.kill_csprng(rng)

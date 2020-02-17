@@ -17,11 +17,8 @@ cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 
 include(PythonSiteDirs)
 
-install(FILES amcl_mpc.py     DESTINATION ${PYTHON_SITE_PACKAGES})
-install(FILES amcl_schnorr.py DESTINATION ${PYTHON_SITE_PACKAGES})
+add_subdirectory(amcl)
 
-file(COPY amcl_mpc.py     DESTINATION "${PROJECT_BINARY_DIR}/python/")
-file(COPY amcl_schnorr.py DESTINATION "${PROJECT_BINARY_DIR}/python/")
 file(COPY test_mta.py     DESTINATION "${PROJECT_BINARY_DIR}/python/")
 file(COPY test_r.py       DESTINATION "${PROJECT_BINARY_DIR}/python/")
 file(COPY test_s.py       DESTINATION "${PROJECT_BINARY_DIR}/python/")
