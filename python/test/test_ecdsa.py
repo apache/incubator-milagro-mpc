@@ -18,10 +18,11 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import unittest
 import json
 import os
-from amcl import mpc
+from context import mpc
 
 
 class TestECDSA(unittest.TestCase):

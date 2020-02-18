@@ -21,14 +21,14 @@ under the License.
 
 import unittest
 import json
-from amcl import mpc
+from context import mpc
 
 
 class TestR(unittest.TestCase):
     """Tests MPC R"""
 
     def setUp(self):
-        with open("R.json", "r") as f:
+        with open("mpc/R.json", "r") as f:
             self.tv = json.load(f)
 
         for vector in self.tv:

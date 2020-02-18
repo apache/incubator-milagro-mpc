@@ -21,7 +21,7 @@ under the License.
 
 import unittest
 import json
-from amcl import schnorr
+from context import schnorr
 
 
 class TestCommit(unittest.TestCase):

@@ -26,7 +26,7 @@
 
 FROM ubuntu:bionic
 
-MAINTAINER kealanmccusker@gmail.com
+LABEL maintainer="kealanmccusker@gmail.com"
 
 WORKDIR /root
 

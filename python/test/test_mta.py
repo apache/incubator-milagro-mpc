@@ -18,16 +18,17 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import unittest
 import json
-from amcl import mpc
+from context import mpc
 
 
 class TestMtA(unittest.TestCase):
     """Tests MPC MtA"""
 
     def setUp(self):
-        with open("MTA.json", "r") as f:
+        with open("mpc/MTA.json", "r") as f:
             self.tv = json.load(f)
 
         for vector in self.tv:
