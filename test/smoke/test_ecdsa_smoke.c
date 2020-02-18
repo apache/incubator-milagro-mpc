@@ -169,7 +169,7 @@ int test(csprng *RNG)
 
     printf("Generating ECDSA key pair two\n");
     ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&W2,&NC_ECP);
-    
+
     // Convert to compressed form
     rc=ECP_SECP256K1_fromOctet(&P, &NC_ECP);
     if (!rc)
@@ -189,7 +189,7 @@ int test(csprng *RNG)
 
     printf("Generating GAMMA pair one\n");
     ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&GAMMA1,&NC_ECP);
-    
+
     // Convert to compressed form
     rc=ECP_SECP256K1_fromOctet(&P, &NC_ECP);
     if (!rc)
@@ -209,7 +209,7 @@ int test(csprng *RNG)
 
     printf("Generating GAMMA pair two\n");
     ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&GAMMA2,&NC_ECP);
-    
+
     // Convert to compressed form
     rc=ECP_SECP256K1_fromOctet(&P, &NC_ECP);
     if (!rc)
@@ -305,7 +305,7 @@ int test(csprng *RNG)
     printf("\n");
 
     // Calculate the R signature component
-    rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, &SIG_R);
+    rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, &SIG_R, NULL);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_R rc: %d\n", rc);

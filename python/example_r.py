@@ -169,7 +169,7 @@ if __name__ == "__main__":
     assert INVKGAMMAGOLDEN_hex == INVKGAMMA_hex, f"expected {INVKGAMMAGOLDEN_hex} got {INVKGAMMA_hex}"      
     # Calculate the R signature component
 
-    rc, SIG_R = amcl_mpc.mpc_r(INVKGAMMA, GAMMAPT1, GAMMAPT2)
+    rc, SIG_R, _ = amcl_mpc.mpc_r(INVKGAMMA, GAMMAPT1, GAMMAPT2)
 
     SIG_R_hex = SIG_R.hex()        
     assert SIG_RGOLDEN_hex == SIG_R_hex, f"expected {SIG_RGOLDEN_hex} got {SIG_R_hex}"      

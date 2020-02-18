@@ -100,7 +100,7 @@ extern void MPC_MTA_CLIENT2(PAILLIER_private_key *PRIV, octet* CB, octet *ALPHA)
 extern void MPC_MTA_SERVER(csprng *RNG, PAILLIER_public_key *PUB, octet *B, octet *CA, octet *Z, octet *R, octet *CB, octet *BETA);
 extern void MPC_SUM_MTA(octet *A, octet *B, octet *ALPHA, octet *BETA, octet *SUM);
 extern void MPC_INVKGAMMA(octet *KGAMMA1, octet *KGAMMA2, octet *INVKGAMMA);
-extern extern int MPC_R(octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R);
+extern extern int MPC_R(octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R, octet *RP);
 extern void MPC_HASH(int sha, octet *M, octet *HM);
 extern int MPC_S(octet *HM, octet *R, octet *K, octet *SIGMA, octet *S);
 extern void MPC_SUM_S(octet *S1, octet *S2, octet *S);
@@ -131,7 +131,7 @@ FS_2048 = 256
 HFS_2048 = 128
 FS_4096 = 512
 EGS_SECP256K1 = 32
-PTS_SECP256K1 = 2*EGS_SECP256K1 + 1
+EFS_SECP256K1 = 32
 SHA256 = 32
 curve_order = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
 
@@ -366,12 +366,12 @@ def ecp_secp256k1_key_pair_generate(rng, ecdsa_sk=None):
     else:
         ecdsa_sk1, ecdsa_sk1_val = make_octet(EGS_SECP256K1)        
 
-    ecdsa_pk1, ecdsa_pk1_val = make_octet(PTS_SECP256K1)                
+    ecdsa_pk1, ecdsa_pk1_val = make_octet(2 * EFS_SECP256K1)                
 
     rc = libamcl_curve_secp256k1.ECP_SECP256K1_KEY_PAIR_GENERATE(rng, ecdsa_sk1, ecdsa_pk1)
 
     ecdsa_sk2 = to_str(ecdsa_sk1)
-    ecdsa_pk2 = to_str(ecdsa_pk1)    
+    ecdsa_pk2 = to_str(ecdsa_pk1)
     
     return rc, ecdsa_pk2, ecdsa_sk2
 
@@ -573,9 +573,9 @@ def mpc_r(invkgamma, gammapt1, gammapt2):
 
     Returns::
 
-        r: R component of the signature
         rc: Zero for success or else an error code
-
+        r : R component of the signature
+        rp: ECP associated to R component of signature
     Raises:
 
     """
@@ -584,12 +584,14 @@ def mpc_r(invkgamma, gammapt1, gammapt2):
     gammapt21, gammapt21_val = make_octet(None, gammapt2)    
     
     r1, r1_val = make_octet(EGS_SECP256K1)
+    rp, rp_val = make_octet(EFS_SECP256K1 + 1)
     
-    rc = libamcl_mpc.MPC_R(invkgamma1, gammapt11, gammapt21, r1)
+    rc = libamcl_mpc.MPC_R(invkgamma1, gammapt11, gammapt21, r1, rp)
 
     r2 = to_str(r1)
+    rp_str = to_str(rp)
     
-    return rc, r2
+    return rc, r2, rp_str
 
 def mpc_hash(message):
     """Hash the message value
@@ -726,7 +728,7 @@ def mpc_sum_pk(pk1, pk2):
     pk11, pk11_val = make_octet(None, pk1)
     pk21, pk21_val = make_octet(None, pk2)    
     
-    pk1, pk1_val = make_octet(PTS_SECP256K1)
+    pk1, pk1_val = make_octet(EFS_SECP256K1 + 1)
 
     rc = libamcl_mpc.MPC_SUM_PK(pk11, pk21, pk1);
 

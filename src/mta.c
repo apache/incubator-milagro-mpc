@@ -274,27 +274,27 @@ void MPC_SUM_MTA(octet *A, octet *B, octet *ALPHA, octet *BETA,  octet *SUM)
     BIG_256_56 q;
 
     // Curve order
-    BIG_256_56_rcopy(q,CURVE_Order_SECP256K1);
+    BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
 
     // Load values
-    BIG_256_56_fromBytes(a,A->val);
-    BIG_256_56_fromBytes(b,B->val);
-    BIG_256_56_fromBytes(alpha,ALPHA->val);
-    BIG_256_56_fromBytes(beta,BETA->val);
+    BIG_256_56_fromBytesLen(a, A->val, A->len);
+    BIG_256_56_fromBytesLen(b, B->val, B->len);
+    BIG_256_56_fromBytesLen(alpha, ALPHA->val, ALPHA->len);
+    BIG_256_56_fromBytesLen(beta, BETA->val, BETA->len);
 
     // sum = a.b mod q
-    BIG_256_56_modmul(sum,a,b,q);
+    BIG_256_56_modmul(sum, a, b, q);
 
     // sum = sum + alpha  + beta
-    BIG_256_56_add(sum,sum,alpha);
-    BIG_256_56_add(sum,sum,beta);
+    BIG_256_56_add(sum, sum, alpha);
+    BIG_256_56_add(sum, sum, beta);
 
     // sum = sum mod q
-    BIG_256_56_mod(sum,q);
+    BIG_256_56_mod(sum, q);
 
     // Output result
-    SUM->len=EGS_SECP256K1;
-    BIG_256_56_toBytes(SUM->val,sum);
+    SUM->len = EGS_SECP256K1;
+    BIG_256_56_toBytes(SUM->val, sum);
 
     // Clean memory
     BIG_256_56_zero(a);
@@ -866,7 +866,7 @@ void MTA_ZK_prove(PAILLIER_public_key *key, MTA_ZK_commitment_rv *rv, octet *X, 
 
     // Clean memory
     FF_2048_zero(hws, HFLEN_2048);
-    FF_2048_zero(ws , FFLEN_2048);
+    FF_2048_zero(ws, FFLEN_2048);
     FF_2048_zero(dws, 2 * FFLEN_2048);
 }
 

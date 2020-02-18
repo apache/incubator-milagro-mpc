@@ -229,7 +229,7 @@ int main(int argc, char** argv)
             MPC_INVKGAMMA(&SUM1, &SUM2, &INVKGAMMA);
 
             // Calculate the R signature component
-            rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, &SIG_R);
+            rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, &SIG_R, NULL);
 
             sprintf(err_msg, "MPC_R rc: %d", rc);
             assert_tv(fp, testNo, err_msg, rc == 0);

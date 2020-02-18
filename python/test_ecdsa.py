@@ -92,7 +92,7 @@ class TestECDSA(unittest.TestCase):
 
             # Calculate the R signature component
 
-            rc, SIG_R = amcl_mpc.mpc_r(INVKGAMMA, GAMMAPT1, GAMMAPT2)
+            rc, SIG_R, _ = amcl_mpc.mpc_r(INVKGAMMA, GAMMAPT1, GAMMAPT2)
            
             # ALPHA1 + BETA2 = K1 * W2    
 

@@ -162,32 +162,30 @@ void MPC_INVKGAMMA(octet *KGAMMA1, octet *KGAMMA2, octet *INVKGAMMA)
 {
     BIG_256_56 kgamma1;
     BIG_256_56 kgamma2;
-    BIG_256_56 kgamma;
-    BIG_256_56 invkgamma;
     BIG_256_56 q;
 
     // Curve order
     BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
 
     // Load values
-    BIG_256_56_fromBytes(kgamma1, KGAMMA1->val);
-    BIG_256_56_fromBytes(kgamma2, KGAMMA2->val);
+    BIG_256_56_fromBytesLen(kgamma1, KGAMMA1->val, KGAMMA1->len);
+    BIG_256_56_fromBytesLen(kgamma2, KGAMMA2->val, KGAMMA2->len);
 
     // kgamma = kgamma1 + kgamma2 mod q
-    BIG_256_56_add(kgamma, kgamma1, kgamma2);
-    BIG_256_56_mod(kgamma, q);
+    BIG_256_56_add(kgamma1, kgamma1, kgamma2);
+    BIG_256_56_mod(kgamma1, q);
 
     // invkgamma = kgamma^{-1}
-    BIG_256_56_invmodp(invkgamma, kgamma, q);
+    BIG_256_56_invmodp(kgamma1, kgamma1, q);
 
     // Output result
     INVKGAMMA->len = EGS_SECP256K1;
-    BIG_256_56_toBytes(INVKGAMMA->val, invkgamma);
+    BIG_256_56_toBytes(INVKGAMMA->val, kgamma1);
 }
 
 
 /* Calculate the r component of the signature */
-int MPC_R(octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R)
+int MPC_R(octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R, octet *RP)
 {
     BIG_256_56 invkgamma;
     BIG_256_56 q;
@@ -200,16 +198,16 @@ int MPC_R(octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R)
     BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
 
     // Load values
-    BIG_256_56_fromBytes(invkgamma, INVKGAMMA->val);
+    BIG_256_56_fromBytesLen(invkgamma, INVKGAMMA->val, INVKGAMMA->len);
 
     if (!ECP_SECP256K1_fromOctet(&gammapt1, GAMMAPT1))
     {
-        return 1;
+        return MPC_INVALID_ECP;
     }
 
     if (!ECP_SECP256K1_fromOctet(&gammapt2, GAMMAPT2))
     {
-        return 1;
+        return MPC_INVALID_ECP;
     }
 
     // gammapt1 + gammapt2
@@ -223,14 +221,19 @@ int MPC_R(octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R)
     BIG_256_56_mod(rx, q);
     if (BIG_256_56_iszilch(rx))
     {
-        return 1;
+        return MPC_FAIL;
     }
 
     // Output result
     R->len = EGS_SECP256K1;
     BIG_256_56_toBytes(R->val, rx);
 
-    return 0;
+    if (RP != NULL)
+    {
+        ECP_SECP256K1_toOctet(RP, &gammapt1, true);
+    }
+
+    return MPC_OK;
 }
 
 // Hash the message
@@ -271,14 +274,14 @@ int MPC_S(octet *HM, octet *R, octet *K, octet *SIGMA, octet *S)
     BIG_256_56_mod(s, q);
     if (BIG_256_56_iszilch(s))
     {
-        return 1;
+        return MPC_FAIL;
     }
 
     // Output result
     S->len = EGS_SECP256K1;
     BIG_256_56_toBytes(S->val, s);
 
-    return 0;
+    return MPC_OK;
 }
 
 /* Calculate sum of s components of signature  */
@@ -314,12 +317,12 @@ int MPC_SUM_PK(octet *PK1, octet *PK2, octet *PK)
     // Load values
     if (!ECP_SECP256K1_fromOctet(&pk1, PK1))
     {
-        return 1;
+        return MPC_INVALID_ECP;
     }
 
     if (!ECP_SECP256K1_fromOctet(&pk2, PK2))
     {
-        return 1;
+        return MPC_INVALID_ECP;
     }
 
     // pk1 + pk2
@@ -328,7 +331,7 @@ int MPC_SUM_PK(octet *PK1, octet *PK2, octet *PK)
     // Output result
     ECP_SECP256K1_toOctet(PK, &pk1, true);
 
-    return 0;
+    return MPC_OK;
 }
 
 int MPC_PHASE5_commit(csprng *RNG, octet *R, octet *S, octet *PHI, octet *RHO, octet *V, octet *A)

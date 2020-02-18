@@ -86,7 +86,8 @@ void MPC_INVKGAMMA(octet *KGAMMA1, octet *KGAMMA2, octet *INVKGAMMA);
 
 /** \brief R component
  *
- *  Generate the ECDSA signature R component
+ *  Generate the ECDSA signature R component. It also outputs the ECP
+ *  associate to the R component if specified
  *
  *  <ol>
  *  <li> \f$ r_x, r_y = k^{-1}G \f$ where G is the group generator
@@ -97,9 +98,10 @@ void MPC_INVKGAMMA(octet *KGAMMA1, octet *KGAMMA2, octet *INVKGAMMA);
  *  @param  GAMMAPT1          Actor 1 gamma point
  *  @param  GAMMAPT2          Actor 2 gamma point
  *  @param  R                 R component of the signature
+ *  @param  RP                ECP associated to the R component of the signature. Optional
  *  @return                   Returns 0 or else error code
  */
-int MPC_R(octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R);
+int MPC_R(octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R, octet *RP);
 
 /** \brief Hash the message value
  *
