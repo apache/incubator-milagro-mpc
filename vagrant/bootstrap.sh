@@ -5,14 +5,18 @@ sudo apt-get update
 sudo apt-get install -y build-essential cmake doxygen lcov python3-dev python3-pip wget git emacs
 sudo apt-get clean
 
-echo "install docker"
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-sudo apt-get update && sudo apt-get install apt-transport-https ca-certificates curl software-properties-common docker-ce -y
-sudo apt-get update && sudo apt-get install docker-ce -y
-sudo curl -L https://github.com/docker/compose/releases/download/1.17.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-sudo usermod -aG docker vagrant
+## docker
+sudo groupadd docker
+sudo usermod -aG docker $USER
+groups $USER
+sudo snap install docker
+# You will also need to re-enter the session for the group update to take place
+# su - $USER
+# Above command will not work as do not know password. Instead do these commands.
+# vagrant halt
+# vagrant up
+
+#docker info
 
 # install AMCL
 git clone https://github.com/apache/incubator-milagro-crypto-c.git
@@ -24,3 +28,12 @@ make
 make test
 sudo make install
 
+# intall libmpc
+git clone https://github.com/apache/incubator-milagro-MPC.git 
+cd incubator-milagro-MPC
+mkdir build
+cd build
+cmake -D CMAKE_INSTALL_PREFIX=/usr/local ..
+make
+make test
+sudo make install

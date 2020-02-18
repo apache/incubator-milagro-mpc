@@ -35,7 +35,7 @@ git clone git@github.com:apache/incubator-milagro-MPC.git
 in this directory and then on the VM
 
 ```
-mv /vagarnt/libmpc $HOME
+mv /vagarnt/incubator-milagro-MPC $HOME
 ```
 
 ## Commands
