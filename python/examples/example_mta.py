@@ -19,7 +19,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from amcl import mpc
+from context import mpc
+
+seed_hex = "78d0fb6705ce77dee47d03eb5b9c5d30"
 
 P_hex = "94f689d07ba20cf7c7ca7ccbed22ae6b40c426db74eaee4ce0ced2b6f52a5e136663f5f1ef379cdbb0c4fdd6e4074d6cff21082d4803d43d89e42fd8dfa82b135aa31a8844ffea25f255f956cbc1b9d8631d01baf1010d028a190b94ce40f3b72897e8196df19edf1ff62e6556f2701d52cef1442e3301db7608ecbdcca703db"
 Q_hex = "9a9ad73f246df853e129c589925fdad9df05606a61081e62e72be4fb33f6e5ec492cc734f28bfb71fbe2ba9a11e4c02e2c0d103a5cbb0a9d6402c07de63b1b995dd72ac8f29825d66923a088b421fb4d52b0b855d2f5dde2be9b0ca0cee6f7a94e5566735fe6cff1fcad3199602f88528d19aa8d0263adff8f5053c38254a2a3"
@@ -36,8 +38,9 @@ beta_hex = "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036413d"
 alpha_hex = "000000000000000000000000000000000000000000000000000000000000000a"
 
 if __name__ == "__main__":
-    p0 = bytes.fromhex(P_hex)
-    q0 = bytes.fromhex(Q_hex)
+    seed = bytes.fromhex(seed_hex)
+    p = bytes.fromhex(P_hex)
+    q = bytes.fromhex(Q_hex)
     a = bytes.fromhex(a_hex)
     b = bytes.fromhex(b_hex)
     z = bytes.fromhex(z_hex)
@@ -48,32 +51,21 @@ if __name__ == "__main__":
     expected = ai * bi % mpc.curve_order
     print(f"expected {hex(expected)}")
 
+    # random number generator
+    rng = mpc.create_csprng(seed)
+
     # Deterministic
-    paillier_pk1, paillier_sk1 = mpc.paillier_key_pair(None, p0, q0)
+    paillier_pk, paillier_sk = mpc.paillier_key_pair(None, p, q)
 
-    # Dump and load Paillier public key
-
-    n = mpc.paillier_pk_to_octet(paillier_pk1)
-    print(f"paillier_pk1.n {n.hex()}")
-
-    paillier_pk2 = mpc.paillier_pk_from_octet(n)
-
-    # Dump and load Paillier secret key
-    p, q  = mpc.mpc_dump_paillier_sk(paillier_sk1)
-    print(f"paillier_sk1.p {p.hex()}")
-    print(f"paillier_sk1.q {q.hex()}")
-
-    paillier_pk3, paillier_sk2 = mpc.paillier_key_pair(None, p, q)
-
-    ca = mpc.mpc_mta_client1(None, paillier_pk2, a, r)
+    ca = mpc.mpc_mta_client1(rng, paillier_pk, a, r)
     ca1_hex = ca.hex()
     assert ca_hex == ca1_hex, f"expected {ca_hex} got {ca1_hex}"
 
-    cb, beta = mpc.mpc_mta_server(None, paillier_pk2, b, ca, z, r)
+    cb, beta = mpc.mpc_mta_server(rng, paillier_pk, b, ca, z, r)
     cb1_hex = cb.hex()
     assert cb_hex == cb1_hex, f"expected {cb_hex} got {cb1_hex}"
 
-    alpha = mpc.mpc_mta_client2(paillier_sk2, cb)
+    alpha = mpc.mpc_mta_client2(paillier_sk, cb)
 
     print(f"alpha {alpha.hex()}")
     print(f"beta {beta.hex()}")
@@ -81,5 +73,28 @@ if __name__ == "__main__":
     alphai = int(alpha.hex(), 16)
     betai = int(beta.hex(), 16)
     got = ( alphai + betai ) % mpc.curve_order
+
     print(f"got {hex(got)}")
+
     assert got == expected, f"expected {hex(expected)} got {hex(got)}"
+
+    # Random
+    paillier_pk, paillier_sk = mpc.paillier_key_pair(rng)
+    ca = mpc.mpc_mta_client1(rng, paillier_pk, a)
+    cb, beta = mpc.mpc_mta_server(rng, paillier_pk, b, ca)
+    alpha = mpc.mpc_mta_client2(paillier_sk, cb)
+
+    print(f"alpha {alpha.hex()}")
+    print(f"beta {beta.hex()}")
+
+    alphai = int(alpha.hex(), 16)
+    betai = int(beta.hex(), 16)
+    got = ( alphai + betai ) % mpc.curve_order
+
+    print(f"got {hex(got)}")
+
+    assert got == expected, f"expected {hex(expected)} got {hex(got)}"
+
+    # Clear memory
+    mpc.kill_csprng(rng)
+    mpc.paillier_private_key_kill(paillier_sk)

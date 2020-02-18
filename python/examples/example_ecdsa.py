@@ -19,7 +19,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from amcl import mpc
+from context import mpc
 
 seed_hex = "78d0fb6705ce77dee47d03eb5b9c5d30"
 

@@ -13,10 +13,5 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
-
-include(PythonSiteDirs)
-
-add_subdirectory(amcl)
-add_subdirectory(test)
-add_subdirectory(examples)
+file(GLOB EXAMPLES *.py)
+file(COPY ${EXAMPLES} DESTINATION "${PROJECT_BINARY_DIR}/python/examples")
