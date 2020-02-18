@@ -1,12 +1,11 @@
 language: c
 compiler: gcc
-dist: trusty
+dist: bionic
+services:
+  - docker
 
 install:
   - gem install coveralls-lcov
-
-services:
-- docker
 
 jobs:
   include:
@@ -15,17 +14,17 @@ jobs:
     - echo "Build docker image and run tests"
     - docker build -t libmpc .
     - docker run --cap-add SYS_PTRACE --rm libmpc 
-  #- stage: coverage
-  #  script:
-  #  - echo "Generate coverage figures"
-  #  - docker build -t libmpc .
-  #  - CONTAINER_ID=$(docker run --cap-add SYS_PTRACE -d libmpc ./scripts/coverage.sh)
-  #  - sleep 100
-  #  - docker logs $CONTAINER_ID
-  #  - docker cp ${CONTAINER_ID}:"/root/target/Coverage/coverage" ./
-  #  - docker rm -f ${CONTAINER_ID} || true
-  #  - sed -i "s|root|home/travis/build/apache/libmpc|" ./coverage/libmpc.info
-  #  - coveralls-lcov /home/travis/build/apache/libmpc/coverage/libmpc.info
+  - stage: coverage
+    script:
+    - echo "Generate coverage figures"
+    - docker build -t libmpc .
+    - CONTAINER_ID=$(docker run --cap-add SYS_PTRACE -d libmpc ./scripts/coverage.sh)
+    - sleep 100
+    - docker logs $CONTAINER_ID
+    - docker cp ${CONTAINER_ID}:"/root/target/Coverage/coverage" ./
+    - docker rm -f ${CONTAINER_ID} || true
+    - sed -i "s|root|home/travis/build/apache/incubator-milagro-MPC|" ./coverage/libmpc.info
+    - coveralls-lcov /home/travis/build/apache/incubator-milagro-MPC/coverage/libmpc.info
 
 
 
