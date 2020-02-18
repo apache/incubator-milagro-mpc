@@ -67,28 +67,17 @@ if __name__ == "__main__":
 
     # Dump and load Paillier public key
     
-    n, g, n2 = amcl_mpc.mpc_dump_paillier_pk(paillier_pk1)
+    n  = amcl_mpc.paillier_pk_to_octet(paillier_pk1)
     print(f"paillier_pk1.n {n.hex()}")
-    print(f"paillier_pk1.g {g.hex()}")
-    print(f"paillier_pk1.n2 {n2.hex()}")
 
-    paillier_pk2 = amcl_mpc.mpc_load_paillier_pk(n,g,n2)
+    paillier_pk2 = amcl_mpc.paillier_pk_from_octet(n)
 
     # Dump and load Paillier secret key
-    p, q, lp, lq, invp, invq, p2, q2, mp, mq = amcl_mpc.mpc_dump_paillier_sk(paillier_sk1)
+    p, q  = amcl_mpc.mpc_dump_paillier_sk(paillier_sk1)
     print(f"paillier_sk1.p {p.hex()}")
     print(f"paillier_sk1.q {q.hex()}")
-    print(f"paillier_sk1.lp {lp.hex()}")
-    print(f"paillier_sk1.lq {lq.hex()}")
-    print(f"paillier_sk1.invp {invp.hex()}")
-    print(f"paillier_sk1.invq {invq.hex()}")
-    print(f"paillier_sk1.p2 {p2.hex()}")
-    print(f"paillier_sk1.q2 {q2.hex()}")
-    print(f"paillier_sk1.mp {mp.hex()}")
-    print(f"paillier_sk1.mq {mq.hex()}")                                    
 
-
-    paillier_sk2 = amcl_mpc.mpc_load_paillier_sk(p, q, lp, lq, invp, invq, p2, q2, mp, mq)
+    paillier_pk3, paillier_sk2 = amcl_mpc.paillier_key_pair(rng, p, q)    
     
     ca = amcl_mpc.mpc_mta_client1(rng, paillier_pk2, a, r)
 
