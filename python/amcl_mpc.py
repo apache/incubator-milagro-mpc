@@ -87,6 +87,9 @@ extern void OCT_clear(octet *O);
 
 extern void PAILLIER_KEY_PAIR(csprng *RNG, octet *P, octet* Q, PAILLIER_public_key *PUB, PAILLIER_private_key *PRIV);
 extern void PAILLIER_PRIVATE_KEY_KILL(PAILLIER_private_key *PRIV);
+extern void PAILLIER_PK_toOctet(octet *PK, PAILLIER_public_key *PUB);
+extern void PAILLIER_PK_fromOctet(PAILLIER_public_key *PUB, octet *PK);
+
 
 extern int  ECP_SECP256K1_KEY_PAIR_GENERATE(csprng *R,octet *s,octet *W);
 extern int  ECP_SECP256K1_PUBLIC_KEY_VALIDATE(octet *W);
@@ -102,10 +105,7 @@ extern void MPC_HASH(int sha, octet *M, octet *HM);
 extern int MPC_S(octet *HM, octet *R, octet *K, octet *SIGMA, octet *S);
 extern void MPC_SUM_S(octet *S1, octet *S2, octet *S);
 extern int MPC_SUM_PK(octet *PK1, octet *PK2, octet *PK);
-extern void MPC_DUMP_PAILLIER_PK(PAILLIER_public_key *PUB, octet *N, octet *G, octet *N2);
-extern void MPC_LOAD_PAILLIER_PK(PAILLIER_public_key *PUB, octet *N, octet *G, octet *N2);
-extern void MPC_DUMP_PAILLIER_SK(PAILLIER_private_key *PRIV, octet *P, octet *Q, octet *LP, octet *LQ, octet *INVP, octet *INVQ, octet *P2, octet *Q2, octet *MP, octet *MQ);
-extern void MPC_LOAD_PAILLIER_SK(PAILLIER_private_key *PRIV, octet *P, octet *Q, octet *LP, octet *LQ, octet *INVP, octet *INVQ, octet *P2, octet *Q2, octet *MP, octet *MQ);
+extern void MPC_DUMP_PAILLIER_SK(PAILLIER_private_key *PRIV, octet *P, octet *Q);
 
 """)
 
@@ -291,6 +291,55 @@ def paillier_private_key_kill(paillier_sk):
     libamcl_paillier.PAILLIER_PRIVATE_KEY_KILL(PAILLIER_private_key *PRIV);
 
     return 0
+
+
+def paillier_pk_to_octet(paillier_pk):    
+    """Write Paillier public key to byte array
+
+    Write Paillier public key to byte array
+
+    Args::
+
+        paillier_pk: Pointer to Paillier public key
+
+    Returns::
+
+        n: Paillier Modulus - n = pq
+
+    Raises:
+
+    """
+    n1, n1_val = make_octet(FS_4096)
+    
+    libamcl_paillier.PAILLIER_PK_toOctet(n1, paillier_pk)
+
+    n2 = to_str(n1)
+
+    return n2
+
+def paillier_pk_from_octet(n):    
+    """Read Paillier public key from byte array
+
+    Read Paillier public key from byte array
+
+    Args::
+
+        n: Paillier Modulus - n = pq
+
+    Returns::
+
+        paillier_pk: Pointer to Paillier public key
+
+    Raises:
+
+    """
+    paillier_pk = ffi.new('PAILLIER_public_key*')
+
+    n1, n1_val = make_octet(None, n)
+
+    libamcl_paillier.PAILLIER_PK_fromOctet(paillier_pk, n1)
+
+    return paillier_pk
 
 def ecp_secp256k1_key_pair_generate(rng, ecdsa_sk=None):
     """Generate ECDSA key pair
@@ -687,65 +736,6 @@ def mpc_sum_pk(pk1, pk2):
     
     return rc, pk2
 
-def mpc_dump_paillier_pk(paillier_pk):
-    """Write Paillier public key to byte array
-
-    Write Paillier public key to byte array
-
-    Args::
-
-        paillier_pk: Pointer to Paillier public key
-
-    Returns::
-
-        n: Paillier Modulus - n = pq
-        g: Public Base - g = n+1
-        n2: Precomputed - n^2 
-
-    Raises:
-
-    """
-    n1, n1_val = make_octet(FS_4096)
-    g1, g1_val = make_octet(FS_4096)
-    n21, n21_val = make_octet(FS_4096)    
-    
-    libamcl_mpc.MPC_DUMP_PAILLIER_PK(paillier_pk, n1, g1, n21)
-
-    n2 = to_str(n1)
-    g2 = to_str(g1)
-    n22 = to_str(n21)        
-
-    return n2, g2, n22
-
-def mpc_load_paillier_pk(n,g,n2):
-    """Read Paillier public key from byte arrays
-
-    Read Paillier public key from byte arrays
-
-    Args::
-
-        n: Paillier Modulus - n = pq
-        g: Public Base - g = n+1
-        n2: Precomputed - n^2 
-
-    Returns::
-
-        paillier_pk: Pointer to Paillier public key
-
-    Raises:
-
-    """
-    paillier_pk = ffi.new('PAILLIER_public_key*')
-
-    n1, n1_val = make_octet(None, n)
-    g1, g1_val = make_octet(None, g)
-    n21, n21_val = make_octet(None, n2)        
-
-
-    libamcl_mpc.MPC_LOAD_PAILLIER_PK(paillier_pk, n1, g1, n21)
-
-    return paillier_pk
-
 def mpc_dump_paillier_sk(paillier_sk):
     """Write Paillier public key to byte array
 
@@ -759,14 +749,6 @@ def mpc_dump_paillier_sk(paillier_sk):
 
         p:           Secret prime number 
         q:           Secret prime number 
-        lp:          Private Key modulo \f$ p \f$ (Euler totient of \f$ p \f$)
-        lq:          Private Key modulo \f$ q \f$ (Euler totient of \f$ q \f$)
-        invp:        Precomputed \f$ p^{-1} \pmod{2^m} \f$
-        invq:        Precomputed \f$ q^{-1} \pmod{2^m} \f$
-        p2:          Precomputed \f$ p^2 \f$
-        q2:          Precomputed \f$ q^2 \f$ 
-        mp:          Precomputed \f$ L(g^{lp} \pmod{p^2})^{-1} \f$
-        mq:          Precomputed \f$ L(g^{lq} \pmod{q^2})^{-1} \f$
 
     Raises:
 
@@ -774,79 +756,9 @@ def mpc_dump_paillier_sk(paillier_sk):
     p, p_val = make_octet(HFS_2048)
     q, q_val = make_octet(HFS_2048)    
 
-    lp, lp_val = make_octet(HFS_2048)
-    lq, lq_val = make_octet(HFS_2048)    
-
-    invp, invp_val = make_octet(FS_2048)
-    invq, invq_val = make_octet(FS_2048)    
-
-    pp2, pp2_val = make_octet(FS_2048)
-    qq2, qq2_val = make_octet(FS_2048)    
-    
-    mp, mp_val = make_octet(HFS_2048)
-    mq, mq_val = make_octet(HFS_2048)    
-    
-    libamcl_mpc.MPC_DUMP_PAILLIER_SK(paillier_sk, p, q, lp, lq, invp, invq, pp2, qq2, mp, mq)
+    libamcl_mpc.MPC_DUMP_PAILLIER_SK(paillier_sk, p, q)
 
     p2 = to_str(p)
     q2 = to_str(q)
 
-    lp2 = to_str(lp)
-    lq2 = to_str(lq)    
-
-    invp2 = to_str(invp)
-    invq2 = to_str(invq)    
-
-    p22 = to_str(pp2)
-    q22 = to_str(qq2)    
-
-    mp2 = to_str(mp)
-    mq2 = to_str(mq)    
-    
-    return p2, q2, lp2, lq2, invp2, invq2, p22, q22, mp2, mq2
-
-def mpc_load_paillier_sk(p, q, lp, lq, invp, invq, p2, q2, mp, mq):
-    """Read Paillier secret key from byte arrays
-
-    Read Paillier secret key from byte arrays
-
-    Args::
-
-        p:           Secret prime number 
-        q:           Secret prime number 
-        lp:          Private Key modulo \f$ p \f$ (Euler totient of \f$ p \f$)
-        lq:          Private Key modulo \f$ q \f$ (Euler totient of \f$ q \f$)
-        invp:        Precomputed \f$ p^{-1} \pmod{2^m} \f$
-        invq:        Precomputed \f$ q^{-1} \pmod{2^m} \f$
-        p2:          Precomputed \f$ p^2 \f$
-        q2:          Precomputed \f$ q^2 \f$ 
-        mp:          Precomputed \f$ L(g^{lp} \pmod{p^2})^{-1} \f$
-        mq:          Precomputed \f$ L(g^{lq} \pmod{q^2})^{-1} \f$
-
-    Returns::
-
-        paillier_sk: Pointer to Paillier secret key
-
-    Raises:
-
-    """
-    paillier_sk = ffi.new('PAILLIER_private_key*')
-
-    p1, p1_val = make_octet(None, p)
-    q1, q1_val = make_octet(None, q)   
-
-    lp1, lp1_val = make_octet(None, lp)
-    lq1, lq1_val = make_octet(None, lq)
-
-    invp1, invp1_val = make_octet(None, invp)
-    invq1, invq1_val = make_octet(None, invq)
-
-    p21, p21_val = make_octet(None, p2)
-    q21, q21_val = make_octet(None, q2)    
-    
-    mp1, mp1_val = make_octet(None, mp)
-    mq1, mq1_val = make_octet(None, mq)    
-
-    libamcl_mpc.MPC_LOAD_PAILLIER_SK(paillier_sk,  p1, q1, lp1, lq1, invp1, invq1, p21, q21, mp1, mq1)
-
-    return paillier_sk
+    return p2, q2

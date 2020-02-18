@@ -3,10 +3,12 @@
 
 **/*~
 **/*bak
-model/sec256k1/__pycache__/
+log.txt
 
 build
-vagrant
 target
-coverage
 incubator-milagro-crypto-c
+vagrant
+coverage
+examples/scratch.c
+
