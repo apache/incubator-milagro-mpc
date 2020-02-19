@@ -19,7 +19,12 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from context import mpc
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from amcl import core_utils, mpc
 
 seed_hex = "78d0fb6705ce77dee47d03eb5b9c5d30"
 
@@ -86,7 +91,7 @@ if __name__ == "__main__":
     SIG_R = bytes.fromhex(SIG_R_hex)
 
     # random number generator
-    rng = mpc.create_csprng(seed)
+    rng = core_utils.create_csprng(seed)
 
     # Deterministic
 

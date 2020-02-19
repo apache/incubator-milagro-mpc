@@ -19,10 +19,14 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import unittest
-import json
 import os
-from context import mpc
+import sys
+import json
+import unittest
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from amcl import core_utils, mpc
 
 
 class TestECDSA(unittest.TestCase):
@@ -34,7 +38,7 @@ class TestECDSA(unittest.TestCase):
             print(f"Test {i}")
 
             seed = os.urandom(16)
-            rng = mpc.create_csprng(seed)
+            rng = core_utils.create_csprng(seed)
 
             # Paillier keys
             paillier_pk1, paillier_sk1 = mpc.paillier_key_pair(rng)

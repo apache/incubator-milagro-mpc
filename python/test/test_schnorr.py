@@ -19,9 +19,14 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import unittest
+import os
+import sys
 import json
-from context import schnorr
+import unittest
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from amcl import core_utils, schnorr
 
 
 class TestCommit(unittest.TestCase):
@@ -31,7 +36,7 @@ class TestCommit(unittest.TestCase):
         # Deterministic PRNG for testing purposes
         seed_hex = "78d0fb6705ce77dee47d03eb5b9c5d30"
         seed = bytes.fromhex(seed_hex)
-        self.rng = schnorr.create_csprng(seed)
+        self.rng = core_utils.create_csprng(seed)
 
         r_hex = "e8a04212cc20520429d854a5bb02b51b4281e663c90a4a4ec0b505171f9bc26a"
         C_hex = "028fe6cafe6e6cef6c47be31cb449faa9495d22a6cb47e057b91c97d807882c439"

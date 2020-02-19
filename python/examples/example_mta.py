@@ -19,7 +19,12 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from context import mpc
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from amcl import core_utils, mpc
 
 seed_hex = "78d0fb6705ce77dee47d03eb5b9c5d30"
 
@@ -52,7 +57,7 @@ if __name__ == "__main__":
     print(f"expected {hex(expected)}")
 
     # random number generator
-    rng = mpc.create_csprng(seed)
+    rng = core_utils.create_csprng(seed)
 
     # Deterministic
     paillier_pk, paillier_sk = mpc.paillier_key_pair(None, p, q)
@@ -96,5 +101,5 @@ if __name__ == "__main__":
     assert got == expected, f"expected {hex(expected)} got {hex(got)}"
 
     # Clear memory
-    mpc.kill_csprng(rng)
+    core_utils.kill_csprng(rng)
     mpc.paillier_private_key_kill(paillier_sk)

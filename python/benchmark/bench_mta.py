@@ -19,8 +19,13 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from context import mpc
+import os
+import sys
 from bench import time_func
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from amcl import core_utils, mpc
 
 seed_hex = "78d0fb6705ce77dee47d03eb5b9c5d30"
 
@@ -38,10 +43,10 @@ if __name__ == "__main__":
     b = bytes.fromhex(b_hex)
 
     # random number generator
-    rng = mpc.create_csprng(seed)
+    rng = core_utils.create_csprng(seed)
 
     # Generate quantities for benchmark
-    paillier_pk, paillier_sk = mpc.paillier_key_pair(rng)
+    paillier_pk, paillier_sk = mpc.paillier_key_pair(None, p, q)
     ca = mpc.mpc_mta_client1(rng, paillier_pk, a)
     cb, beta = mpc.mpc_mta_server(rng, paillier_pk, b, ca)
     alpha = mpc.mpc_mta_client2(paillier_sk, cb)
@@ -68,4 +73,4 @@ if __name__ == "__main__":
     time_func("mpc_mta_client2", fncall)
 
     # Clear memory
-    mpc.kill_csprng(rng)
+    core_utils.kill_csprng(rng)
