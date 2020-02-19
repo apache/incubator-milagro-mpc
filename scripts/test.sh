@@ -18,5 +18,5 @@ do
   echo "$i"
   cd $CURRENTDIR
   cd target/$i
-  make test
+  make test ARGS=-j8
 done
