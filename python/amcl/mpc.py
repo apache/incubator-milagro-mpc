@@ -26,9 +26,8 @@ This module use cffi to access the c functions in the amcl_mpc library.
 import platform
 from amcl import core_utils
 
-ffi = core_utils.ffi
-
-ffi.cdef("""
+_ffi = core_utils._ffi
+_ffi.cdef("""
 typedef struct
 {
     BIG_512_60 n[8];
@@ -73,17 +72,17 @@ extern void MPC_DUMP_PAILLIER_SK(PAILLIER_private_key *PRIV, octet *P, octet *Q)
 """)
 
 if (platform.system() == 'Windows'):
-    libamcl_mpc = ffi.dlopen("libamcl_mpc.dll")
-    libamcl_paillier = ffi.dlopen("libamcl_paillier.dll")
-    libamcl_curve_secp256k1 = ffi.dlopen("libamcl_curve_SECP256K1.dll")
+    _libamcl_mpc = _ffi.dlopen("libamcl_mpc.dll")
+    _libamcl_paillier = _ffi.dlopen("libamcl_paillier.dll")
+    _libamcl_curve_secp256k1 = _ffi.dlopen("libamcl_curve_SECP256K1.dll")
 elif (platform.system() == 'Darwin'):
-    libamcl_mpc = ffi.dlopen("libamcl_mpc.dylib")
-    libamcl_paillier = ffi.dlopen("libamcl_paillier.dylib")
-    libamcl_curve_secp256k1 = ffi.dlopen("libamcl_curve_SECP256K1.dylib")
+    _libamcl_mpc = _ffi.dlopen("libamcl_mpc.dylib")
+    _libamcl_paillier = _ffi.dlopen("libamcl_paillier.dylib")
+    _libamcl_curve_secp256k1 = _ffi.dlopen("libamcl_curve_SECP256K1.dylib")
 else:
-    libamcl_mpc = ffi.dlopen("libamcl_mpc.so")
-    libamcl_paillier = ffi.dlopen("libamcl_paillier.so")
-    libamcl_curve_secp256k1 = ffi.dlopen("libamcl_curve_SECP256K1.so")
+    _libamcl_mpc = _ffi.dlopen("libamcl_mpc.so")
+    _libamcl_paillier = _ffi.dlopen("libamcl_paillier.so")
+    _libamcl_curve_secp256k1 = _ffi.dlopen("libamcl_curve_SECP256K1.so")
 
 # Constants
 FS_2048 = 256      # Size of an FF_2048 in bytes 
@@ -118,15 +117,15 @@ def paillier_key_pair(rng, p=None, q=None):
     if p:
         p1, p1_val = core_utils.make_octet(None, p)
         q1, q1_val = core_utils.make_octet(None, q)
-        rng = ffi.NULL
+        rng = _ffi.NULL
     else:
-        p1 = ffi.NULL
-        q1 = ffi.NULL
+        p1 = _ffi.NULL
+        q1 = _ffi.NULL
 
-    paillier_pk = ffi.new('PAILLIER_public_key*')
-    paillier_sk = ffi.new('PAILLIER_private_key*')
+    paillier_pk = _ffi.new('PAILLIER_public_key*')
+    paillier_sk = _ffi.new('PAILLIER_private_key*')
 
-    libamcl_paillier.PAILLIER_KEY_PAIR(rng, p1, q1, paillier_pk, paillier_sk)
+    _libamcl_paillier.PAILLIER_KEY_PAIR(rng, p1, q1, paillier_pk, paillier_sk)
 
     return paillier_pk, paillier_sk
 
@@ -146,7 +145,7 @@ def paillier_private_key_kill(paillier_sk):
     Raises:
 
     """
-    libamcl_paillier.PAILLIER_PRIVATE_KEY_KILL(paillier_sk)
+    _libamcl_paillier.PAILLIER_PRIVATE_KEY_KILL(paillier_sk)
 
     return 0
 
@@ -169,7 +168,7 @@ def paillier_pk_to_octet(paillier_pk):
     """
     n1, n1_val = core_utils.make_octet(FS_4096)
 
-    libamcl_paillier.PAILLIER_PK_toOctet(n1, paillier_pk)
+    _libamcl_paillier.PAILLIER_PK_toOctet(n1, paillier_pk)
 
     n2 = core_utils.to_str(n1)
 
@@ -191,11 +190,11 @@ def paillier_pk_from_octet(n):
     Raises:
 
     """
-    paillier_pk = ffi.new('PAILLIER_public_key*')
+    paillier_pk = _ffi.new('PAILLIER_public_key*')
 
     n1, n1_val = core_utils.make_octet(None, n)
 
-    libamcl_paillier.PAILLIER_PK_fromOctet(paillier_pk, n1)
+    _libamcl_paillier.PAILLIER_PK_fromOctet(paillier_pk, n1)
 
     return paillier_pk
 
@@ -220,13 +219,13 @@ def ecp_secp256k1_key_pair_generate(rng, ecdsa_sk=None):
     """
     if ecdsa_sk:
         ecdsa_sk1, ecdsa_sk1_val = core_utils.make_octet(None, ecdsa_sk)
-        rng = ffi.NULL
+        rng = _ffi.NULL
     else:
         ecdsa_sk1, ecdsa_sk1_val = core_utils.make_octet(EGS_SECP256K1)
 
     ecdsa_pk1, ecdsa_pk1_val = core_utils.make_octet(2 * EFS_SECP256K1 + 1)
 
-    rc = libamcl_curve_secp256k1.ECP_SECP256K1_KEY_PAIR_GENERATE(rng, ecdsa_sk1, ecdsa_pk1)
+    rc = _libamcl_curve_secp256k1.ECP_SECP256K1_KEY_PAIR_GENERATE(rng, ecdsa_sk1, ecdsa_pk1)
 
     ecdsa_sk2 = core_utils.to_str(ecdsa_sk1)
     ecdsa_pk2 = core_utils.to_str(ecdsa_pk1)
@@ -251,7 +250,7 @@ def ecp_secp256k1_public_key_validate(ecdsa_pk):
     """
     ecdsa_pk1, ecdsa_pk1_val = core_utils.make_octet(None, ecdsa_pk)
 
-    rc = libamcl_curve_secp256k1.ECP_SECP256K1_PUBLIC_KEY_VALIDATE(ecdsa_pk1)
+    rc = _libamcl_curve_secp256k1.ECP_SECP256K1_PUBLIC_KEY_VALIDATE(ecdsa_pk1)
 
     return rc
 
@@ -277,14 +276,14 @@ def mpc_mta_client1(rng, paillier_pk, a, r=None):
     """
     if r:
         r1, r1_val = core_utils.make_octet(None, r)
-        rng = ffi.NULL
+        rng = _ffi.NULL
     else:
-        r1 = ffi.NULL
+        r1 = _ffi.NULL
 
     a1, a1_val = core_utils.make_octet(None, a)
     ca1, ca1_val = core_utils.make_octet(FS_4096)
 
-    libamcl_mpc.MPC_MTA_CLIENT1(rng, paillier_pk, a1, ca1, r1)
+    _libamcl_mpc.MPC_MTA_CLIENT1(rng, paillier_pk, a1, ca1, r1)
 
     ca2 = core_utils.to_str(ca1)
 
@@ -310,7 +309,7 @@ def mpc_mta_client2(paillier_sk, cb):
     cb1, cb1_val = core_utils.make_octet(None, cb)
     alpha1, alpha1_val = core_utils.make_octet(EGS_SECP256K1)
 
-    libamcl_mpc.MPC_MTA_CLIENT2(paillier_sk, cb1, alpha1)
+    _libamcl_mpc.MPC_MTA_CLIENT2(paillier_sk, cb1, alpha1)
 
     alpha2 = core_utils.to_str(alpha1)
 
@@ -341,17 +340,17 @@ def mpc_mta_server(rng, paillier_pk, b, ca, z=None, r=None):
     if r:
         r1, r1_val = core_utils.make_octet(None, r)
         z1, z1_val = core_utils.make_octet(None, z)
-        rng = ffi.NULL
+        rng = _ffi.NULL
     else:
-        r1 = ffi.NULL
-        z1 = ffi.NULL
+        r1 = _ffi.NULL
+        z1 = _ffi.NULL
 
     b1, b1_val = core_utils.make_octet(None, b)
     ca1, ca1_val = core_utils.make_octet(None, ca)
     beta1, beta1_val = core_utils.make_octet(EGS_SECP256K1)
     cb1, cb1_val = core_utils.make_octet(FS_4096)
 
-    libamcl_mpc.MPC_MTA_SERVER(rng, paillier_pk, b1, ca1, z1, r1, cb1, beta1)
+    _libamcl_mpc.MPC_MTA_SERVER(rng, paillier_pk, b1, ca1, z1, r1, cb1, beta1)
 
     beta2 = core_utils.to_str(beta1)
     cb2 = core_utils.to_str(cb1)
@@ -384,7 +383,7 @@ def mpc_sum_mta(a, b, alpha, beta):
 
     sum1, sum1_val = core_utils.make_octet(EGS_SECP256K1)
 
-    libamcl_mpc.MPC_SUM_MTA(a1, b1, alpha1, beta1, sum1)
+    _libamcl_mpc.MPC_SUM_MTA(a1, b1, alpha1, beta1, sum1)
 
     sum2 = core_utils.to_str(sum1)
 
@@ -412,7 +411,7 @@ def mpc_invkgamma(kgamma1, kgamma2):
 
     invkgamma1, invkgamma1_val = core_utils.make_octet(EGS_SECP256K1)
 
-    libamcl_mpc.MPC_INVKGAMMA(kgamma11, kgamma21, invkgamma1)
+    _libamcl_mpc.MPC_INVKGAMMA(kgamma11, kgamma21, invkgamma1)
 
     invkgamma2 = core_utils.to_str(invkgamma1)
 
@@ -444,7 +443,7 @@ def mpc_r(invkgamma, gammapt1, gammapt2):
     r1, r1_val = core_utils.make_octet(EGS_SECP256K1)
     rp, rp_val = core_utils.make_octet(EFS_SECP256K1 + 1)
 
-    rc = libamcl_mpc.MPC_R(invkgamma1, gammapt11, gammapt21, r1, rp)
+    rc = _libamcl_mpc.MPC_R(invkgamma1, gammapt11, gammapt21, r1, rp)
 
     r2 = core_utils.to_str(r1)
     rp_str = core_utils.to_str(rp)
@@ -470,7 +469,7 @@ def mpc_hash(message):
     message1, message1_val = core_utils.make_octet(None, message)
     hm1, hm1_val = core_utils.make_octet(SHA256)
 
-    libamcl_mpc.MPC_HASH(SHA256, message1, hm1)
+    _libamcl_mpc.MPC_HASH(SHA256, message1, hm1)
 
     hm2 = core_utils.to_str(hm1)
 
@@ -503,7 +502,7 @@ def mpc_s(hm, r, k, sigma):
 
     s1, s1_val = core_utils.make_octet(EGS_SECP256K1)
 
-    rc = libamcl_mpc.MPC_S(hm1, r1, k1, sigma1, s1)
+    rc = _libamcl_mpc.MPC_S(hm1, r1, k1, sigma1, s1)
 
     s2 = core_utils.to_str(s1)
 
@@ -533,7 +532,7 @@ def mpc_ecdsa_verify(hm, pk, r, s):
     r1, r1_val = core_utils.make_octet(None, r)
     s1, s1_val = core_utils.make_octet(None, s)
 
-    rc = libamcl_mpc.MPC_ECDSA_VERIFY(hm1, pk1, r1, s1)
+    rc = _libamcl_mpc.MPC_ECDSA_VERIFY(hm1, pk1, r1, s1)
 
     return rc
 
@@ -559,7 +558,7 @@ def mpc_sum_s(s1, s2):
 
     s1, s1_val = core_utils.make_octet(EGS_SECP256K1)
 
-    libamcl_mpc.MPC_SUM_S(s11, s21, s1)
+    _libamcl_mpc.MPC_SUM_S(s11, s21, s1)
 
     s2 = core_utils.to_str(s1)
 
@@ -588,7 +587,7 @@ def mpc_sum_pk(pk1, pk2):
 
     pk1, pk1_val = core_utils.make_octet(EFS_SECP256K1 + 1)
 
-    rc = libamcl_mpc.MPC_SUM_PK(pk11, pk21, pk1)
+    rc = _libamcl_mpc.MPC_SUM_PK(pk11, pk21, pk1)
 
     pk2 = core_utils.to_str(pk1)
 
@@ -614,7 +613,7 @@ def mpc_dump_paillier_sk(paillier_sk):
     p, p_val = core_utils.make_octet(HFS_2048)
     q, q_val = core_utils.make_octet(HFS_2048)
 
-    libamcl_mpc.MPC_DUMP_PAILLIER_SK(paillier_sk, p, q)
+    _libamcl_mpc.MPC_DUMP_PAILLIER_SK(paillier_sk, p, q)
 
     p2 = core_utils.to_str(p)
     q2 = core_utils.to_str(q)

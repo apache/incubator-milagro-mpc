@@ -26,9 +26,8 @@ This module use cffi to access the c functions in the amcl_mpc library.
 import platform
 from amcl import core_utils
 
-ffi = core_utils.ffi
-
-ffi.cdef("""
+_ffi = core_utils._ffi
+_ffi.cdef("""
 extern void SCHNORR_random_challenge(csprng *RNG, octet *E);
 extern void SCHNORR_commit(csprng *RNG, octet *R, octet *C);
 extern void SCHNORR_challenge(octet *V, octet *C, octet *E);
@@ -37,14 +36,14 @@ extern int  SCHNORR_verify(octet *V, octet *C, octet *E, octet *P);
 """)
 
 if (platform.system() == 'Windows'):
-    libamcl_mpc = ffi.dlopen("libamcl_mpc.dll")
-    libamcl_curve_secp256k1 = ffi.dlopen("libamcl_curve_SECP256K1.dll")
+    _libamcl_mpc = _ffi.dlopen("libamcl_mpc.dll")
+    _libamcl_curve_secp256k1 = _ffi.dlopen("libamcl_curve_SECP256K1.dll")
 elif (platform.system() == 'Darwin'):
-    libamcl_mpc = ffi.dlopen("libamcl_mpc.dylib")
-    libamcl_curve_secp256k1 = ffi.dlopen("libamcl_curve_SECP256K1.dylib")
+    _libamcl_mpc = _ffi.dlopen("libamcl_mpc.dylib")
+    _libamcl_curve_secp256k1 = _ffi.dlopen("libamcl_curve_SECP256K1.dylib")
 else:
-    libamcl_mpc = ffi.dlopen("libamcl_mpc.so")
-    libamcl_curve_secp256k1 = ffi.dlopen("libamcl_curve_SECP256K1.so")
+    _libamcl_mpc = _ffi.dlopen("libamcl_mpc.so")
+    _libamcl_curve_secp256k1 = _ffi.dlopen("libamcl_curve_SECP256K1.so")
 
 # Constants
 EGS = 32      # Size of a Z/qZ element in bytes
@@ -78,7 +77,7 @@ def random_challenge(rng):
     e, e_val = core_utils.make_octet(EGS)
     _ = e_val # Suppress warning
 
-    libamcl_mpc.SCHNORR_random_challenge(rng, e)
+    _libamcl_mpc.SCHNORR_random_challenge(rng, e)
 
     return core_utils.to_str(e)
 
@@ -107,13 +106,13 @@ def commit(rng, r=None):
         r_oct, r_val = core_utils.make_octet(EGS)
     else:
         r_oct, r_val = core_utils.make_octet(None, r)
-        rng = ffi.NULL
+        rng = _ffi.NULL
 
     C, C_val = core_utils.make_octet(PTS)
     _ = r_val, C_val # Suppress warning
 
 
-    libamcl_mpc.SCHNORR_commit(rng, r_oct, C)
+    _libamcl_mpc.SCHNORR_commit(rng, r_oct, C)
 
     r = core_utils.to_str(r_oct)
 
@@ -149,7 +148,7 @@ def challenge(V, C):
     e, e_val = core_utils.make_octet(EGS)
     _ = e_val # Suppress warning
 
-    libamcl_mpc.SCHNORR_challenge(V_oct, C_oct, e)
+    _libamcl_mpc.SCHNORR_challenge(V_oct, C_oct, e)
 
     return core_utils.to_str(e)
 
@@ -181,7 +180,7 @@ def prove(r, e, x):
     p, p_val = core_utils.make_octet(EGS)
     _ = p_val # Suppress warning
 
-    libamcl_mpc.SCHNORR_prove(r_oct, e_oct, x_oct, p)
+    _libamcl_mpc.SCHNORR_prove(r_oct, e_oct, x_oct, p)
 
     # Clean memory
     core_utils.clear_octet(r_oct)
@@ -215,6 +214,6 @@ def verify(V, C, e, p):
     p_oct, p_val = core_utils.make_octet(None, p)
     _ = V_val, C_val, e_val, p_val # Suppress warning
 
-    ec = libamcl_mpc.SCHNORR_verify(V_oct, C_oct, e_oct, p_oct)
+    ec = _libamcl_mpc.SCHNORR_verify(V_oct, C_oct, e_oct, p_oct)
 
     return ec

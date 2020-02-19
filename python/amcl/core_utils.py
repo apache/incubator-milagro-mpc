@@ -26,8 +26,8 @@ This module use cffi to access the c functions in the amcl_core library.
 import cffi
 import platform
 
-ffi = cffi.FFI()
-ffi.cdef("""
+_ffi = cffi.FFI()
+_ffi.cdef("""
 
 typedef long unsigned int BIG_512_60[9];
 typedef long unsigned int BIG_1024_58[18];
@@ -54,11 +54,11 @@ extern void OCT_clear(octet *O);
 """)
 
 if (platform.system() == 'Windows'):
-    libamcl_core = ffi.dlopen("libamcl_core.dll")
+    _libamcl_core = _ffi.dlopen("libamcl_core.dll")
 elif (platform.system() == 'Darwin'):
-    libamcl_core = ffi.dlopen("libamcl_core.dylib")
+    _libamcl_core = _ffi.dlopen("libamcl_core.dylib")
 else:
-    libamcl_core = ffi.dlopen("libamcl_core.so")
+    _libamcl_core = _ffi.dlopen("libamcl_core.so")
 
 
 def to_str(octet_value):
@@ -106,14 +106,14 @@ def make_octet(length, value=None):
     Raises:
 
     """
-    oct_ptr = ffi.new("octet*")
+    oct_ptr = _ffi.new("octet*")
     if value:
-        val = ffi.new("char [%s]" % len(value), value)
+        val = _ffi.new("char [%s]" % len(value), value)
         oct_ptr.val = val
         oct_ptr.max = len(value)
         oct_ptr.len = len(value)
     else:
-        val = ffi.new("char []", length)
+        val = _ffi.new("char []", length)
         oct_ptr.val = val
         oct_ptr.max = length
         oct_ptr.len = length
@@ -133,7 +133,7 @@ def clear_octet(octet):
 
     Raises::
     """
-    libamcl_core.OCT_clear(octet)
+    _libamcl_core.OCT_clear(octet)
 
 
 def create_csprng(seed):
@@ -152,12 +152,12 @@ def create_csprng(seed):
     Raises:
 
     """
-    seed_val = ffi.new("char [%s]" % len(seed), seed)
+    seed_val = _ffi.new("char [%s]" % len(seed), seed)
     seed_len = len(seed)
 
     # random number generator
-    rng = ffi.new('csprng*')
-    libamcl_core.RAND_seed(rng, seed_len, seed_val)
+    rng = _ffi.new('csprng*')
+    _libamcl_core.RAND_seed(rng, seed_len, seed_val)
 
     return rng
 
@@ -176,6 +176,6 @@ def kill_csprng(rng):
     Raises:
 
     """
-    libamcl_core.RAND_clean(rng)
+    _libamcl_core.RAND_clean(rng)
 
     return 0
