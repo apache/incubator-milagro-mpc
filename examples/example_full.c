@@ -131,7 +131,11 @@ void key_material_zkp(csprng *RNG, key_material *km, octet *C, octet *P, octet *
     char s_e[EGS_SECP256K1];
     octet S_E = {0, sizeof(s_e), s_e};
 
-    FACTORING_ZK_modulus m;
+    char p[HFS_2048] = {0};
+    octet M_P = {0, sizeof(p), p};
+
+    char q[HFS_2048];
+    octet M_Q = {0, sizeof(q), q};
 
     /* Prove knowledge of DLOG PK = s.G */
 
@@ -151,11 +155,10 @@ void key_material_zkp(csprng *RNG, key_material *km, octet *C, octet *P, octet *
 
     /* Prove knowledge of factorization of the Paillier modulus */
 
-    FF_2048_copy(m.p, km->paillier_sk.p, HFLEN_2048);
-    FF_2048_copy(m.q, km->paillier_sk.q, HFLEN_2048);
-    FF_2048_mul(m.n, m.p, m.q, HFLEN_2048);
+    FF_2048_toOctet(&M_P, km->paillier_sk.p, HFLEN_2048);
+    FF_2048_toOctet(&M_Q, km->paillier_sk.q, HFLEN_2048);
 
-    FACTORING_ZK_prove(&m, RNG, NULL, E, Y);
+    FACTORING_ZK_prove(RNG, &M_P, &M_Q, NULL, E, Y);
 
     printf("\n\tProve knowledge of the Paillier Secret Key\n");
     printf("\t\tE = ");
@@ -163,7 +166,8 @@ void key_material_zkp(csprng *RNG, key_material *km, octet *C, octet *P, octet *
     printf("\t\tY = ");
     OCT_output(Y);
 
-    FACTORING_ZK_kill_modulus(&m);
+    OCT_clear(&M_P);
+    OCT_clear(&M_Q);
 }
 
 int key_material_verify_zkp(key_material *km, octet *C, octet *P, octet *E, octet *Y)
