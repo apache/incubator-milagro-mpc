@@ -53,7 +53,7 @@ int main()
     PAILLIER_private_key PRIV2;
     PAILLIER_public_key PUB2;
     PAILLIER_public_key PUB3;
-    
+
     char p[FS_2048] = {0};
     octet P = {0,sizeof(p),p};
 
@@ -180,9 +180,9 @@ int main()
         fprintf(stderr, "FAILURE QQ != Q rc: %d\n", rc);
         exit(EXIT_FAILURE);
     }
-    
+
     // Read secret key from octets
-    PAILLIER_KEY_PAIR(NULL, &PP, &QQ, &PUB3, &PRIV2);    
+    PAILLIER_KEY_PAIR(NULL, &PP, &QQ, &PUB3, &PRIV2);
 
     MPC_MTA_CLIENT1(NULL, &PUB2, &A, &CA, &R);
 

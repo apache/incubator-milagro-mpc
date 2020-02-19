@@ -50,7 +50,7 @@ int main()
     PAILLIER_public_key PUB1;
     PAILLIER_private_key PRIV2;
     PAILLIER_public_key PUB2;
-    PAILLIER_public_key PUB3;    
+    PAILLIER_public_key PUB3;
 
     // Paillier public key
     char n[FS_4096] = {0};
@@ -73,7 +73,7 @@ int main()
 
     FF_2048_toOctet(&P, PRIV1.p, HFLEN_2048);
     FF_2048_toOctet(&Q, PRIV1.q, HFLEN_2048);
-    
+
     // Write secret key to octets
     MPC_DUMP_PAILLIER_SK(&PRIV1, &P, &Q);
 
