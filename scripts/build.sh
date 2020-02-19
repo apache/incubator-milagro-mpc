@@ -24,6 +24,6 @@ do
   make
   if [ $i = Coverage ]
   then
-      make test
+      make test ARGS=-j8
   fi
 done
