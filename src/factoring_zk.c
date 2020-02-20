@@ -93,7 +93,7 @@ void generator(hash256 *sha, int k, octet *O)
  *  e  = H'(N, Z1, Z2, X)
  *  y  = r + (N - phi(N)) * e
  */
-void FACTORING_ZK_prove(FACTORING_ZK_modulus *m, csprng *RNG, octet *R, octet *E, octet *Y)
+void FACTORING_ZK_prove(csprng *RNG, octet *P, octet *Q, octet *R, octet *E, octet *Y)
 {
     int i;
 
@@ -101,6 +101,10 @@ void FACTORING_ZK_prove(FACTORING_ZK_modulus *m, csprng *RNG, octet *R, octet *E
     hash256 mgf;
     hash256 sha_x;
     hash256 sha_prime;
+
+    BIG_1024_58 p[HFLEN_2048];
+    BIG_1024_58 q[HFLEN_2048];
+    BIG_1024_58 n[FFLEN_2048];
 
     BIG_1024_58 r[FFLEN_2048];
     BIG_1024_58 rp[HFLEN_2048];
@@ -116,6 +120,11 @@ void FACTORING_ZK_prove(FACTORING_ZK_modulus *m, csprng *RNG, octet *R, octet *E
     char w[FS_2048];
     octet W = {0, sizeof(w), w};
 
+    // Read modulus
+    FF_2048_fromOctet(p, P, HFLEN_2048);
+    FF_2048_fromOctet(q, Q, HFLEN_2048);
+    FF_2048_mul(n, p, q, HFLEN_2048);
+
     if (RNG != NULL)
     {
         FF_2048_random(r, RNG, FFLEN_2048);
@@ -126,17 +135,17 @@ void FACTORING_ZK_prove(FACTORING_ZK_modulus *m, csprng *RNG, octet *R, octet *E
     }
 
     // Compute r mod (p-1) and r mod (q-1) for exponent with CRT
-    FF_2048_copy(hws, m->p, HFLEN_2048);
+    FF_2048_copy(hws, p, HFLEN_2048);
     FF_2048_dec(hws, 1, HFLEN_2048);
     FF_2048_dmod(rp, r, hws, HFLEN_2048);
 
-    FF_2048_copy(hws, m->q, HFLEN_2048);
+    FF_2048_copy(hws, q, HFLEN_2048);
     FF_2048_dec(hws, 1, HFLEN_2048);
     FF_2048_dmod(rq, r, hws, HFLEN_2048);
 
     // Process N in the hash function H(N, ?)
     HASH256_init(&sha);
-    FF_2048_toOctet(&W, m->n, FFLEN_2048);
+    FF_2048_toOctet(&W, n, FFLEN_2048);
     hash_oct(&sha, &W);
 
     // Duplicate the state of H so it can be used as H'(N, ?)
@@ -152,21 +161,21 @@ void FACTORING_ZK_prove(FACTORING_ZK_modulus *m, csprng *RNG, octet *R, octet *E
         generator(&mgf, i, &W);
 
         FF_2048_fromOctet(ws, &W, FFLEN_2048);
-        FF_2048_mod(ws, m->n, FFLEN_2048);
+        FF_2048_mod(ws, n, FFLEN_2048);
 
         FF_2048_toOctet(&W, ws, FFLEN_2048);
         hash_oct(&sha_prime, &W);
 
         // Compute Z_i ^ r mod P
-        FF_2048_dmod(hws, ws, m->p, HFLEN_2048);
-        FF_2048_skpow(zrp, hws, rp, m->p, HFLEN_2048, HFLEN_2048);
+        FF_2048_dmod(hws, ws, p, HFLEN_2048);
+        FF_2048_skpow(zrp, hws, rp, p, HFLEN_2048, HFLEN_2048);
 
         // Compute Z_i ^ r mod Q
-        FF_2048_dmod(hws, ws, m->q, HFLEN_2048);
-        FF_2048_skpow(zrq, hws, rq, m->q, HFLEN_2048, HFLEN_2048);
+        FF_2048_dmod(hws, ws, q, HFLEN_2048);
+        FF_2048_skpow(zrq, hws, rq, q, HFLEN_2048, HFLEN_2048);
 
         // Combine Z_i ^ r mod N with CRT
-        FF_2048_crt(ws, zrp, zrq, m->p, m->q, HFLEN_2048);
+        FF_2048_crt(ws, zrp, zrq, p, q, HFLEN_2048);
 
         // Process Z_i ^ r mod N in H
         FF_2048_toOctet(&W, ws, FFLEN_2048);
@@ -187,7 +196,7 @@ void FACTORING_ZK_prove(FACTORING_ZK_modulus *m, csprng *RNG, octet *R, octet *E
     FF_2048_fromOctet(e, &W, HFLEN_2048);
 
     // N - phi(N) = P + Q - 1
-    FF_2048_add(hws, m->p, m->q, HFLEN_2048);
+    FF_2048_add(hws, p, q, HFLEN_2048);
     FF_2048_dec(hws, 1, HFLEN_2048);
 
     // e * (N - phi(N))
@@ -201,10 +210,14 @@ void FACTORING_ZK_prove(FACTORING_ZK_modulus *m, csprng *RNG, octet *R, octet *E
 
     // Clear memory
     FF_2048_zero(r,   FFLEN_2048);
+    FF_2048_zero(n,   FFLEN_2048);
+    FF_2048_zero(p,   HFLEN_2048);
+    FF_2048_zero(q,   HFLEN_2048);
     FF_2048_zero(rp,  HFLEN_2048);
     FF_2048_zero(rq,  HFLEN_2048);
     FF_2048_zero(zrp, HFLEN_2048);
     FF_2048_zero(zrq, HFLEN_2048);
+    FF_2048_zero(hws, HFLEN_2048);
 }
 
 int FACTORING_ZK_verify(octet *N, octet *E, octet *Y)
@@ -291,8 +304,3 @@ int FACTORING_ZK_verify(octet *N, octet *E, octet *Y)
     return FACTORING_ZK_OK;
 }
 
-void FACTORING_ZK_kill_modulus(FACTORING_ZK_modulus *m)
-{
-    FF_2048_zero(m->p, HFLEN_2048);
-    FF_2048_zero(m->q, HFLEN_2048);
-}

@@ -111,7 +111,6 @@ def commit(rng, r=None):
     C, C_val = core_utils.make_octet(PTS)
     _ = r_val, C_val # Suppress warning
 
-
     _libamcl_mpc.SCHNORR_commit(rng, r_oct, C)
 
     r = core_utils.to_str(r_oct)
