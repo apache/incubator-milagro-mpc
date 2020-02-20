@@ -44,10 +44,16 @@ file(COPY ${MPC_TV} DESTINATION "${PROJECT_BINARY_DIR}/python/test/mpc/")
 file(GLOB SCHNORR_TV "${PROJECT_SOURCE_DIR}/testVectors/schnorr/*.json")
 file(COPY ${SCHNORR_TV} DESTINATION "${PROJECT_BINARY_DIR}/python/test/schnorr/")
 
+# NM Commitment test vector
+file(
+  COPY ${PROJECT_SOURCE_DIR}/testVectors/commitments/nm_commit.json
+  DESTINATION "${PROJECT_BINARY_DIR}/python/test/commitments/")
+
 if(NOT CMAKE_BUILD_TYPE STREQUAL "ASan")
-  add_python_test(test_python_mpc_mta     test_mta.py)
-  add_python_test(test_python_mpc_r       test_r.py)
-  add_python_test(test_python_mpc_s       test_s.py)
-  add_python_test(test_python_mpc_ecdsa   test_ecdsa.py)
-  add_python_test(test_python_mpc_schnorr test_schnorr.py)
+  add_python_test(test_python_mpc_mta       test_mta.py)
+  add_python_test(test_python_mpc_r         test_r.py)
+  add_python_test(test_python_mpc_s         test_s.py)
+  add_python_test(test_python_mpc_ecdsa     test_ecdsa.py)
+  add_python_test(test_python_mpc_schnorr   test_schnorr.py)
+  add_python_test(test_python_mpc_nm_commit test_nm_commit.py)
 endif(NOT CMAKE_BUILD_TYPE STREQUAL "ASan")
