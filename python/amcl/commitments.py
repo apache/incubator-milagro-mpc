@@ -24,6 +24,7 @@ under the License.
 This module use cffi to access the c functions in the amcl_mpc library.
 
 """
+
 import platform
 from amcl import core_utils
 
@@ -34,125 +35,17 @@ extern int COMMITMENTS_NM_decommit(octet* X, octet* R, octet* C);
 """)
 
 if (platform.system() == 'Windows'):
-    libamcl_mpc = _ffi.dlopen("libamcl_mpc.dll")
-    libamcl_core = _ffi.dlopen("libamcl_core.dll")
+    _libamcl_mpc = _ffi.dlopen("libamcl_mpc.dll")
 elif (platform.system() == 'Darwin'):
-    libamcl_mpc = _ffi.dlopen("libamcl_mpc.dylib")
-    libamcl_core = _ffi.dlopen("libamcl_core.dylib")
+    _libamcl_mpc = _ffi.dlopen("libamcl_mpc.dylib")
 else:
-    libamcl_mpc = _ffi.dlopen("libamcl_mpc.so")
-    libamcl_core = _ffi.dlopen("libamcl_core.so")
+    _libamcl_mpc = _ffi.dlopen("libamcl_mpc.so")
 
 # Constants
 SHA256 = 32
 
 OK   = 0
 FAIL = 81
-
-
-def to_str(octet_value):
-    """Converts an octet type into a string
-
-    Add all the values in an octet into an array.
-
-    Args::
-
-        octet_value. An octet pointer type
-
-    Returns::
-
-        String
-
-    Raises:
-        Exception
-    """
-    i = 0
-    val = []
-    while i < octet_value.len:
-        val.append(octet_value.val[i])
-        i = i + 1
-    out = b''
-    for x in val:
-        out = out + x
-    return out
-
-
-def make_octet(length, value=None):
-    """Generates an octet pointer
-
-    Generates an empty octet or one filled with the input value
-
-    Args::
-
-        length: Length of empty octet
-        value:  Data to assign to octet
-
-    Returns::
-
-        oct_ptr: octet pointer
-        val: data associated with octet to prevent garbage collection
-
-    Raises:
-
-    """
-    oct_ptr = _ffi.new("octet*")
-    if value:
-        val = _ffi.new("char [%s]" % len(value), value)
-        oct_ptr.val = val
-        oct_ptr.max = len(value)
-        oct_ptr.len = len(value)
-    else:
-        val = _ffi.new("char []", length)
-        oct_ptr.val = val
-        oct_ptr.max = length
-        oct_ptr.len = 0
-    return oct_ptr, val
-
-
-def create_csprng(seed):
-    """Make a Cryptographically secure pseudo-random number generator instance
-
-    Make a Cryptographically secure pseudo-random number generator instance
-
-    Args::
-
-        seed:   random seed value
-
-    Returns::
-
-        rng: Pointer to cryptographically secure pseudo-random number generator instance
-
-    Raises:
-
-    """
-    seed_val = _ffi.new("char [%s]" % len(seed), seed)
-    seed_len = len(seed)
-
-    # random number generator
-    rng = _ffi.new('csprng*')
-    libamcl_core.RAND_seed(rng, seed_len, seed_val)
-
-    return rng
-
-
-def kill_csprng(rng):
-    """Kill a random number generator
-
-    Deletes all internal state
-
-    Args::
-
-        rng: Pointer to cryptographically secure pseudo-random number generator instance
-
-    Returns::
-
-    Raises:
-
-    """
-    libamcl_core.RAND_clean(rng)
-
-    return 0
-
 
 def nm_commit(rng, x, r=None):
     """ Commit to the value x
@@ -174,26 +67,26 @@ def nm_commit(rng, x, r=None):
     """
 
     if r is None:
-        r_oct, r_val = make_octet(SHA256)
+        r_oct, r_val = core_utils.make_octet(SHA256)
     else:
-        r_oct, r_val = make_octet(None, r)
+        r_oct, r_val = core_utils.make_octet(None, r)
         rng = _ffi.NULL
 
     _ = r_val # Suppress warning
 
-    x_oct, x_val = make_octet(None, x)
-    c_oct, c_val = make_octet(SHA256)
+    x_oct, x_val = core_utils.make_octet(None, x)
+    c_oct, c_val = core_utils.make_octet(SHA256)
     _ = x_val, c_val # Suppress warning
 
-    libamcl_mpc.COMMITMENTS_NM_commit(rng, x_oct, r_oct, c_oct)
+    _libamcl_mpc.COMMITMENTS_NM_commit(rng, x_oct, r_oct, c_oct)
 
-    r = to_str(r_oct)
+    r = core_utils.to_str(r_oct)
 
     # Clean memory
-    libamcl_core.OCT_clear(x_oct)
-    libamcl_core.OCT_clear(r_oct)
+    core_utils.clear_octet(x_oct)
+    core_utils.clear_octet(r_oct)
 
-    return r, to_str(c_oct)
+    return r, core_utils.to_str(c_oct)
 
 def nm_decommit(x, r, c):
     """ Decommit commitment c
@@ -212,11 +105,11 @@ def nm_decommit(x, r, c):
 
     """
 
-    x_oct, x_val = make_octet(None, x)
-    r_oct, r_val = make_octet(None, r)
-    c_oct, c_val = make_octet(None, c)
+    x_oct, x_val = core_utils.make_octet(None, x)
+    r_oct, r_val = core_utils.make_octet(None, r)
+    c_oct, c_val = core_utils.make_octet(None, c)
     _ = x_val, r_val, c_val # Suppress warning
 
-    ec = libamcl_mpc.COMMITMENTS_NM_decommit(x_oct, r_oct, c_oct)
+    ec = _libamcl_mpc.COMMITMENTS_NM_decommit(x_oct, r_oct, c_oct)
 
     return ec

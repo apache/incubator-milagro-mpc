@@ -28,7 +28,6 @@ import platform
 
 _ffi = cffi.FFI()
 _ffi.cdef("""
-
 typedef long unsigned int BIG_512_60[9];
 typedef long unsigned int BIG_1024_58[18];
 
@@ -50,7 +49,6 @@ typedef struct
 extern void RAND_seed(csprng *R,int n,char *b);
 extern void RAND_clean(csprng *R);
 extern void OCT_clear(octet *O);
-
 """)
 
 if (platform.system() == 'Windows'):
