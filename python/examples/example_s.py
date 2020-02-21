@@ -24,7 +24,8 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from amcl import core_utils, mpc
+import amcl.core_utils
+import amcl.mpc
 
 seed_hex = "78d0fb6705ce77dee47d03eb5b9c5d30"
 
@@ -91,70 +92,70 @@ if __name__ == "__main__":
     SIG_R = bytes.fromhex(SIG_R_hex)
 
     # random number generator
-    rng = core_utils.create_csprng(seed)
+    rng = amcl.core_utils.create_csprng(seed)
 
     # Deterministic
 
     # Paillier key pairs
-    paillier_pk1, paillier_sk1 = mpc.paillier_key_pair(None, P1, Q1)
-    paillier_pk2, paillier_sk2 = mpc.paillier_key_pair(None, P2, Q2)
+    paillier_pk1, paillier_sk1 = amcl.mpc.paillier_key_pair(None, P1, Q1)
+    paillier_pk2, paillier_sk2 = amcl.mpc.paillier_key_pair(None, P2, Q2)
 
     # ALPHA1 + BETA2 = K1 * W2
-    CA11 = mpc.mpc_mta_client1(rng, paillier_pk1, K1, R11)
+    CA11 = amcl.mpc.mpc_mta_client1(rng, paillier_pk1, K1, R11)
     CA11_hex = CA11.hex()
     assert CA11GOLDEN_hex == CA11_hex, f"expected {CA11GOLDEN_hex} got {CA11_hex}"
 
-    CB12, BETA2 = mpc.mpc_mta_server(rng, paillier_pk1, W2, CA11, Z12, R12)
+    CB12, BETA2 = amcl.mpc.mpc_mta_server(rng, paillier_pk1, W2, CA11, Z12, R12)
     CB12_hex = CB12.hex()
     assert CB12GOLDEN_hex == CB12_hex, f"expected {CB12GOLDEN_hex} got {CB12_hex}"
 
     BETA2_hex = BETA2.hex()
     assert BETA2GOLDEN_hex == BETA2_hex, f"expected {BETA2GOLDEN_hex} got {BETA2_hex}"
 
-    ALPHA1 = mpc.mpc_mta_client2(paillier_sk1, CB12)
+    ALPHA1 = amcl.mpc.mpc_mta_client2(paillier_sk1, CB12)
     ALPHA1_hex = ALPHA1.hex()
     assert ALPHA1GOLDEN_hex == ALPHA1_hex, f"expected {ALPHA1GOLDEN_hex} got {ALPHA1_hex}"
 
     # ALPHA2 + BETA1 = K2 * W1
-    CA22 = mpc.mpc_mta_client1(rng, paillier_pk2, K2, R22)
+    CA22 = amcl.mpc.mpc_mta_client1(rng, paillier_pk2, K2, R22)
     CA22_hex = CA22.hex()
     assert CA22GOLDEN_hex == CA22_hex, f"expected {CA22GOLDEN_hex} got {CA22_hex}"
 
-    CB21, BETA1 = mpc.mpc_mta_server(rng, paillier_pk2, W1, CA22, Z21, R21)
+    CB21, BETA1 = amcl.mpc.mpc_mta_server(rng, paillier_pk2, W1, CA22, Z21, R21)
     CB21_hex = CB21.hex()
     assert CB21GOLDEN_hex == CB21_hex, f"expected {CB21GOLDEN_hex} got {CB21_hex}"
 
     BETA1_hex = BETA1.hex()
     assert BETA1GOLDEN_hex == BETA1_hex, f"expected {BETA1GOLDEN_hex} got {BETA1_hex}"
 
-    ALPHA2 = mpc.mpc_mta_client2(paillier_sk2, CB21)
+    ALPHA2 = amcl.mpc.mpc_mta_client2(paillier_sk2, CB21)
     ALPHA2_hex = ALPHA2.hex()
     assert ALPHA2GOLDEN_hex == ALPHA2_hex, f"expected {ALPHA2GOLDEN_hex} got {ALPHA2_hex}"
 
     # sum = K1.W1 + alpha1  + beta1
-    SUM1 = mpc.mpc_sum_mta(K1, W1,  ALPHA1,  BETA1)
+    SUM1 = amcl.mpc.mpc_sum_mta(K1, W1,  ALPHA1,  BETA1)
     SUM1_hex = SUM1.hex()
     assert SUM1GOLDEN_hex == SUM1_hex, f"expected {SUM1GOLDEN_hex} got {SUM1_hex}"
 
     # sum = K2.W2 + alpha2  + beta2
-    SUM2 = mpc.mpc_sum_mta(K2, W2, ALPHA2, BETA2)
+    SUM2 = amcl.mpc.mpc_sum_mta(K2, W2, ALPHA2, BETA2)
     SUM2_hex = SUM2.hex()
     assert SUM2GOLDEN_hex == SUM2_hex, f"expected {SUM2GOLDEN_hex} got {SUM2_hex}"
 
     # Calculate the message hash
-    HM = mpc.mpc_hash(M)
+    HM = amcl.mpc.mpc_hash(M)
 
     # Calculate the S1 signature component
-    rc, SIG_S1 = mpc.mpc_s(HM, SIG_R, K1, SUM1)
+    rc, SIG_S1 = amcl.mpc.mpc_s(HM, SIG_R, K1, SUM1)
     SIG_S1_hex = SIG_S1.hex()
     assert SIG_S1GOLDEN_hex == SIG_S1_hex, f"expected {SIG_S1GOLDEN_hex} got {SIG_S1_hex}"
 
     # Calculate the S2 signature component
-    rc, SIG_S2 = mpc.mpc_s(HM, SIG_R, K2, SUM2)
+    rc, SIG_S2 = amcl.mpc.mpc_s(HM, SIG_R, K2, SUM2)
     SIG_S2_hex = SIG_S2.hex()
     assert SIG_S2GOLDEN_hex == SIG_S2_hex, f"expected {SIG_S2GOLDEN_hex} got {SIG_S2_hex}"
 
     # Sum S signature component
-    SIG_S = mpc.mpc_sum_s(SIG_S1, SIG_S2)
+    SIG_S = amcl.mpc.mpc_sum_s(SIG_S1, SIG_S2)
     SIG_S_hex = SIG_S.hex()
     assert SIG_SGOLDEN_hex == SIG_S_hex, f"expected {SIG_SGOLDEN_hex} got {SIG_S_hex}"

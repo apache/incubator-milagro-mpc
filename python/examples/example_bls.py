@@ -24,7 +24,8 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from amcl import core_utils, bls
+import amcl.core_utils
+import amcl.bls
 
 if __name__ == "__main__":
     # Print hex values
@@ -38,31 +39,31 @@ if __name__ == "__main__":
     message = b"test message"
 
     # random number generator
-    rng = core_utils.create_csprng(seed)
+    rng = amcl.core_utils.create_csprng(seed)
 
     # Generate key pairs
-    rtn, sk1, pktmp = bls.key_pair_generate(rng)
+    rtn, sk1, pktmp = amcl.bls.key_pair_generate(rng)
     if rtn != 0:
         print("Error: key_pair_generate {}".format(rtn))
         raise SystemExit(0)
     print("sk1: {}".format(sk1.hex()))
     print("pktmp: {}".format(pktmp.hex()))
 
-    rtn, sk1, pk1 = bls.key_pair_generate(rng, sk1)
+    rtn, sk1, pk1 = amcl.bls.key_pair_generate(rng, sk1)
     if rtn != 0:
         print("Error: key_pair_generate {}".format(rtn))
         raise SystemExit(0)
     print("sk1: {}".format(sk1.hex()))
     print("pk1: {}".format(pk1.hex()))
 
-    rtn, sk2, pk2 = bls.key_pair_generate(rng)
+    rtn, sk2, pk2 = amcl.bls.key_pair_generate(rng)
     if rtn != 0:
         print("Error: key_pair_generate {}".format(rtn))
         raise SystemExit(0)
     print("sk2: {}".format(sk2.hex()))
     print("pk2: {}".format(pk2.hex()))
 
-    rtn, sk3, pk3 = bls.key_pair_generate(rng)
+    rtn, sk3, pk3 = amcl.bls.key_pair_generate(rng)
     if rtn != 0:
         print("Error: key_pair_generate {}".format(rtn))
         raise SystemExit(0)
@@ -70,77 +71,77 @@ if __name__ == "__main__":
     print("pk3: {}".format(pk3.hex()))
 
     # Sign and verify
-    rtn, sig1 = bls.sign(message, sk1)
+    rtn, sig1 = amcl.bls.sign(message, sk1)
     if rtn != 0:
         print("Error: sign {}".format(rtn))
         raise SystemExit(0)
     print("sig1: {}".format(sig1.hex()))
 
-    rtn = bls.verify(sig1, message, pk1)
+    rtn = amcl.bls.verify(sig1, message, pk1)
     if rtn != 0:
         print("Error: Invalid signature {}".format(rtn))
         raise SystemExit(0)
     print("Success: Signature is valid")
 
-    rtn, sig2 = bls.sign(message, sk2)
+    rtn, sig2 = amcl.bls.sign(message, sk2)
     if rtn != 0:
         print("Error: sign {}".format(rtn))
         raise SystemExit(0)
     print("sig2: {}".format(sig2.hex()))
 
-    rtn = bls.verify(sig2, message, pk2)
+    rtn = amcl.bls.verify(sig2, message, pk2)
     if rtn != 0:
         print("Error: Invalid signature {}".format(rtn))
         raise SystemExit(0)
     print("Success: Signature is valid")
 
-    rtn, sig3 = bls.sign(message, sk3)
+    rtn, sig3 = amcl.bls.sign(message, sk3)
     if rtn != 0:
         print("Error: sign {}".format(rtn))
         raise SystemExit(0)
     print("sig3: {}".format(sig3.hex()))
 
-    rtn = bls.verify(sig3, message, pk3)
+    rtn = amcl.bls.verify(sig3, message, pk3)
     if rtn != 0:
         print("Error: Invalid signature {}".format(rtn))
         raise SystemExit(0)
     print("Success: Signature is valid")
 
     # Add Signatures
-    rtn, sig12 = bls.add_G1(sig1, sig2)
+    rtn, sig12 = amcl.bls.add_G1(sig1, sig2)
     if rtn != 0:
         print("Error: add_G1 {}".format(rtn))
         raise SystemExit(0)
     print("sig12: {}".format(sig12.hex()))
 
-    rtn, sig123 = bls.add_G1(sig12, sig3)
+    rtn, sig123 = amcl.bls.add_G1(sig12, sig3)
     if rtn != 0:
         print("Error: add_G1 {}".format(rtn))
         raise SystemExit(0)
     print("sig123: {}".format(sig123.hex()))
 
     # Add Public keys
-    rtn, pk12 = bls.add_G2(pk1, pk2)
+    rtn, pk12 = amcl.bls.add_G2(pk1, pk2)
     if rtn != 0:
         print("Error: add_G2 {}".format(rtn))
         raise SystemExit(0)
     print("pk12: {}".format(pk12.hex()))
 
-    rtn, pk123 = bls.add_G2(pk12, pk3)
+    rtn, pk123 = amcl.bls.add_G2(pk12, pk3)
     if rtn != 0:
         print("Error: add_G2 {}".format(rtn))
         raise SystemExit(0)
     print("pk123: {}".format(pk123.hex()))
 
     # Verify aggretated values
-    rtn = bls.verify(sig123, message, pk123)
+    rtn = amcl.bls.verify(sig123, message, pk123)
     if rtn != 0:
         print("Error: Invalid aggregated signature {}".format(rtn))
         raise SystemExit(0)
     print("Success: Aggregated signature is valid")
 
     # Clear memory
-    core_utils.kill_csprng(rng)
+    amcl.core_utils.kill_csprng(rng)
     del sk1
     del pk1
     del sk2

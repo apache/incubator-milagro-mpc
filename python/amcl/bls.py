@@ -30,7 +30,7 @@ There is also an example usage program in this file.
 """
 
 import platform
-from amcl import core_utils
+from . import core_utils
 
 _ffi = core_utils._ffi
 _ffi.cdef("""
