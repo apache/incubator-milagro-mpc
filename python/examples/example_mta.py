@@ -24,7 +24,8 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from amcl import core_utils, mpc
+import amcl.core_utils
+import amcl.mpc
 
 seed_hex = "78d0fb6705ce77dee47d03eb5b9c5d30"
 
@@ -53,53 +54,53 @@ if __name__ == "__main__":
 
     ai = int(a_hex, 16)
     bi = int(b_hex, 16)
-    expected = ai * bi % mpc.curve_order
+    expected = ai * bi % amcl.mpc.curve_order
     print(f"expected {hex(expected)}")
 
     # random number generator
-    rng = core_utils.create_csprng(seed)
+    rng = amcl.core_utils.create_csprng(seed)
 
     # Deterministic
-    paillier_pk, paillier_sk = mpc.paillier_key_pair(None, p, q)
+    paillier_pk, paillier_sk = amcl.mpc.paillier_key_pair(None, p, q)
 
-    ca = mpc.mpc_mta_client1(rng, paillier_pk, a, r)
+    ca = amcl.mpc.mpc_mta_client1(rng, paillier_pk, a, r)
     ca1_hex = ca.hex()
     assert ca_hex == ca1_hex, f"expected {ca_hex} got {ca1_hex}"
 
-    cb, beta = mpc.mpc_mta_server(rng, paillier_pk, b, ca, z, r)
+    cb, beta = amcl.mpc.mpc_mta_server(rng, paillier_pk, b, ca, z, r)
     cb1_hex = cb.hex()
     assert cb_hex == cb1_hex, f"expected {cb_hex} got {cb1_hex}"
 
-    alpha = mpc.mpc_mta_client2(paillier_sk, cb)
+    alpha = amcl.mpc.mpc_mta_client2(paillier_sk, cb)
 
     print(f"alpha {alpha.hex()}")
     print(f"beta {beta.hex()}")
 
     alphai = int(alpha.hex(), 16)
     betai = int(beta.hex(), 16)
-    got = ( alphai + betai ) % mpc.curve_order
+    got = ( alphai + betai ) % amcl.mpc.curve_order
 
     print(f"got {hex(got)}")
 
     assert got == expected, f"expected {hex(expected)} got {hex(got)}"
 
     # Random
-    paillier_pk, paillier_sk = mpc.paillier_key_pair(rng)
-    ca = mpc.mpc_mta_client1(rng, paillier_pk, a)
-    cb, beta = mpc.mpc_mta_server(rng, paillier_pk, b, ca)
-    alpha = mpc.mpc_mta_client2(paillier_sk, cb)
+    paillier_pk, paillier_sk = amcl.mpc.paillier_key_pair(rng)
+    ca = amcl.mpc.mpc_mta_client1(rng, paillier_pk, a)
+    cb, beta = amcl.mpc.mpc_mta_server(rng, paillier_pk, b, ca)
+    alpha = amcl.mpc.mpc_mta_client2(paillier_sk, cb)
 
     print(f"alpha {alpha.hex()}")
     print(f"beta {beta.hex()}")
 
     alphai = int(alpha.hex(), 16)
     betai = int(beta.hex(), 16)
-    got = ( alphai + betai ) % mpc.curve_order
+    got = ( alphai + betai ) % amcl.mpc.curve_order
 
     print(f"got {hex(got)}")
 
     assert got == expected, f"expected {hex(expected)} got {hex(got)}"
 
     # Clear memory
-    core_utils.kill_csprng(rng)
-    mpc.paillier_private_key_kill(paillier_sk)
+    amcl.core_utils.kill_csprng(rng)
+    amcl.mpc.paillier_private_key_kill(paillier_sk)

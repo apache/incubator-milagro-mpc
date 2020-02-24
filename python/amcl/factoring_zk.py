@@ -24,7 +24,7 @@ This module use cffi to access the c functions in the amcl_mpc library.
 """
 
 import platform
-from amcl import core_utils
+from . import core_utils
 
 _ffi = core_utils._ffi
 _ffi.cdef("""
