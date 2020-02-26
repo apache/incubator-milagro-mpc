@@ -30,7 +30,7 @@ int main()
     char sk[EGS_SECP256K1];
     octet SK = {0,sizeof(sk),sk};
 
-    char pk[2*EFS_SECP256K1+1];
+    char pk[EFS_SECP256K1+1];
     octet PK = {0,sizeof(pk),pk};
 
     char k[EGS_SECP256K1];
@@ -49,8 +49,7 @@ int main()
     char* sk_hex = "2f7b34cc0194179865128b63dc8af0c4062067291693e8043eda653d32a2b2d2";
     OCT_fromHex(&SK,sk_hex);
 
-    // ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&SK,&PK);
-    ECP_SECP256K1_KEY_PAIR_GENERATE(NULL,&SK,&PK);
+    MPC_ECDSA_KEY_PAIR_GENERATE(NULL,&SK,&PK);
     rc=ECP_SECP256K1_PUBLIC_KEY_VALIDATE(&PK);
     if (rc!=0)
     {

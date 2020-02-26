@@ -136,11 +136,6 @@ int test(csprng *RNG)
     char hm[32];
     octet HM = {0,sizeof(hm),hm};
 
-    char nc_ecp[2 * EFS_SECP256K1 + 1];
-    octet NC_ECP = {0, sizeof(nc_ecp), nc_ecp};
-
-    ECP_SECP256K1 P;
-
     printf("Generating Paillier key pair one\n");
     PAILLIER_KEY_PAIR(RNG, NULL, NULL, &PUB1, &PRIV1);
 
@@ -148,16 +143,7 @@ int test(csprng *RNG)
     PAILLIER_KEY_PAIR(RNG, NULL, NULL, &PUB2, &PRIV2);
 
     printf("Generating ECDSA key pair one\n");
-    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&W1,&NC_ECP);
-    rc=ECP_SECP256K1_fromOctet(&P, &NC_ECP);
-    if (!rc)
-    {
-        fprintf(stderr, "ERROR ECP_SECP256K1_fromOctet PK1 rc\n");
-        exit(EXIT_FAILURE);
-    }
-
-    ECP_SECP256K1_toOctet(&PK1, &P, true);
-
+    MPC_ECDSA_KEY_PAIR_GENERATE(RNG, &W1, &PK1);
     rc=ECP_SECP256K1_PUBLIC_KEY_VALIDATE(&PK1);
     if (rc!=0)
     {
@@ -166,64 +152,37 @@ int test(csprng *RNG)
     }
 
     printf("Generating ECDSA key pair two\n");
-    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&W2,&NC_ECP);
-    rc=ECP_SECP256K1_fromOctet(&P, &NC_ECP);
-    if (!rc)
-    {
-        fprintf(stderr, "ERROR ECP_SECP256K1_fromOctet PK2 rc");
-        exit(EXIT_FAILURE);
-    }
-
-    ECP_SECP256K1_toOctet(&PK2, &P, true);
-
-    rc=ECP_SECP256K1_PUBLIC_KEY_VALIDATE(&PK2);
-    if (rc!=0)
+    MPC_ECDSA_KEY_PAIR_GENERATE(RNG, &W2, &PK2);
+    rc = ECP_SECP256K1_PUBLIC_KEY_VALIDATE(&PK2);
+    if (rc != 0)
     {
         fprintf(stderr, "ERROR ECP_SECP256K1_PUBLIC_KEY_VALIDATE rc: %d\n", rc);
         exit(EXIT_FAILURE);
     }
 
     printf("Generating GAMMA pair one\n");
-    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&GAMMA1,&NC_ECP);
-    rc=ECP_SECP256K1_fromOctet(&P, &NC_ECP);
-    if (!rc)
-    {
-        fprintf(stderr, "ERROR ECP_SECP256K1_fromOctet GAMMAPT1\n");
-        exit(EXIT_FAILURE);
-    }
-
-    ECP_SECP256K1_toOctet(&GAMMAPT1, &P, true);
-
-    rc=ECP_SECP256K1_PUBLIC_KEY_VALIDATE(&GAMMAPT1);
-    if (rc!=0)
+    MPC_ECDSA_KEY_PAIR_GENERATE(RNG, &GAMMA1, &GAMMAPT1);
+    rc = ECP_SECP256K1_PUBLIC_KEY_VALIDATE(&GAMMAPT1);
+    if (rc != 0)
     {
         fprintf(stderr, "ERROR ECP_SECP256K1_PUBLIC_KEY_VALIDATE rc: %d\n", rc);
         exit(EXIT_FAILURE);
     }
 
     printf("Generating GAMMA pair two\n");
-    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&GAMMA2,&NC_ECP);
-    rc=ECP_SECP256K1_fromOctet(&P, &NC_ECP);
-    if (!rc)
-    {
-        fprintf(stderr, "ERROR ECP_SECP256K1_fromOctet GAMMAPT2\n");
-        exit(EXIT_FAILURE);
-    }
-
-    ECP_SECP256K1_toOctet(&GAMMAPT2, &P, true);
-
-    rc=ECP_SECP256K1_PUBLIC_KEY_VALIDATE(&GAMMAPT2);
-    if (rc!=0)
+    MPC_ECDSA_KEY_PAIR_GENERATE(RNG, &GAMMA2, &GAMMAPT2);
+    rc = ECP_SECP256K1_PUBLIC_KEY_VALIDATE(&GAMMAPT2);
+    if (rc != 0)
     {
         fprintf(stderr, "ERROR ECP_SECP256K1_PUBLIC_KEY_VALIDATE rc: %d\n", rc);
         exit(EXIT_FAILURE);
     }
 
     printf("Generating K1\n");
-    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&K1,&NC_ECP);
+    MPC_K_GENERATE(RNG, &K1);
 
     printf("Generating K2\n");
-    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG,&K2,&NC_ECP);
+    MPC_K_GENERATE(RNG, &K2);
 
     OCT_jstring(&M,"test message");
     printf("M: ");
