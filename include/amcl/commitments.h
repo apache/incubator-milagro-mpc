@@ -34,8 +34,8 @@ extern "C"
 {
 #endif
 
-#define COMMITMENTS_OK   0   /** < Success */
-#define COMMITMENTS_FAIL 81  /** < Invalid Commitment */
+#define COMMITMENTS_OK   0   /**< Success */
+#define COMMITMENTS_FAIL 81  /**< Invalid Commitment */
 
 /* NM Commitment Scheme API */
 
