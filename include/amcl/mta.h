@@ -120,7 +120,7 @@ void MPC_SUM_MTA(const octet *A, const octet *B, const octet *ALPHA, const octet
  *
  *  <ol>
  *  <li> \f$ e \in_R [0, \ldots, q] \f$
- *  <ol>
+ *  </ol>
  *
  *  @param RNG               csprng for random generation
  *  @param E                 Destination octet for the challenge.
@@ -481,7 +481,7 @@ typedef MTA_ZK_proof MTA_ZKWC_proof;
  *  <li> \f$ t  = h_1^{y}h_2^{\sigma}            \text{ }\mathrm{mod}\text{ }\tilde{N} \f$
  *  <li> \f$ w  = h_1^{\gamma}h_2^{\tau}         \text{ }\mathrm{mod}\text{ }\tilde{N} \f$
  *  <li> \f$ v  = c1^{\alpha}g^{\gamma}\beta^{N} \text{ }\mathrm{mod}\text{ }N^2 \f$
- *  <li> \f$ U  = \alpha.G
+ *  <li> \f$ U  = \alpha.G \f$
  *  </ol>
  *
  *  @param RNG         csprng for random generation
@@ -507,6 +507,7 @@ extern void MTA_ZKWC_commit(csprng *RNG, PAILLIER_public_key *key, COMMITMENTS_B
  *  @param mod         Public BC modulus of the verifier
  *  @param C1          Base Paillier Ciphertext
  *  @param C2          New Paillier Ciphertext to prove knowledge and range
+ *  @param X           Public exponent of the associated DLOG to prove knowledge
  *  @param c           Commitment of the prover
  *  @param E           Destination challenge
  */
