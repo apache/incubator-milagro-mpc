@@ -53,7 +53,7 @@ int generate_key_material(csprng *RNG, key_material *km, octet *P, octet *Q)
 {
     int rc;
 
-    char pk[2 * EFS_SECP256K1 + 1];
+    char pk[EFS_SECP256K1 + 1];
     octet PK = {0, sizeof(pk), pk};
 
     char out[2][FS_2048];
@@ -65,12 +65,7 @@ int generate_key_material(csprng *RNG, key_material *km, octet *P, octet *Q)
     // ECDSA Key Pair
     printf("\n\tGenerate ECDSA key pair\n");
 
-    rc = ECP_SECP256K1_KEY_PAIR_GENERATE(RNG, km->SK, &PK);
-    if (rc != 0)
-    {
-        return rc;
-    }
-
+    MPC_ECDSA_KEY_PAIR_GENERATE(RNG, km->SK, &PK);
     rc = ECP_SECP256K1_PUBLIC_KEY_VALIDATE(&PK);
     if (rc != 0)
     {
@@ -1297,7 +1292,7 @@ void signature(csprng *RNG, octet *M, key_material *alice_km, key_material *bob_
     BIG_256_56_toBytes(K1.val, k1);
     K1.len = EGS_SECP256K1;
 
-    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG, &GAMMA1, &NCP);
+    MPC_ECDSA_KEY_PAIR_GENERATE(RNG, &GAMMA1, &NCP);
     ECP_SECP256K1_fromOctet(&P, &NCP);
     ECP_SECP256K1_toOctet(&GAMMAPT1, &P, true);
 
@@ -1327,7 +1322,7 @@ void signature(csprng *RNG, octet *M, key_material *alice_km, key_material *bob_
     BIG_256_56_toBytes(K2.val, k2);
     K2.len = EGS_SECP256K1;
 
-    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG, &GAMMA2, &NCP);
+    MPC_ECDSA_KEY_PAIR_GENERATE(RNG, &GAMMA2, &NCP);
     ECP_SECP256K1_fromOctet(&P, &NCP);
     ECP_SECP256K1_toOctet(&GAMMAPT2, &P, true);
 
