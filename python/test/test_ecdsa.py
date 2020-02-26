@@ -45,21 +45,16 @@ class TestECDSA(unittest.TestCase):
             paillier_pk2, paillier_sk2 = mpc.paillier_key_pair(rng)
 
             # ECDSA keys
-            rc, PK1, W1 = mpc.ecp_secp256k1_key_pair_generate(rng)
-            rc = mpc.ecp_secp256k1_public_key_validate(PK1)
-            assert rc == 0, f"Invalid ECDSA public key"
-
-            rc, PK2, W2 = mpc.ecp_secp256k1_key_pair_generate(rng)
-            rc = mpc.ecp_secp256k1_public_key_validate(PK2)
-            assert rc == 0, f"Invalid ECDSA public key"
+            PK1, W1 = mpc.mpc_ecdsa_key_pair_generate(rng)
+            PK2, W2 = mpc.mpc_ecdsa_key_pair_generate(rng)
 
             # Gamma values
-            rc, GAMMAPT1, GAMMA1 = mpc.ecp_secp256k1_key_pair_generate(rng)
-            rc, GAMMAPT2, GAMMA2 = mpc.ecp_secp256k1_key_pair_generate(rng)
+            GAMMAPT1, GAMMA1 = mpc.mpc_ecdsa_key_pair_generate(rng)
+            GAMMAPT2, GAMMA2 = mpc.mpc_ecdsa_key_pair_generate(rng)
 
             # K values
-            rc, _, K1 = mpc.ecp_secp256k1_key_pair_generate(rng)
-            rc, _, K2 = mpc.ecp_secp256k1_key_pair_generate(rng)
+            K1 = mpc.mpc_k_generate(rng)
+            K2 = mpc.mpc_k_generate(rng)
 
             # Message
             M = b'test message'
