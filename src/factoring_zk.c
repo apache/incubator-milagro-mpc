@@ -25,7 +25,7 @@ under the License.
 #define FACTORING_ZK_K 2
 
 // Copy the internal state of an hash function
-void hash_copy(hash256 *dst, hash256 *src)
+static void hash_copy(hash256 *dst, const hash256 *src)
 {
     memcpy(dst->length, src->length, sizeof(dst->length));
     memcpy(dst->h, src->h, sizeof(dst->h));
@@ -34,7 +34,7 @@ void hash_copy(hash256 *dst, hash256 *src)
 }
 
 // utility function to has an octet
-void hash_oct(hash256 *sha, octet *O)
+static void hash_oct(hash256 *sha, const octet *O)
 {
     int i;
 

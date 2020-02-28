@@ -30,9 +30,9 @@ _ffi = core_utils._ffi
 _ffi.cdef("""
 extern void SCHNORR_random_challenge(csprng *RNG, octet *E);
 extern void SCHNORR_commit(csprng *RNG, octet *R, octet *C);
-extern void SCHNORR_challenge(octet *V, octet *C, octet *E);
-extern void SCHNORR_prove(octet *R, octet *E, octet *X, octet *P);
-extern int  SCHNORR_verify(octet *V, octet *C, octet *E, octet *P);
+extern void SCHNORR_challenge(const octet *V, const octet *C, octet *E);
+extern void SCHNORR_prove(const octet *R, const octet *E, const octet *X, octet *P);
+extern int SCHNORR_verify(octet *V, octet *C, const octet *E, const octet *P);
 """)
 
 if (platform.system() == 'Windows'):

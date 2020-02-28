@@ -1,14 +1,43 @@
 language: c
 compiler: gcc
-dist: bionic
+dist: trusty
+
 services:
   - docker
 
+addons:
+  sonarcloud:
+    organization: "kealan-github"
+    token:
+      secure: "ORVvvXrl7OGjTb+8FIKHUKVwvI5N9QEul4xX8lyRk8b1tAq5ZiqgZkQBC2FlKYAw/filKVn/XWUsm86moPIWl/ek6gxvWY5dD4Al4C9onMKFlNthjMdYBs5cMr8O7xaGSKJZxPtwLwiVa7h6AwZIzOaTIgI22lwgY5M8uW2L781JwK/TqOhClfsRrOmCHKrd+7fOeErCA9B/4fleZcvUGvkX4Cpl95nJt8LbsN17bxB5c0bieWTIQppZSQU3PZwNEjnvxYtcEMLZShv/0kO8QVxWZn8X/KBAnA38Cj9qtexwFXK3zExQjv7j9Jpz89T8VdIrckF21VgIKFPxaFZ1Xibgd8XjzOf6Fr5t+juc+fYvCnARxrHdGCajI5GlHt0yYGUSOR4zlj2Ie2l0j/tOx0N1TKXvfaBDy8PIUK2eLAws2IWnZRKBPUUeWeXK7mIH7tpHvWiCsjyVZ6Ud7mX9/tu9YubPbWvH5zIiZ0fKMldJ2ca4OkZS6SeN+rz1BRbC0zw7cDnbBwJlwodueS7RgNIJDyMK/MK71y+4Dt/jlumQYxJ7bDi5PnjZXEMcybSDoHbBu7xXwQsyLJExvvgWxqGs5r7gUFFbOPtkm4eiL/zkRAVqZzzdMsuZzR0SJecbEC6M4ZUd4gZov5UEhMMoDsuvrL9x4U/tA5JP3G/BZ0M="
+      
 install:
   - gem install coveralls-lcov
 
 jobs:
   include:
+  - stage: sonar
+    script:
+    - echo "Run static code analysis"
+    - git clone https://github.com/apache/incubator-milagro-crypto-c.git 
+    - cd incubator-milagro-crypto-c
+    - mkdir build
+    - cd build
+    - cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D AMCL_CHUNK=64 -D AMCL_CURVE="BLS381,SECP256K1" -D AMCL_RSA="" -D BUILD_PAILLIER=ON -D BUILD_PYTHON=OFF -D BUILD_BLS=ON -D BUILD_WCC=OFF -D BUILD_MPIN=OFF -D BUILD_X509=OFF -D CMAKE_INSTALL_PREFIX=/usr/local .. 
+    - make
+    - sudo make install
+    - cd ../..
+    - rm -rf python
+    - mkdir build
+    - cd build
+    - cmake -D BUILD_TESTS=OFF -D BUILD_EXAMPLES=OFF -D BUILD_BENCHMARK=OFF -D BUILD_PYTHON=OFF -D BUILD_DOXYGEN=OFF ..
+    - build-wrapper-linux-x86-64 --out-dir bw-output make
+    - mv bw-output ..
+    - cd ..
+    - rm -rf test
+    - rm -rf examples
+    - rm -rf benchmark    
+    - sonar-scanner -X  
   - stage: test
     script:
     - echo "Build docker image and run tests"

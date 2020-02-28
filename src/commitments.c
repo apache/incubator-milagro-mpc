@@ -22,7 +22,7 @@ under the License.
 /* NM Commitments Definitions */
 
 // Compute the hash of X || R
-void hash(octet *X, octet *R, octet *C)
+static void hash(const octet *X, const octet *R, octet *C)
 {
     int i;
     hash256 sha256;
@@ -47,7 +47,7 @@ void hash(octet *X, octet *R, octet *C)
 }
 
 // Compute a commitment for the value X
-void COMMITMENTS_NM_commit(csprng *RNG, octet *X, octet *R, octet *C)
+void COMMITMENTS_NM_commit(csprng *RNG, const octet *X, octet *R, octet *C)
 {
     if (RNG != NULL)
     {
@@ -58,7 +58,7 @@ void COMMITMENTS_NM_commit(csprng *RNG, octet *X, octet *R, octet *C)
 }
 
 // Verify the commitment for the value X
-int COMMITMENTS_NM_decommit(octet *X, octet *R, octet *C)
+int COMMITMENTS_NM_decommit(const octet *X, const octet *R, octet *C)
 {
     char d[SHA256];
     octet D = {0, sizeof(d), d};
@@ -86,12 +86,14 @@ int COMMITMENTS_NM_decommit(octet *X, octet *R, octet *C)
 /*
  * Check if a number is a safe prime
  */
-int is_safe_prime(BIG_1024_58 *p, BIG_1024_58 *P, csprng *RNG, int n)
+static int is_safe_prime(BIG_1024_58 *p, BIG_1024_58 *P, csprng *RNG, int n)
 {
 #ifndef C99
-    BIG_1024_58 Pm1[FFLEN_2048], f[FFLEN_2048];
+    BIG_1024_58 Pm1[FFLEN_2048];
+    BIG_1024_58 f[FFLEN_2048];
 #else
-    BIG_1024_58 Pm1[n], f[n];
+    BIG_1024_58 Pm1[n];
+    BIG_1024_58 f[n];
 #endif
 
     // Sieve small primes from P, p is already checked in Miller-Rabin

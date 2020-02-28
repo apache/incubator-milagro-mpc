@@ -70,7 +70,7 @@ extern void SCHNORR_commit(csprng *RNG, octet *R, octet *C);
  * @param C     Public commitment value. Compressed form
  * @param E     Challenge generated
  */
-extern void SCHNORR_challenge(octet *V, octet *C, octet *E);
+extern void SCHNORR_challenge(const octet *V, const octet *C, octet *E);
 
 /*! \brief Generate the proof for the given commitment and challenge
  *
@@ -79,7 +79,7 @@ extern void SCHNORR_challenge(octet *V, octet *C, octet *E);
  * @param X     Secret exponent of the DLOG. V = x.G
  * @param P     Proof of knowldege of the DLOG
  */
-extern void SCHNORR_prove(octet *R, octet *E, octet *X, octet *P);
+extern void SCHNORR_prove(const octet *R, const octet *E, const octet *X, octet *P);
 
 /*! \brief Verify the proof of knowledge for the DLOG
  *
@@ -89,7 +89,7 @@ extern void SCHNORR_prove(octet *R, octet *E, octet *X, octet *P);
  * @param P     Proof received from the prover
  * @return      SCHNORR_OK if the prove is valid or an error code
  */
-extern int SCHNORR_verify(octet *V, octet *C, octet *E, octet *P);
+extern int SCHNORR_verify(octet *V, octet *C, const octet *E, const octet *P);
 
 /* Double Schnorr's proofs API */
 
@@ -118,7 +118,7 @@ extern int SCHNORR_D_commit(csprng *RNG, octet *R, octet *A, octet *B, octet *C)
  * @param C     Public commitment value. Compressed form
  * @param E     Challenge generated
  */
-extern void SCHNORR_D_challenge(octet *R, octet *V, octet *C, octet *E);
+extern void SCHNORR_D_challenge(const octet *R, const octet *V, const octet *C, octet *E);
 
 /*! \brief Generate the proof for the given commitment and challenge
  *
@@ -130,7 +130,7 @@ extern void SCHNORR_D_challenge(octet *R, octet *V, octet *C, octet *E);
  * @param T     First component of the proof of knowldege of the DLOG
  * @param U     Second component of the proof of knowldege of the DLOG
  */
-extern void SCHNORR_D_prove(octet *A, octet *B, octet *E, octet *S, octet *L, octet *T, octet *U);
+extern void SCHNORR_D_prove(const octet *A, const octet *B, const octet *E, const octet *S, const octet *L, octet *T, octet *U);
 
 /*! \brief Verify the proof of knowledge for the DLOG
  *
@@ -142,7 +142,7 @@ extern void SCHNORR_D_prove(octet *A, octet *B, octet *E, octet *S, octet *L, oc
  * @param U     Second component of the proof received
  * @return      SCHNORR_OK if the prove is valid or an error code
  */
-extern int SCHNORR_D_verify(octet *R, octet *V, octet *C, octet *E, octet *T, octet *U);
+extern int SCHNORR_D_verify(octet *R, octet *V, octet *C, const octet *E, const octet *T, const octet *U);
 
 #ifdef __cplusplus
 }

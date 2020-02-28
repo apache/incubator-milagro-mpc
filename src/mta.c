@@ -28,7 +28,7 @@ static char* curve_order_hex = "fffffffffffffffffffffffffffffffebaaedce6af48a03b
 
 /* Octet manipulation utilities */
 
-void OCT_hash(hash256 *sha, octet *O)
+static void OCT_hash(hash256 *sha, const octet *O)
 {
     int i;
 
@@ -264,7 +264,7 @@ void MPC_MTA_SERVER(csprng *RNG, PAILLIER_public_key *PUB, octet *B, octet *CA, 
 }
 
 /* sum = a1.b1 + alpha + beta  */
-void MPC_SUM_MTA(octet *A, octet *B, octet *ALPHA, octet *BETA,  octet *SUM)
+void MPC_SUM_MTA(const octet *A, const octet *B, const octet *ALPHA, const octet *BETA,  octet *SUM)
 {
     BIG_256_56 a;
     BIG_256_56 b;
@@ -387,7 +387,7 @@ void MTA_RP_commit(csprng *RNG, PAILLIER_private_key *key, COMMITMENTS_BC_pub_mo
     FF_2048_zero(dws, HFLEN_2048);
 }
 
-void MTA_RP_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod, octet *CT, MTA_RP_commitment *c, octet *E)
+void MTA_RP_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod, const octet *CT, MTA_RP_commitment *c, octet *E)
 {
     hash256 sha;
 
@@ -770,7 +770,7 @@ void MTA_ZK_commit(csprng *RNG, PAILLIER_public_key *key, COMMITMENTS_BC_pub_mod
     FF_4096_zero(gamma, HFLEN_4096);
 }
 
-void MTA_ZK_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod, octet *C1, octet *C2, MTA_ZK_commitment *c, octet *E)
+void MTA_ZK_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod, const octet *C1, const octet *C2, MTA_ZK_commitment *c, octet *E)
 {
     hash256 sha;
     char digest[SHA256];
@@ -1070,7 +1070,7 @@ void MTA_ZKWC_commit(csprng *RNG, PAILLIER_public_key *key, COMMITMENTS_BC_pub_m
     ECP_SECP256K1_mul(&(c->U), alpha);
 }
 
-void MTA_ZKWC_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod, octet *C1, octet *C2, octet *X, MTA_ZKWC_commitment *c, octet *E)
+void MTA_ZKWC_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod, const octet *C1, const octet *C2, const octet *X, MTA_ZKWC_commitment *c, octet *E)
 {
     hash256 sha;
     char digest[SHA256];
