@@ -30,8 +30,8 @@ from . import core_utils
 
 _ffi = core_utils._ffi
 _ffi.cdef("""
-extern void COMMITMENTS_NM_commit(csprng *RNG, octet *X, octet *R, octet *C);
-extern int COMMITMENTS_NM_decommit(octet* X, octet* R, octet* C);
+extern void COMMITMENTS_NM_commit(csprng *RNG, const octet *X, octet *R, octet *C);
+extern int COMMITMENTS_NM_decommit(const octet* X, const octet* R, octet* C);
 """)
 
 if (platform.system() == 'Windows'):

@@ -27,6 +27,8 @@
 [![Develop Build Status](https://travis-ci.org/apache/incubator-milagro-MPC.svg?branch=develop)](https://travis-ci.org/apache/incubator-milagro-MPC)
 [![Develop Coverage Status](https://coveralls.io/repos/github/apache/incubator-milagro-MPC/badge.svg?branch=develop)](https://coveralls.io/github/apache/incubator-milagro-MPC?branch=develop)
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=apache_incubator-milagro-MPC&metric=alert_status)](https://sonarcloud.io/dashboard?id=apache_incubator-milagro-MPC)
+
 * **category**:    Library
 * **copyright**:   2020 The Apache Software Foundation
 * **license**:     ASL 2.0 ([Apache License Version 2.0, January 2004](http://www.apache.org/licenses/LICENSE-2.0))
@@ -107,20 +109,20 @@ via the file
 
 Build and run tests using docker
 
-```
+```sh
 docker build --no-cache -t libmpc .
 docker run --cap-add SYS_PTRACE --rm libmpc
 ```
 
 Generate coverage figures
 
-```
+```sh
 docker run --rm libmpc ./scripts/coverage.sh
 ```
 
 or copy to host
 
-```
+```sh
 CONTAINER_ID=$(docker run --cap-add SYS_PTRACE -d libmpc ./scripts/coverage.sh)
 docker logs $CONTAINER_ID
 docker cp ${CONTAINER_ID}:"/root/target/Coverage/coverage" ./

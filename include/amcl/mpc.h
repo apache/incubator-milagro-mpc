@@ -56,7 +56,7 @@ extern "C" {
  *  @param R component of the signature
  *  @param S component of the signature
  */
-int MPC_ECDSA_SIGN(int sha, octet *K, octet *SK, octet *M, octet *R, octet *S);
+int MPC_ECDSA_SIGN(int sha, const octet *K, const octet *SK, octet *M, octet *R, octet *S);
 
 /** \brief ECDSA Verify signature
  *
@@ -68,7 +68,7 @@ int MPC_ECDSA_SIGN(int sha, octet *K, octet *SK, octet *M, octet *R, octet *S);
  *  @param  S                S component of signature
  *  @return                  Returns 0 or else error code
  */
-int MPC_ECDSA_VERIFY(octet *HM,octet *PK, octet *R,octet *S);
+int MPC_ECDSA_VERIFY(const octet *HM,octet *PK, octet *R,octet *S);
 
 /** \brief Calculate the inverse of the sum of kgamma values
  *
@@ -82,7 +82,7 @@ int MPC_ECDSA_VERIFY(octet *HM,octet *PK, octet *R,octet *S);
  *  @param KGAMMA2            Actor 2 additive share
  *  @param INVKGAMMA          Inverse of the sum of the additive shares
  */
-void MPC_INVKGAMMA(octet *KGAMMA1, octet *KGAMMA2, octet *INVKGAMMA);
+void MPC_INVKGAMMA(const octet *KGAMMA1, const octet *KGAMMA2, octet *INVKGAMMA);
 
 /** \brief R component
  *
@@ -101,7 +101,7 @@ void MPC_INVKGAMMA(octet *KGAMMA1, octet *KGAMMA2, octet *INVKGAMMA);
  *  @param  RP                ECP associated to the R component of the signature. Optional
  *  @return                   Returns 0 or else error code
  */
-int MPC_R(octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R, octet *RP);
+int MPC_R(const octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R, octet *RP);
 
 /** \brief Hash the message value
  *
@@ -131,7 +131,7 @@ void MPC_HASH(int sha, octet *M, octet *HM);
  *  @param  S                 S component output
  *  @return                   Returns 0 or else error code
  */
-int MPC_S(octet *HM, octet *R, octet *K, octet *SIGMA, octet *S);
+int MPC_S(const octet *HM, const octet *R, const octet *K, const octet *SIGMA, octet *S);
 
 /** \brief Sum of ECDSA s components
  *
@@ -145,7 +145,7 @@ int MPC_S(octet *HM, octet *R, octet *K, octet *SIGMA, octet *S);
  *  @param  S2                Actor 2 ECDSA s component
  *  @param  S                 S component sum
  */
-void MPC_SUM_S(octet *S1, octet *S2, octet *S);
+void MPC_SUM_S(const octet *S1, const octet *S2, octet *S);
 
 /** \brief Sum of ECDSA public key shares
  *
@@ -184,7 +184,7 @@ int MPC_SUM_PK(octet *PK1, octet *PK2, octet *PK);
  *  @param A                  Second component of the player commitment. An ECP in compressed form
  *  @return                   Returns MPC_OK or an error code
  */
-extern int MPC_PHASE5_commit(csprng *RNG, octet *R, octet *S, octet *PHI, octet *RHO, octet *V, octet *A);
+extern int MPC_PHASE5_commit(csprng *RNG, octet *R, const octet *S, octet *PHI, octet *RHO, octet *V, octet *A);
 
 /** \brief Generate Proof for the MPC Phase 5
  *
@@ -209,7 +209,7 @@ extern int MPC_PHASE5_commit(csprng *RNG, octet *R, octet *S, octet *PHI, octet 
  *  @param T                  Second component of the player proof. An ECP in compressed form
  *  @return                   Returns MPC_OK or an error code
  */
-extern int MPC_PHASE5_prove(octet *PHI, octet *RHO, octet *V[2], octet *A[2], octet *PK, octet *HM, octet *RX, octet *U, octet *T);
+extern int MPC_PHASE5_prove(const octet *PHI, const octet *RHO, octet *V[2], octet *A[2], octet *PK, const octet *HM, const octet *RX, octet *U, octet *T);
 
 /** \brief Verify Proof for the MPC Phase 5
  *
