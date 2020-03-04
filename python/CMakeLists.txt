@@ -16,6 +16,13 @@
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 
 include(PythonSiteDirs)
+include(PythonParameters)
+
+if(NOT DEFINED PYTHON_RSA_LEVELS)
+  set(PYTHON_RSA_LEVELS "")
+endif()
+
+string(REPLACE "," ";" PYTHON_RSA_LEVELS "${PYTHON_RSA_LEVELS}")
 
 add_subdirectory(amcl)
 add_subdirectory(test)

@@ -1,0 +1,143 @@
+#!/usr/bin/env python3
+
+"""
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+"""
+
+import os
+import sys
+import json
+import unittest
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from amcl import core_utils, rsa_WWW
+
+p_2048_hex  = "94f689d07ba20cf7c7ca7ccbed22ae6b40c426db74eaee4ce0ced2b6f52a5e136663f5f1ef379cdbb0c4fdd6e4074d6cff21082d4803d43d89e42fd8dfa82b135aa31a8844ffea25f255f956cbc1b9d8631d01baf1010d028a190b94ce40f3b72897e8196df19edf1ff62e6556f2701d52cef1442e3301db7608ecbdcca703db"
+q_2048_hex  = "9a9ad73f246df853e129c589925fdad9df05606a61081e62e72be4fb33f6e5ec492cc734f28bfb71fbe2ba9a11e4c02e2c0d103a5cbb0a9d6402c07de63b1b995dd72ac8f29825d66923a088b421fb4d52b0b855d2f5dde2be9b0ca0cee6f7a94e5566735fe6cff1fcad3199602f88528d19aa8d0263adff8f5053c38254a2a3"
+pt_2048_hex = "53ea5dc08cd260fb3b858567287fa91552c30b2febfba213f0ae87702d068d19bab07fe574523dfb42139d68c3c5afeee0bfe4cb7969cbf382b804d6e61396144e2d0e60741f8993c3014b58b9b1957a8babcd23af854f4c356fb1662aa72bfcc7e586559dc4280d160c126785a723ebeebeff71f11594440aaef87d10793a8774a239d4a04c87fe1467b9daf85208ec6c7255794a96cc29142f9a8bd418e3c1fd67344b0cd0829df3b2bec60253196293c6b34d3f75d32f213dd45c6273d505adf4cced1057cb758fc26aeefa441255ed4e64c199ee075e7f16646182fdb464739b68ab5daff0e63e9552016824f054bf4d3c8c90a97bb6b6553284eb429fcc"
+
+p_4096_hex  = "b18f69bd4e52677d48d846055988877ce9e97b962f01e3f425f3101a6a589f020c858b1ee5ae8f79e4c63ce2356d8a9a4ef144d3a55e05badfbebdb0e97594cdb4ebebd6177b2eb04149aa463ede7ba2216657e3b4de42f496c0d493b4d734131e63edcde042d951b9bf285622b9d69e9ee170156deeb173725032a952068e685aa31a8844ffea25f255f956cbc1b9d8631d01baf1010d028a190b94ce40f3b72897e8196df19edf1ff62e6556f2701d52cef1442e3301db7608ecbdcca6ef9994f689d07ba20cf7c7ca7ccbed22ae6b40c426db74eaee4ce0ced2b6f52a5e136663f5f1ef379cdbb0c4fdd6e4074d6cff21082d4803d43d89e42fd8dfa82c0f"
+q_4096_hex  = "e87190e478b1132e3c05ade06a196858b4d24a4c8350ce9ecda7f0a1c4e3e75c136c250dd8b67e377670021e4810e0f19f3ecdc780b836febc939fc7ad7c70300323bf4b24f03e8656bb49614fcbfe0687fef150ce34e646806a2b4369259ecc2c01c796be2a2317f4a9974f4ee101a63ac1383091fde717dac1fe529abb6a276559c8185776c332b98f51d55c85311af1138e9a8858693142d0109383929143d17ed7645d22afcad045d85eba7c5df02ed0bd4d9a8f22d30865d538ba933a1579377f979390894ab558922352acaa05d94aa8fa9d273f35912d5efabaaf647ebdb03e55db04941df0409bc2a124a2732ac989186a4987bcbcbc1dfb4e91f79f"
+pt_4096_hex = "53ea5dc08cd260fb3b858567287fa91552c30b2febfba213f0ae87702d068d19bab07fe574523dfb42139d68c3c5afeee0bfe4cb7969cbf382b804d6e61396144e2d0e60741f8993c3014b58b9b1957a8babcd23af854f4c356fb1662aa72bfcc7e586559dc4280d160c126785a723ebeebeff71f11594440aaef87d10793a8774a239d4a04c87fe1467b9daf85208ec6c7255794a96cc29142f9a8bd418e3c1fd67344b0cd0829df3b2bec60253196293c6b34d3f75d32f213dd45c6273d505adf4cced1057cb758fc26aeefa441255ed4e64c199ee075e7f16646182fdb464739b68ab5daff0e63e9552016824f054bf4d3c8c90a97bb6b6553284eb429fcc53ea5dc08cd260fb3b858567287fa91552c30b2febfba213f0ae87702d068d19bab07fe574523dfb42139d68c3c5afeee0bfe4cb7969cbf382b804d6e61396144e2d0e60741f8993c3014b58b9b1957a8babcd23af854f4c356fb1662aa72bfcc7e586559dc4280d160c126785a723ebeebeff71f11594440aaef87d10793a8774a239d4a04c87fe1467b9daf85208ec6c7255794a96cc29142f9a8bd418e3c1fd67344b0cd0829df3b2bec60253196293c6b34d3f75d32f213dd45c6273d505adf4cced1057cb758fc26aeefa441255ed4e64c199ee075e7f16646182fdb464739b68ab5daff0e63e9552016824f054bf4d3c8c90a97bb6b6553284eb429fcc"
+
+e = 0x10001
+
+
+class TestBareRSA(unittest.TestCase):
+    """ Test RSA2048 API """
+
+    def setUp(self):
+        # Deterministic PRNG for testing purposes
+        seed_hex = "78d0fb6705ce77dee47d03eb5b9c5d30"
+        seed = bytes.fromhex(seed_hex)
+        self.rng = core_utils.create_csprng(seed)
+
+        self.p =  bytes.fromhex(p_WWW_hex)
+        self.q =  bytes.fromhex(q_WWW_hex)
+        self.pt = bytes.fromhex(pt_WWW_hex)
+
+    def test_pq(self):
+        public_key, private_key = rsa_WWW.generate_key_pair(None, e, p=self.p, q=self.q)
+
+        ct = rsa_WWW.encrypt(public_key, self.pt)
+        pt = rsa_WWW.decrypt(private_key, ct)
+        self.assertEqual(pt, self.pt)
+
+    def test_rng(self):
+        public_key, private_key = rsa_WWW.generate_key_pair(self.rng, e)
+
+        ct = rsa_WWW.encrypt(public_key, self.pt)
+        pt = rsa_WWW.decrypt(private_key, ct)
+        self.assertEqual(pt, self.pt)
+
+
+class TestOAEP(unittest.TestCase):
+    """ Test RSA2048 OAEP encryption/decryption """
+
+    def setUp(self):
+        # Deterministic PRNG for testing purposes
+        seed_hex = "78d0fb6705ce77dee47d03eb5b9c5d30"
+        seed = bytes.fromhex(seed_hex)
+        self.rng = core_utils.create_csprng(seed)
+
+        self.p =  bytes.fromhex(p_WWW_hex)
+        self.q =  bytes.fromhex(q_WWW_hex)
+        self.pt = bytes.fromhex(pt_WWW_hex)
+
+        self.long_bytes = ('a'*(rsa_WWW.FS + 1)).encode('utf-8')
+
+    def test_consistency(self):
+        m = b'test_message'
+        pt, rc = rsa_WWW.oaep_encode(self.rng, rsa_WWW.SHA256, m)
+        self.assertEqual(rc, 0)
+
+        m_dec, rc = rsa_WWW.oaep_decode(rsa_WWW.SHA256, pt)
+        self.assertEqual(rc, 0)
+        self.assertEqual(m, m_dec)
+
+    def test_encryption_decryption(self):
+        public_key, private_key = rsa_WWW.generate_key_pair(None, e, self.p, self.q)
+
+        m = b'test_encryption_decryption'
+        pt, rc = rsa_WWW.oaep_encode(self.rng, rsa_WWW.SHA256, m)
+        self.assertEqual(rc, 0)
+
+        ct = rsa_WWW.encrypt(public_key, pt)
+        pt_dec = rsa_WWW.decrypt(private_key, ct)
+        self.assertEqual(pt_dec, pt)
+
+        m_dec, rc = rsa_WWW.oaep_decode(rsa_WWW.SHA256, pt_dec)
+        self.assertEqual(rc, 0)
+        self.assertEqual(m_dec, m)
+
+    def test_encoding_error(self):
+        enc, rc = rsa_WWW.oaep_encode(self.rng, rsa_WWW.SHA256, self.long_bytes)
+        self.assertEqual(rc, -1)
+        self.assertEqual(enc, None)
+
+    def test_decoding_error(self):
+        dec, rc = rsa_WWW.oaep_decode(rsa_WWW.SHA256, self.long_bytes)
+        self.assertEqual(rc, -1)
+        self.assertEqual(dec, None)
+
+
+class TestIO(unittest.TestCase):
+    """ Test RSA2048 I/O for public key """
+
+    def setUp(self):
+        p =  bytes.fromhex(p_WWW_hex)
+        q =  bytes.fromhex(q_WWW_hex)
+        self.public_key, self.private_key = rsa_WWW.generate_key_pair(None, e, p, q)
+
+        self.pt = bytes.fromhex(pt_WWW_hex)
+
+    def test_consistency(self):
+        n = rsa_WWW.public_key_to_bytes(self.public_key)
+        e = self.public_key.e
+
+        public_key = rsa_WWW.public_key_from_bytes(n)
+        public_key.e = e
+
+        ct = rsa_WWW.encrypt(public_key, self.pt)
+        pt = rsa_WWW.decrypt(self.private_key, ct)
+        self.assertEqual(pt, self.pt)
+
+if __name__ == '__main__':
+    # Run tests
+    unittest.main()

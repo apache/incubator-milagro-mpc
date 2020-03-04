@@ -132,6 +132,22 @@ docker rm -f ${CONTAINER_ID} || true
 ## Python
 
 There is a Python wrapper in ./python.
+You can to specify the RSA levels to build in the wrappers using
+the cmake flag `PYTHON_RSA_LEVELS`. Supported levels are 2048 and 4096.
+E.g.
+
+```
+cmake -DPYTHON_RSA_LEVELS="2048,4096" ..
+```
+
+In order for the RSA wrappers to work, the appropriate dynamic
+libraries need to be generated and installed for AMCL. For instance, to
+install the dynamic libraries for RSA 2048 and 4069, modify the AMCL cmake
+build as follows.
+
+```
+cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D AMCL_CHUNK=64 -D AMCL_CURVE="BLS381,SECP256K1" -D AMCL_RSA="2048,4096" -D BUILD_PAILLIER=ON -D BUILD_PYTHON=ON -D BUILD_BLS=ON -D BUILD_WCC=OFF -D BUILD_MPIN=ON -D BUILD_X509=OFF -D CMAKE_INSTALL_PREFIX=/usr/local ..
+```
 
 ## Virtual machine
 

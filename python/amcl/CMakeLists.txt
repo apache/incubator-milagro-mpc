@@ -16,12 +16,17 @@
 file(GLOB SRCS *.py)
 file(COPY ${SRCS} DESTINATION "${PROJECT_BINARY_DIR}/python/amcl")
 
+foreach(level ${PYTHON_RSA_LEVELS})
+  load_rsa_fields(${level})
+  configure_rsa_file("rsa.py.in" "${PROJECT_BINARY_DIR}/python/amcl/rsa_${TFF}.py")
+endforeach()
+
 install(DIRECTORY DESTINATION ${PYTHON_SITE_PACKAGES}/amcl DIRECTORY_PERMISSIONS
         OWNER_WRITE OWNER_READ OWNER_EXECUTE
         GROUP_READ GROUP_EXECUTE
         WORLD_READ WORLD_EXECUTE)
-      
+
 install(FILES ${SRCS} DESTINATION ${PYTHON_SITE_PACKAGES}/amcl PERMISSIONS
   OWNER_WRITE OWNER_READ OWNER_EXECUTE
-  GROUP_READ 
+  GROUP_READ
   WORLD_READ)

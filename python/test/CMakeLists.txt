@@ -67,3 +67,10 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "ASan")
   add_python_test(test_python_mpc_nm_commit    test_nm_commit.py)
   add_python_test(test_python_mpc_zk_factoring test_zk_factoring.py)
 endif(NOT CMAKE_BUILD_TYPE STREQUAL "ASan")
+
+foreach(level ${PYTHON_RSA_LEVELS})
+  load_rsa_fields(${level})
+  configure_rsa_file("test_rsa.py.in" "${PROJECT_BINARY_DIR}/python/test/test_rsa_${TFF}.py")
+
+  add_python_test(test_python_rsa_${TFF} test_rsa_${TFF}.py)
+endforeach()
