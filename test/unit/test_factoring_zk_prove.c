@@ -53,10 +53,17 @@ int main(int argc, char **argv)
     octet YGOLDEN = {0, sizeof(ygolden), ygolden};
     const char *Yline = "Y = ";
 
-    FACTORING_ZK_modulus m;
-    const char *Nline = "N = ";
+    char p[HFS_2048];
+    octet P = {0, sizeof(p), p};
     const char *Pline = "P = ";
+
+    char q[HFS_2048];
+    octet Q = {0, sizeof(q), q};
     const char *Qline = "Q = ";
+
+    char n[FS_2048];
+    octet N = {0, sizeof(n), n};
+    const char *Nline = "N = ";
 
     char e[FACTORING_ZK_B];
     octet E = {0, sizeof(e), e};
@@ -79,9 +86,9 @@ int main(int argc, char **argv)
         scan_int(&testNo, line, TESTline);
 
         // Read modulus
-        scan_FF_2048(fp, m.p, line, Pline, HFLEN_2048);
-        scan_FF_2048(fp, m.q, line, Qline, HFLEN_2048);
-        scan_FF_2048(fp, m.n, line, Nline, FFLEN_2048);
+        scan_OCTET(fp, &P, line, Pline);
+        scan_OCTET(fp, &Q, line, Qline);
+        scan_OCTET(fp, &N, line, Nline);
 
         // Read non-random R
         scan_OCTET(fp, &R, line, Rline);
@@ -93,7 +100,7 @@ int main(int argc, char **argv)
         // Read Y and run test
         if (!strncmp(line, last_line, strlen(last_line)))
         {
-            FACTORING_ZK_prove(&m, NULL, &R, &E, &Y);
+            FACTORING_ZK_prove(NULL, &P, &Q, &R, &E, &Y);
 
             compare_OCT(fp, testNo, "FACTORING_ZK_prove E", &E, &EGOLDEN);
             compare_OCT(fp, testNo, "FACTORING_ZK_prove Y", &Y, &YGOLDEN);

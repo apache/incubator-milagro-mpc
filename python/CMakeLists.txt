@@ -17,34 +17,7 @@ cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 
 include(PythonSiteDirs)
 
-install(FILES amcl_mpc.py DESTINATION ${PYTHON_SITE_PACKAGES})
-
-file(COPY amcl_mpc.py DESTINATION "${PROJECT_BINARY_DIR}/python/")
-file(COPY test_mta.py DESTINATION "${PROJECT_BINARY_DIR}/python/")
-file(COPY test_r.py DESTINATION "${PROJECT_BINARY_DIR}/python/")
-file(COPY test_s.py DESTINATION "${PROJECT_BINARY_DIR}/python/")
-file(COPY test_ecdsa.py DESTINATION "${PROJECT_BINARY_DIR}/python/")
-
-file(COPY "${PROJECT_SOURCE_DIR}/testVectors/mpc/MTA.json" DESTINATION "${PROJECT_BINARY_DIR}/python/")
-file(COPY "${PROJECT_SOURCE_DIR}/testVectors/mpc/R.json" DESTINATION "${PROJECT_BINARY_DIR}/python/")
-file(COPY "${PROJECT_SOURCE_DIR}/testVectors/mpc/S.json" DESTINATION "${PROJECT_BINARY_DIR}/python/")
-
-if(NOT CMAKE_BUILD_TYPE STREQUAL "ASan")
-  add_test(test_python_mpc_mta python3 test_mta.py)
-  add_test(test_python_mpc_r python3 test_r.py)
-  add_test(test_python_mpc_s python3 test_s.py)
-  add_test(test_python_mpc_ecdsa python3 test_ecdsa.py)
-endif(NOT CMAKE_BUILD_TYPE STREQUAL "ASan")
-
-# Set the LD_LIBRARY_PATH or equivalent to the libraries can be loaded when
-# running the test.
-#if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
-#  set(ld_library_path_var "DYLD_LIBRARY_PATH")
-#elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
-#  set(ld_library_path_var "LD_LIBRARY_PATH")
-#elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
-#  set(ld_library_path_var "PATH")
-#endif()
-#set_tests_properties(test_python_mpc_mta PROPERTIES ENVIRONMENT
-#             "${ld_library_path_var}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
-
+add_subdirectory(amcl)
+add_subdirectory(test)
+add_subdirectory(examples)
+add_subdirectory(benchmark)

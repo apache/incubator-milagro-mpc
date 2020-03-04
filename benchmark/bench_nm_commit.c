@@ -80,7 +80,7 @@ int main()
     }
     while (elapsed < MIN_TIME || iterations < MIN_ITERS);
 
-    if (!rc)
+    if (rc != COMMITMENTS_OK)
     {
         printf("FAILURE COMMITMENTS_NM_decommit: %d\n", rc);
         exit(EXIT_FAILURE);

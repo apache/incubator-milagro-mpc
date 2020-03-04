@@ -52,6 +52,7 @@ int main()
     PAILLIER_public_key PUB1;
     PAILLIER_private_key PRIV2;
     PAILLIER_public_key PUB2;
+    PAILLIER_public_key PUB3;
 
     char p[FS_2048] = {0};
     octet P = {0,sizeof(p),p};
@@ -98,36 +99,12 @@ int main()
     // Paillier public key
     char n[FS_4096] = {0};
     octet N = {0,sizeof(n),n};
-    char g[FS_4096] = {0};
-    octet G = {0,sizeof(g),g};
-    char n2[FS_4096] = {0};
-    octet N2 = {0,sizeof(n2),n2};
 
     // Paillier private key
     char pp[HFS_2048] = {0};
     octet PP = {0,sizeof(pp),pp};
     char qq[HFS_2048] = {0};
     octet QQ = {0,sizeof(qq),qq};
-
-    char lp[HFS_2048] = {0};
-    octet LP = {0,sizeof(lp),lp};
-    char lq[HFS_2048] = {0};
-    octet LQ = {0,sizeof(lq),lq};
-
-    char invp[FS_2048] = {0};
-    octet INVP = {0,sizeof(invp),invp};
-    char invq[FS_2048] = {0};
-    octet INVQ = {0,sizeof(invq),invq};
-
-    char p2[FS_2048] = {0};
-    octet P2 = {0,sizeof(p2),p2};
-    char q2[FS_2048] = {0};
-    octet Q2 = {0,sizeof(q2),q2};
-
-    char mp[HFS_2048] = {0};
-    octet MP = {0,sizeof(mp),mp};
-    char mq[HFS_2048] = {0};
-    octet MQ = {0,sizeof(mq),mq};
 
     // Load values
     OCT_fromHex(&P,P_hex);
@@ -173,17 +150,39 @@ int main()
     //  Paillier key pair
     PAILLIER_KEY_PAIR(NULL, &P, &Q, &PUB1, &PRIV1);
 
-    // Write public key to octets
-    MPC_DUMP_PAILLIER_PK(&PUB1, &N, &G, &N2);
+    // Write public key to octet
+    PAILLIER_PK_toOctet(&N, &PUB1);
 
-    // Read public key from octets
-    MPC_LOAD_PAILLIER_PK(&PUB2, &N, &G, &N2);
+    // Read public key from octet
+    PAILLIER_PK_fromOctet(&PUB2, &N);
 
     // Write secret key to octets
-    MPC_DUMP_PAILLIER_SK(&PRIV1, &PP, &QQ, &LP, &LQ, &INVP, &INVQ, &P2, &Q2, &MP, &MQ);
+    MPC_DUMP_PAILLIER_SK(&PRIV1, &PP, &QQ);
+
+    printf("PP: ");
+    OCT_output(&PP);
+    printf("\n");
+
+    rc = OCT_comp(&P,&PP);
+    if(!rc)
+    {
+        fprintf(stderr, "FAILURE PP != P rc: %d\n", rc);
+        exit(EXIT_FAILURE);
+    }
+
+    printf("QQ: ");
+    OCT_output(&QQ);
+    printf("\n");
+
+    rc = OCT_comp(&Q,&QQ);
+    if(!rc)
+    {
+        fprintf(stderr, "FAILURE QQ != Q rc: %d\n", rc);
+        exit(EXIT_FAILURE);
+    }
 
     // Read secret key from octets
-    MPC_LOAD_PAILLIER_SK(&PRIV2, &PP, &QQ, &LP, &LQ, &INVP, &INVQ, &P2, &Q2, &MP, &MQ);
+    PAILLIER_KEY_PAIR(NULL, &PP, &QQ, &PUB3, &PRIV2);
 
     MPC_MTA_CLIENT1(NULL, &PUB2, &A, &CA, &R);
 

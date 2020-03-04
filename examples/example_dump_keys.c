@@ -50,14 +50,11 @@ int main()
     PAILLIER_public_key PUB1;
     PAILLIER_private_key PRIV2;
     PAILLIER_public_key PUB2;
+    PAILLIER_public_key PUB3;
 
     // Paillier public key
     char n[FS_4096] = {0};
     octet N = {0,sizeof(n),n};
-    char g[FS_4096] = {0};
-    octet G = {0,sizeof(g),g};
-    char n2[FS_4096] = {0};
-    octet N2 = {0,sizeof(n2),n2};
 
     // Paillier private key
     char p[HFS_2048] = {0};
@@ -65,40 +62,23 @@ int main()
     char q[HFS_2048] = {0};
     octet Q = {0,sizeof(q),q};
 
-    char lp[HFS_2048] = {0};
-    octet LP = {0,sizeof(lp),lp};
-    char lq[HFS_2048] = {0};
-    octet LQ = {0,sizeof(lq),lq};
-
-    char invp[FS_2048] = {0};
-    octet INVP = {0,sizeof(invp),invp};
-    char invq[FS_2048] = {0};
-    octet INVQ = {0,sizeof(invq),invq};
-
-    char p2[FS_2048] = {0};
-    octet P2 = {0,sizeof(p2),p2};
-    char q2[FS_2048] = {0};
-    octet Q2 = {0,sizeof(q2),q2};
-
-    char mp[HFS_2048] = {0};
-    octet MP = {0,sizeof(mp),mp};
-    char mq[HFS_2048] = {0};
-    octet MQ = {0,sizeof(mq),mq};
-
     // Generating Paillier key pair
     PAILLIER_KEY_PAIR(&RNG, NULL, NULL, &PUB1, &PRIV1);
 
-    // Write public key to octets
-    MPC_DUMP_PAILLIER_PK(&PUB1, &N, &G, &N2);
+    // Write public key to octet
+    PAILLIER_PK_toOctet(&N, &PUB1);
 
-    // Read public key from octets
-    MPC_LOAD_PAILLIER_PK(&PUB2, &N, &G, &N2);
+    // Read public key from octet
+    PAILLIER_PK_fromOctet(&PUB2, &N);
+
+    FF_2048_toOctet(&P, PRIV1.p, HFLEN_2048);
+    FF_2048_toOctet(&Q, PRIV1.q, HFLEN_2048);
 
     // Write secret key to octets
-    MPC_DUMP_PAILLIER_SK(&PRIV1, &P, &Q, &LP, &LQ, &INVP, &INVQ, &P2, &Q2, &MP, &MQ);
+    MPC_DUMP_PAILLIER_SK(&PRIV1, &P, &Q);
 
     // Read secret key from octets
-    MPC_LOAD_PAILLIER_SK(&PRIV2, &P, &Q, &LP, &LQ, &INVP, &INVQ, &P2, &Q2, &MP, &MQ);
+    PAILLIER_KEY_PAIR(NULL, &P, &Q, &PUB3, &PRIV2);
 
     char a1[FS_2048];
     octet A1 = {0,sizeof(a1),a1};

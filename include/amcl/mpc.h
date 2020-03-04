@@ -33,6 +33,10 @@ under the License.
 extern "C" {
 #endif
 
+#define MPC_OK          0    /**< Execution Successful */
+#define MPC_FAIL        71   /**< Failure */
+#define MPC_INVALID_ECP 72   /**< Input is not a valid point on the curve */
+
 /** \brief ECDSA Sign message
  *
  *  Generate the ECDSA signature on message, M, with outputs (R,S)
@@ -52,7 +56,7 @@ extern "C" {
  *  @param R component of the signature
  *  @param S component of the signature
  */
-int MPC_ECDSA_SIGN(int sha, octet *K, octet *SK, octet *M, octet *R, octet *S);
+int MPC_ECDSA_SIGN(int sha, const octet *K, const octet *SK, octet *M, octet *R, octet *S);
 
 /** \brief ECDSA Verify signature
  *
@@ -64,7 +68,7 @@ int MPC_ECDSA_SIGN(int sha, octet *K, octet *SK, octet *M, octet *R, octet *S);
  *  @param  S                S component of signature
  *  @return                  Returns 0 or else error code
  */
-int MPC_ECDSA_VERIFY(octet *HM,octet *PK, octet *R,octet *S);
+int MPC_ECDSA_VERIFY(const octet *HM,octet *PK, octet *R,octet *S);
 
 /** \brief Calculate the inverse of the sum of kgamma values
  *
@@ -78,11 +82,12 @@ int MPC_ECDSA_VERIFY(octet *HM,octet *PK, octet *R,octet *S);
  *  @param KGAMMA2            Actor 2 additive share
  *  @param INVKGAMMA          Inverse of the sum of the additive shares
  */
-void MPC_INVKGAMMA(octet *KGAMMA1, octet *KGAMMA2, octet *INVKGAMMA);
+void MPC_INVKGAMMA(const octet *KGAMMA1, const octet *KGAMMA2, octet *INVKGAMMA);
 
 /** \brief R component
  *
- *  Generate the ECDSA signature R component
+ *  Generate the ECDSA signature R component. It also outputs the ECP
+ *  associate to the R component if specified
  *
  *  <ol>
  *  <li> \f$ r_x, r_y = k^{-1}G \f$ where G is the group generator
@@ -93,9 +98,10 @@ void MPC_INVKGAMMA(octet *KGAMMA1, octet *KGAMMA2, octet *INVKGAMMA);
  *  @param  GAMMAPT1          Actor 1 gamma point
  *  @param  GAMMAPT2          Actor 2 gamma point
  *  @param  R                 R component of the signature
+ *  @param  RP                ECP associated to the R component of the signature. Optional
  *  @return                   Returns 0 or else error code
  */
-int MPC_R(octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R);
+int MPC_R(const octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R, octet *RP);
 
 /** \brief Hash the message value
  *
@@ -125,7 +131,7 @@ void MPC_HASH(int sha, octet *M, octet *HM);
  *  @param  S                 S component output
  *  @return                   Returns 0 or else error code
  */
-int MPC_S(octet *HM, octet *R, octet *K, octet *SIGMA, octet *S);
+int MPC_S(const octet *HM, const octet *R, const octet *K, const octet *SIGMA, octet *S);
 
 /** \brief Sum of ECDSA s components
  *
@@ -139,7 +145,7 @@ int MPC_S(octet *HM, octet *R, octet *K, octet *SIGMA, octet *S);
  *  @param  S2                Actor 2 ECDSA s component
  *  @param  S                 S component sum
  */
-void MPC_SUM_S(octet *S1, octet *S2, octet *S);
+void MPC_SUM_S(const octet *S1, const octet *S2, octet *S);
 
 /** \brief Sum of ECDSA public key shares
  *
@@ -156,55 +162,81 @@ void MPC_SUM_S(octet *S1, octet *S2, octet *S);
  */
 int MPC_SUM_PK(octet *PK1, octet *PK2, octet *PK);
 
-/*! \brief Write Paillier public key to octets
- *
- *  @param   PUB              Paillier public key
- *  @param   N                Paillier Modulus - \f$ n = pq \f$
- *  @param   G                Public Base - \f$ g = n+1 \f$
- *  @param   N2               Precomputed \f$ n^2 \f$
- */
-void MPC_DUMP_PAILLIER_PK(PAILLIER_public_key *PUB, octet *N, octet *G, octet *N2);
+/* MPC Phase 5 API */
 
-/*! \brief Load Paillier public key from octets
+/** \brief Generate Commitment for the MPC Phase 5
  *
- *  @param   PUB              Paillier public key
- *  @param   N                Paillier Modulus - \f$ n = pq \f$
- *  @param   G                Public Base - \f$ g = n+1 \f$
- *  @param   N2               Precomputed \f$ n^2 \f$
+ *  Calculate player Commitment (A, V) for MPC Phase 5
+ *
+ *  <ol>
+ *  <li> \f$ \phi \in_R [0, \ldots, q] \f$
+ *  <li> \f$ \rho \in_R [0, \ldots, q] \f$
+ *  <li> \f$ V = \phi.G + s.R \f$
+ *  <li> \f$ A = \rho.G \f$
+ *  </ol>
+ *
+ *  @param RNG                csprng for random values generation
+ *  @param R                  Reconciled R for the signature
+ *  @param S                  Player signature share
+ *  @param PHI                Random value for the commitment. If RNG is null this is read
+ *  @param RHO                Random value for the commitment. If RNG is null this is read
+ *  @param V                  First component of the player commitment. An ECP in compressed form
+ *  @param A                  Second component of the player commitment. An ECP in compressed form
+ *  @return                   Returns MPC_OK or an error code
  */
-void MPC_LOAD_PAILLIER_PK(PAILLIER_public_key *PUB, octet *N, octet *G, octet *N2);
+extern int MPC_PHASE5_commit(csprng *RNG, octet *R, const octet *S, octet *PHI, octet *RHO, octet *V, octet *A);
 
-/*! \brief Write Paillier secret key to octets
+/** \brief Generate Proof for the MPC Phase 5
+ *
+ *  Calculate player Proof (U, T) for MPC Phase 5
+ *
+ *  <ol>
+ *  <li> \f$ m = H(M) \f$
+ *  <li> \f$ A = A1 + A2 \f$
+ *  <li> \f$ V = V1 + V2 \f$
+ *  <li> \f$ U = \rho.(V - m.G - r.PK) \f$
+ *  <li> \f$ T = \phi.A \f$
+ *  </ol>
+ *
+ *  @param PHI                Random value used in the commitment
+ *  @param RHO                Random value used in the commitment
+ *  @param V                  Array with the commitments V from both players. ECPs in compressed form
+ *  @param A                  Array with the commitments A from both players. ECPs in compressed form
+ *  @param PK                 Shared public key for MPC
+ *  @param HM                 Hash of the message being signed
+ *  @param RX                 x component of the reconciled R for the signature
+ *  @param U                  First component of the player proof. An ECP in compressed form
+ *  @param T                  Second component of the player proof. An ECP in compressed form
+ *  @return                   Returns MPC_OK or an error code
+ */
+extern int MPC_PHASE5_prove(const octet *PHI, const octet *RHO, octet *V[2], octet *A[2], octet *PK, const octet *HM, const octet *RX, octet *U, octet *T);
+
+/** \brief Verify Proof for the MPC Phase 5
+ *
+ *  Combine player Proofs and verify the consistency of the signature shares
+ *  This does NOT prove that the signature is valid. It only verifies that
+ *  all players know the secret quantities used to generate their shares.
+ *
+ *  <ol>
+ *  <li> \f$ U = U1 + U2 \f$
+ *  <li> \f$ T = T1 + T2 \f$
+ *  <li> \f$ U \stackrel{?}{=} T \f$
+ *  </ol>
+ *
+ *  @param U                  Array with the proofs U from both players. ECPs in compressed form
+ *  @param T                  Array with the proofs T from both players. ECPs in compressed form
+ *  @return                   Returns MPC_OK or an error code
+ */
+extern int MPC_PHASE5_verify(octet *U[2], octet *T[2]);
+
+/*! \brief Write Paillier keys to octets
  *
  *  @param   PRIV             Paillier secret key
  *  @param   P                Secret prime number
  *  @param   Q                Secret prime number
- *  @param   LP               Private Key modulo \f$ p \f$ (Euler totient of \f$ p \f$)
- *  @param   LQ               Private Key modulo \f$ q \f$ (Euler totient of \f$ q \f$)
- *  @param   INVP             Precomputed \f$ p^{-1} \pmod{2^m} \f$
- *  @param   INVQ             Precomputed \f$ q^{-1} \pmod{2^m} \f$
- *  @param   P2               Precomputed \f$ p^2 \f$
- *  @param   Q2               Precomputed \f$ q^2 \f$
- *  @param   MP               Precomputed \f$ L(g^{lp} \pmod{p^2})^{-1} \f$
- *  @param   MQ               Precomputed \f$ L(g^{lq} \pmod{q^2})^{-1} \f$
  */
-void MPC_DUMP_PAILLIER_SK(PAILLIER_private_key *PRIV, octet *P, octet *Q, octet *LP, octet *LQ, octet *INVP, octet *INVQ, octet *P2, octet *Q2, octet *MP, octet *MQ);
+void MPC_DUMP_PAILLIER_SK(PAILLIER_private_key *PRIV, octet *P, octet *Q);
 
-/*! \brief Load Paillier secret key from octets
- *
- *  @param   PRIV             Paillier secret key
- *  @param   P                Secret prime number
- *  @param   Q                Secret prime number
- *  @param   LP               Private Key modulo \f$ p \f$ (Euler totient of \f$ p \f$)
- *  @param   LQ               Private Key modulo \f$ q \f$ (Euler totient of \f$ q \f$)
- *  @param   INVP             Precomputed \f$ p^{-1} \pmod{2^m} \f$
- *  @param   INVQ             Precomputed \f$ q^{-1} \pmod{2^m} \f$
- *  @param   P2               Precomputed \f$ p^2 \f$
- *  @param   Q2               Precomputed \f$ q^2 \f$
- *  @param   MP               Precomputed \f$ L(g^{lp} \pmod{p^2})^{-1} \f$
- *  @param   MQ               Precomputed \f$ L(g^{lq} \pmod{q^2})^{-1} \f$
- */
-void MPC_LOAD_PAILLIER_SK(PAILLIER_private_key *PRIV, octet *P, octet *Q, octet *LP, octet *LQ, octet *INVP, octet *INVQ, octet *P2, octet *Q2, octet *MP, octet *MQ);
 
 #ifdef __cplusplus
 }

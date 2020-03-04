@@ -22,7 +22,7 @@ under the License.
 /* NM Commitments Definitions */
 
 // Compute the hash of X || R
-void hash(octet *X, octet *R, octet *C)
+static void hash(const octet *X, const octet *R, octet *C)
 {
     int i;
     hash256 sha256;
@@ -47,7 +47,7 @@ void hash(octet *X, octet *R, octet *C)
 }
 
 // Compute a commitment for the value X
-void COMMITMENTS_NM_commit(csprng *RNG, octet *X, octet *R, octet *C)
+void COMMITMENTS_NM_commit(csprng *RNG, const octet *X, octet *R, octet *C)
 {
     if (RNG != NULL)
     {
@@ -58,7 +58,7 @@ void COMMITMENTS_NM_commit(csprng *RNG, octet *X, octet *R, octet *C)
 }
 
 // Verify the commitment for the value X
-int COMMITMENTS_NM_decommit(octet *X, octet *R, octet *C)
+int COMMITMENTS_NM_decommit(const octet *X, const octet *R, octet *C)
 {
     char d[SHA256];
     octet D = {0, sizeof(d), d};
@@ -67,13 +67,18 @@ int COMMITMENTS_NM_decommit(octet *X, octet *R, octet *C)
     // to make the scheme non malleable
     if (R->len != SHA256)
     {
-        return 0;
+        return COMMITMENTS_FAIL;
     }
 
     // Verify the commitment
     hash(X, R, &D);
 
-    return OCT_comp(C, &D);
+    if (!OCT_comp(C, &D))
+    {
+        return COMMITMENTS_FAIL;
+    }
+
+    return COMMITMENTS_OK;
 }
 
 /* Bit Commitment Setup Definitions */
@@ -81,12 +86,14 @@ int COMMITMENTS_NM_decommit(octet *X, octet *R, octet *C)
 /*
  * Check if a number is a safe prime
  */
-int is_safe_prime(BIG_1024_58 *p, BIG_1024_58 *P, csprng *RNG, int n)
+static int is_safe_prime(BIG_1024_58 *p, BIG_1024_58 *P, csprng *RNG, int n)
 {
 #ifndef C99
-    BIG_1024_58 Pm1[FFLEN_2048], f[FFLEN_2048];
+    BIG_1024_58 Pm1[FFLEN_2048];
+    BIG_1024_58 f[FFLEN_2048];
 #else
-    BIG_1024_58 Pm1[n], f[n];
+    BIG_1024_58 Pm1[n];
+    BIG_1024_58 f[n];
 #endif
 
     // Sieve small primes from P, p is already checked in Miller-Rabin
@@ -175,12 +182,11 @@ void bc_generator(csprng *RNG, BIG_1024_58* x, BIG_1024_58 *p, BIG_1024_58 *P, i
     }
 
     // If ord(x) = 2p, square it.
-    FF_2048_pow(e, x, p, P, n);
+    FF_2048_skpow(e, x, p, P, n, n);
     FF_2048_dec(e, 1, n);
     if (!FF_2048_iszilch(e, n))
     {
         FF_2048_power(x, x, 2, P, n);
-        FF_2048_mod(x, P, n);
     }
 }
 
@@ -271,6 +277,14 @@ void COMMITMENTS_BC_setup(csprng *RNG, COMMITMENTS_BC_priv_modulus *m, octet *P,
     FF_2048_skpow(gq, gq, aq, m->Q, HFLEN_2048, HFLEN_2048);
 
     FF_2048_crt(m->b1, gp, gq, m->P, m->Q, HFLEN_2048);
+
+    // Clean memory
+    FF_2048_zero(p,  HFLEN_2048);
+    FF_2048_zero(q,  HFLEN_2048);
+    FF_2048_zero(gp, HFLEN_2048);
+    FF_2048_zero(gq, HFLEN_2048);
+    FF_2048_zero(ap, HFLEN_2048);
+    FF_2048_zero(aq, HFLEN_2048);
 }
 
 void COMMITMENTS_BC_kill_priv_modulus(COMMITMENTS_BC_priv_modulus *m)

@@ -42,8 +42,7 @@ install(TARGETS ${target} DESTINATION lib PERMISSIONS
 
 if(BUILD_PYTHON)
   message(STATUS "Copy ${target} library to python directory for testing")
-  add_custom_command(TARGET ${target} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-    "${CMAKE_CURRENT_BINARY_DIR}/lib*"
-    "${PROJECT_BINARY_DIR}/python/")
+  add_custom_command(TARGET ${target} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/lib*" "${PROJECT_BINARY_DIR}/python/test")
+  add_custom_command(TARGET ${target} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/lib*" "${PROJECT_BINARY_DIR}/python/benchmark")
+  add_custom_command(TARGET ${target} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/lib*" "${PROJECT_BINARY_DIR}/python/examples")  
 endif(BUILD_PYTHON)

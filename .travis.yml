@@ -2,30 +2,58 @@ language: c
 compiler: gcc
 dist: trusty
 
+services:
+  - docker
+
+addons:
+  sonarcloud:
+    organization: "apache"
+    token:
+      secure: "FjYjuVZ4OJXdktJJCjernblRou1AMnHmr1/wLpjQ/L2f+1mVHNwxJDg3hpeq9yD7GiL038x+KkQoOL+wazlZYEnhve1HOG6kmdgAwAsx+BysiDzIdEuz7fBKlaKXkK/nWh/TSo2+wSry35pYXf+wDJybyp0FiN643lL8A8ATC19MFRYfvgyrpPhk3mIYQBnpHwPLlBmFChlakHkhNJy+mfHJBdVxVQ4b7z7Kdm8OYYyXwwCxQKLNSnZ5UI6DfgCyGFBM2aFpjpK2Duok/YdtjvLdks52cG/52LVqOAKYSr80lEmpAyxKxvMbO6yYzrOvxh2uepk9nWHFVF1GeT9lgU4v6EyMVJ13zknbo0JhF2WwwKk4ws4k2D8yPkwC2HD/cPyANVqYGku+wTdEtgrwhvlAIVT9gCLp3sJDrjwE57xMkaLDHpcw9yd5OerJoMwJ0koPnBpx/KtforkeGbpNgXxYnWGA++rfHumVd4Vp2e9mzDoQF5XvuWNnfx+q8F516d96qeQtPV6pfx7t45lB6fQs6etGOqE60g3K2sWw872iosmjYzygnIYhMHPCWfiK+qKPwhddzuo+zldGd/CY+2+IjM1dlWCiMxjwEXdXjnNP+iJwXui35PqDG8eKiqcfL+Co0JiK/PrK4LDbuoQSjrjX78hsX6icdqulhQfQ+0Q="
+      
 install:
   - gem install coveralls-lcov
 
-services:
-- docker
-
 jobs:
   include:
+  - stage: sonar
+    script:
+    - echo "Run static code analysis"
+    - git clone https://github.com/apache/incubator-milagro-crypto-c.git 
+    - cd incubator-milagro-crypto-c
+    - mkdir build
+    - cd build
+    - cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D AMCL_CHUNK=64 -D AMCL_CURVE="BLS381,SECP256K1" -D AMCL_RSA="" -D BUILD_PAILLIER=ON -D BUILD_PYTHON=OFF -D BUILD_BLS=ON -D BUILD_WCC=OFF -D BUILD_MPIN=OFF -D BUILD_X509=OFF -D CMAKE_INSTALL_PREFIX=/usr/local .. 
+    - make
+    - sudo make install
+    - cd ../..
+    - rm -rf python
+    - mkdir build
+    - cd build
+    - cmake -D BUILD_TESTS=OFF -D BUILD_EXAMPLES=OFF -D BUILD_BENCHMARK=OFF -D BUILD_PYTHON=OFF -D BUILD_DOXYGEN=OFF ..
+    - build-wrapper-linux-x86-64 --out-dir bw-output make
+    - mv bw-output ..
+    - cd ..
+    - rm -rf test
+    - rm -rf examples
+    - rm -rf benchmark    
+    - sonar-scanner -X  
   - stage: test
     script:
     - echo "Build docker image and run tests"
     - docker build -t libmpc .
     - docker run --cap-add SYS_PTRACE --rm libmpc 
-  #- stage: coverage
-  #  script:
-  #  - echo "Generate coverage figures"
-  #  - docker build -t libmpc .
-  #  - CONTAINER_ID=$(docker run --cap-add SYS_PTRACE -d libmpc ./scripts/coverage.sh)
-  #  - sleep 100
-  #  - docker logs $CONTAINER_ID
-  #  - docker cp ${CONTAINER_ID}:"/root/target/Coverage/coverage" ./
-  #  - docker rm -f ${CONTAINER_ID} || true
-  #  - sed -i "s|root|home/travis/build/apache/libmpc|" ./coverage/libmpc.info
-  #  - coveralls-lcov /home/travis/build/apache/libmpc/coverage/libmpc.info
+  - stage: coverage
+    script:
+    - echo "Generate coverage figures"
+    - docker build -t libmpc .
+    - CONTAINER_ID=$(docker run --cap-add SYS_PTRACE -d libmpc ./scripts/coverage.sh)
+    - sleep 100
+    - docker logs $CONTAINER_ID
+    - docker cp ${CONTAINER_ID}:"/root/target/Coverage/coverage" ./
+    - docker rm -f ${CONTAINER_ID} || true
+    - sed -i "s|root|home/travis/build/apache/incubator-milagro-MPC|" ./coverage/libmpc.info
+    - coveralls-lcov /home/travis/build/apache/incubator-milagro-MPC/coverage/libmpc.info
 
 
 

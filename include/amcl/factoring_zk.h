@@ -35,30 +35,29 @@ extern "C"
 {
 #endif
 
+#ifndef FS_2048
 #define FS_2048 MODBYTES_1024_58 * FFLEN_2048  /**< 2048 field size in bytes */
+#endif
+
+#ifndef HFS_2048
 #define HFS_2048 MODBYTES_1024_58 * HFLEN_2048 /**< Half 2048 field size in bytes */
+#endif
 
 #define FACTORING_ZK_B 16 /**< Security parameter, length in bytes */
 
-/*!
- * \brief RSA modulus for ZKP
- */
-typedef struct
-{
-    BIG_1024_58 n[FFLEN_2048]; /**< Integer to prove knowledge of factoring */
-    BIG_1024_58 p[HFLEN_2048]; /**< First prime factor of n */
-    BIG_1024_58 q[HFLEN_2048]; /**< Second prime factor of n*/
-} FACTORING_ZK_modulus;
+#define FACTORING_ZK_OK   0  /** < Proof successfully verified */
+#define FACTORING_ZK_FAIL 91 /** < Invalid proof */
 
 /** \brief Prove knowledge of the modulus m in ZK
  *
- *  @param  m           Modulus to prove knowledge of factoring for
  *  @param  RNG         Cryptographically secure PRNG
+ *  @param  P           First prime of the factorization
+ *  @param  Q           Second prime of the factorization
  *  @param  R           Random value used in the proof. If RNG is NULL this is read
  *  @param  E           Fisrt component of the ZK proof
  *  @param  Y           Second component of the ZK proof
  */
-void FACTORING_ZK_prove(FACTORING_ZK_modulus *m, csprng *RNG, octet *R, octet *E, octet *Y);
+void FACTORING_ZK_prove(csprng *RNG, octet *P, octet *Q, octet *R, octet *E, octet *Y);
 
 /** \brief Verify ZK proof of knowledge of factoring of N
  *
@@ -70,13 +69,6 @@ void FACTORING_ZK_prove(FACTORING_ZK_modulus *m, csprng *RNG, octet *R, octet *E
  *  @return             1 if the proof is valid, 0 otherwise
  */
 int FACTORING_ZK_verify(octet *N, octet *E, octet *Y);
-
-/** \brief Clear modulus
- *
- *  @param m             Modulus for the ZK proof to clean
- *
- */
-void FACTORING_ZK_kill_modulus(FACTORING_ZK_modulus *m);
 
 #ifdef __cplusplus
 }

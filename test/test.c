@@ -49,7 +49,7 @@ void read_FF_2048(FILE *fp, BIG_1024_58 *x, char *string, int n)
 {
     int len = strlen(string);
     char oct[len / 2];
-    octet OCT = {0, len / 2, oct};
+    octet OCT = {0, sizeof(oct), oct};
 
     read_OCTET(fp, &OCT, string);
     FF_2048_fromOctet(x, &OCT, n);
@@ -59,10 +59,27 @@ void read_FF_4096(FILE *fp, BIG_512_60 *x, char *string, int n)
 {
     int len = strlen(string);
     char oct[len / 2];
-    octet OCT = {0, len / 2, oct};
+    octet OCT = {0, sizeof(oct), oct};
 
     read_OCTET(fp, &OCT, string);
     FF_4096_fromOctet(x, &OCT, n);
+}
+
+void read_ECP_SECP256K1(FILE *fp, ECP_SECP256K1 *P, char *string)
+{
+    int len = strlen(string);
+    char oct[len /2];
+    octet OCT = {0, sizeof(oct), oct};
+
+    read_OCTET(fp, &OCT, string);
+
+    if (!ECP_SECP256K1_fromOctet(P, &OCT))
+    {
+        fclose(fp);
+
+        printf("ERROR invalid test vector ECP %s\n", string);
+        exit(EXIT_FAILURE);
+    }
 }
 
 void scan_int(int *v, char *line, const char *prefix)
@@ -118,6 +135,21 @@ void scan_FF_4096(FILE *fp, BIG_512_60 *x, char *line, const char *prefix, int n
     }
 }
 
+void scan_ECP_SECP256K1(FILE *fp, ECP_SECP256K1 *P, char *line, const char *prefix)
+{
+    if (!strncmp(line, prefix, strlen(prefix)))
+    {
+
+        line+=strlen(prefix);
+        read_ECP_SECP256K1(fp, P, line);
+
+#ifdef DEBUG
+        printf("%s", prefix);
+        ECP_SECP256K1_output(P);
+#endif
+    }
+}
+
 /* Assertion utilities */
 
 void compare_OCT(FILE* fp, int testNo, char *name, octet *X, octet *Y)
@@ -129,7 +161,22 @@ void compare_OCT(FILE* fp, int testNo, char *name, octet *X, octet *Y)
             fclose(fp);
         }
 
+#ifdef DEBUG
+        printf("X = ");
+        OCT_output(X);
+        printf("Y = ");
+        OCT_output(Y);
+#endif
+
         printf("FAILURE %s. Test %d\n", name, testNo);
+
+#ifdef DEBUG
+        printf("X = ");
+        OCT_output(X);
+        printf("Y = ");
+        OCT_output(Y);
+#endif
+
         exit(EXIT_FAILURE);
     }
 }
@@ -174,6 +221,28 @@ void compare_FF_4096(FILE* fp, int testNo, char* name, BIG_512_60 *x, BIG_512_60
         printf("\ny = ");
         FF_4096_output(y,n);
         printf("\n");
+#endif
+
+        exit(EXIT_FAILURE);
+    }
+}
+
+void compare_ECP_SECP256K1(FILE *fp, int testNo, char *name, ECP_SECP256K1 *P, ECP_SECP256K1 *Q)
+{
+    if (!ECP_SECP256K1_equals(P, Q))
+    {
+        if (fp != NULL)
+        {
+            fclose(fp);
+        }
+
+        fprintf(stderr, "FAILURE %s. Test %d\n", name, testNo);
+
+#ifdef DEBUG
+        printf("P = ");
+        ECP_SECP256K1_output(P);
+        printf("Q = ");
+        ECP_SECP256K1_output(Q);
 #endif
 
         exit(EXIT_FAILURE);

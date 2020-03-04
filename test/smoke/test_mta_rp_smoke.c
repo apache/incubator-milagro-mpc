@@ -25,7 +25,7 @@ void ff_2048_cleaned(BIG_1024_58 *a, char *name, int n)
 {
     if(!FF_2048_iszilch(a, n))
     {
-        fprintf(stderr, "FAILURE COMMITMENTS_BC_kill_priv_modulus. %s was not cleaned\n", name);
+        fprintf(stderr, "FAILURE MTA_RP_commitment_rv_kill. %s was not cleaned\n", name);
         exit(EXIT_FAILURE);
     }
 }

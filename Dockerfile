@@ -1,6 +1,6 @@
 # Dockerfile
 #
-# Ubuntu 18.04 (Bionic) 
+# Ubuntu 18.04 (Bionic)
 #
 # @author  Kealan McCusker <kealanmccusker@gmail.com>
 # ------------------------------------------------------------------------------
@@ -26,7 +26,7 @@
 
 FROM ubuntu:bionic
 
-MAINTAINER kealanmccusker@gmail.com
+LABEL maintainer="kealanmccusker@gmail.com"
 
 WORKDIR /root
 
@@ -39,29 +39,15 @@ RUN apt-get update && \
 
 RUN pip3 install cffi
 
-# install golang
-RUN cd /tmp && \
-    wget https://dl.google.com/go/go1.13.linux-amd64.tar.gz && \
-    tar -xzf go1.13.linux-amd64.tar.gz && \
-    cp -r go /usr/local && \
-    echo 'export PATH=$PATH:/usr/local/go/bin' >> /root/.bashrc
-
-# configure GO
-RUN mkdir -p /root/go/bin && \
-    mkdir -p /root/go/pkg && \
-    mkdir -p /root/go/src && \
-    echo 'export GOPATH=/root/go' >> /root/.bashrc && \
-    echo 'export PATH=$GOPATH/bin:$PATH' >> /root/.bashrc
-
 # install AMCL
 RUN git clone https://github.com/apache/incubator-milagro-crypto-c.git && \
     cd incubator-milagro-crypto-c && \
     mkdir build && \
     cd build && \
-    cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D AMCL_CHUNK=64 -D AMCL_CURVE="BLS381,SECP256K1" -D AMCL_RSA="" -D BUILD_PAILLIER=ON -D BUILD_PYTHON=ON -D BUILD_BLS=ON -D BUILD_WCC=OFF -D BUILD_MPIN=OFF -D BUILD_X509=OFF -D CMAKE_INSTALL_PREFIX=/usr/local .. && \
+    cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D AMCL_CHUNK=64 -D AMCL_CURVE="BLS381,SECP256K1" -D AMCL_RSA="" -D BUILD_PAILLIER=ON -D BUILD_PYTHON=OFF -D BUILD_BLS=ON -D BUILD_WCC=OFF -D BUILD_MPIN=OFF -D BUILD_X509=OFF -D CMAKE_INSTALL_PREFIX=/usr/local .. && \
     make && \
-    make test && \
-    make install 
+    make test  ARGS=-j8 && \
+    make install
 
 ADD . /root
 

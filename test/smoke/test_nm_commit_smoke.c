@@ -45,7 +45,7 @@ int main()
     COMMITMENTS_NM_commit(&RNG, &X, &R, &C);
 
     rc = COMMITMENTS_NM_decommit(&X, &R, &C);
-    if (!rc)
+    if (rc != COMMITMENTS_OK)
     {
         fprintf(stderr, "FAILURE COMMITMENTS_NM_decommit.\n");
         exit(EXIT_FAILURE);

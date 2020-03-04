@@ -79,9 +79,9 @@ char* KGAMMA_hex = "40511eda0877bee4a457001dbbf2ee12466619027940d07db6d8e2adb3d7
 
 char* INVKGAMMA_hex = "f9419b11580cdc098cbcbfd3ac06e70d2d4827447353f64bd97daa5667b34ef9";
 
-char* GAMMAPT1_hex = "04206b7c7ae7ecf8fe79ac581d8de90b9a12a27f79732268649fb0ae109faade73385833cafe293b42e33097a79397c77c94a7d12a32304514a890a0c2d747a40d";
+char* GAMMAPT1_hex = "03206b7c7ae7ecf8fe79ac581d8de90b9a12a27f79732268649fb0ae109faade73";
 
-char* GAMMAPT2_hex = "04fc86f69384e2b0cc3d563dc24ebb3a7ca0ac12dfa671e4cda4abdec35f33ed326fdc2404c8e236d5bea82bcbe4aeeb7545c8b5d0a19a39e00bacf8a7143800a9";
+char* GAMMAPT2_hex = "03fc86f69384e2b0cc3d563dc24ebb3a7ca0ac12dfa671e4cda4abdec35f33ed32";
 
 char* SUMGAMMAPT_hex = "04b46da316359aead5e06c983407b199465bad193dc661334aafb1d7d94bafe721e671defdf3eedef2b6f298f7cdc673a740e88dbb313f2afdb294ee6527e325c1";
 
@@ -205,10 +205,10 @@ int main()
     char invkgammagolden[EGS_SECP256K1];
     octet INVKGAMMAGOLDEN = {0,sizeof(invkgammagolden),invkgammagolden};
 
-    char gammapt1[2*EFS_SECP256K1+1];
+    char gammapt1[EFS_SECP256K1+1];
     octet GAMMAPT1 = {0,sizeof(gammapt1),gammapt1};
 
-    char gammapt2[2*EFS_SECP256K1+1];
+    char gammapt2[EFS_SECP256K1+1];
     octet GAMMAPT2 = {0,sizeof(gammapt2),gammapt2};
 
     char sig_rgolden[EGS_SECP256K1];
@@ -479,7 +479,7 @@ int main()
     }
 
     // Calculate the R signature component
-    rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, &SIG_R);
+    rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, &SIG_R, NULL);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_R rc: %d\n", rc);

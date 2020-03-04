@@ -106,11 +106,11 @@ int main(int argc, char** argv)
     octet Z12 = {0,sizeof(z12),z12};
     const char* Z12line = "Z12 = ";
 
-    char gammapt1[2*EFS_SECP256K1+1];
+    char gammapt1[EFS_SECP256K1+1];
     octet GAMMAPT1 = {0,sizeof(gammapt1),gammapt1};
     const char* GAMMAPT1line = "GAMMAPT1 = ";
 
-    char gammapt2[2*EFS_SECP256K1+1];
+    char gammapt2[EFS_SECP256K1+1];
     octet GAMMAPT2 = {0,sizeof(gammapt2),gammapt2};
     const char* GAMMAPT2line = "GAMMAPT2 = ";
 
@@ -229,7 +229,7 @@ int main(int argc, char** argv)
             MPC_INVKGAMMA(&SUM1, &SUM2, &INVKGAMMA);
 
             // Calculate the R signature component
-            rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, &SIG_R);
+            rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, &SIG_R, NULL);
 
             sprintf(err_msg, "MPC_R rc: %d", rc);
             assert_tv(fp, testNo, err_msg, rc == 0);

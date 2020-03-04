@@ -481,7 +481,7 @@ int main()
     }
 
     // Calculate the R signature component
-    rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, &SIG_R);
+    rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, &SIG_R, NULL);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_R rc: %d\n", rc);
