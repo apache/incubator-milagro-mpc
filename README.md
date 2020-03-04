@@ -109,20 +109,20 @@ via the file
 
 Build and run tests using docker
 
-```
+```sh
 docker build --no-cache -t libmpc .
 docker run --cap-add SYS_PTRACE --rm libmpc
 ```
 
 Generate coverage figures
 
-```
+```sh
 docker run --rm libmpc ./scripts/coverage.sh
 ```
 
 or copy to host
 
-```
+```sh
 CONTAINER_ID=$(docker run --cap-add SYS_PTRACE -d libmpc ./scripts/coverage.sh)
 docker logs $CONTAINER_ID
 docker cp ${CONTAINER_ID}:"/root/target/Coverage/coverage" ./
