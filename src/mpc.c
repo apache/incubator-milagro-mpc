@@ -27,7 +27,8 @@ under the License.
 void MPC_ECDSA_KEY_PAIR_GENERATE(csprng *RNG, octet* S, octet *W)
 {
 
-    BIG_256_56 s, q;
+    BIG_256_56 s;
+    BIG_256_56 q;
 
     ECP_SECP256K1 G;
 
@@ -187,7 +188,8 @@ int MPC_ECDSA_VERIFY(const octet *HM, octet *PK, octet *R,octet *S)
 
 void MPC_K_GENERATE(csprng *RNG, octet *K)
 {
-    BIG_256_56 s, q;
+    BIG_256_56 s;
+    BIG_256_56 q;
 
     BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
     BIG_256_56_randomnum(s, q, RNG);
