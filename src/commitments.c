@@ -118,7 +118,7 @@ static int is_safe_prime(BIG_1024_58 *p, BIG_1024_58 *P, csprng *RNG, int n)
     FF_2048_copy(Pm1, P, n);
     FF_2048_dec(Pm1, 1, n);
 
-    FF_2048_pow(f, f, Pm1, P, n);
+    FF_2048_pow(f, f, Pm1, P, n, n);
     FF_2048_dec(f, 1, n);
     if (FF_2048_iszilch(f, n))
     {
