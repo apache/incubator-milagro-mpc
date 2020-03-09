@@ -331,8 +331,8 @@ void MTA_RP_commit(csprng *RNG, PAILLIER_private_key *key, COMMITMENTS_BC_pub_mo
 
     // Curve order
     OCT_fromHex(&OCT, curve_order_hex);
-    FF_2048_zero(q, HFLEN_2048);
-    BIG_512_60_fromBytesLen(q[0],OCT.val,OCT.len);
+    OCT_pad(&OCT, HFS_2048);
+    FF_2048_fromOctet(q, &OCT, HFLEN_2048);
 
     FF_2048_mul(n, key->p, key->q, HFLEN_2048);
     FF_2048_copy(g, n, FFLEN_2048);
@@ -680,8 +680,8 @@ void MTA_ZK_commit(csprng *RNG, PAILLIER_public_key *key, COMMITMENTS_BC_pub_mod
 
     // Curve order
     OCT_fromHex(&OCT, curve_order_hex);
-    FF_2048_zero(q, HFLEN_2048);
-    BIG_512_60_fromBytesLen(q[0],OCT.val,OCT.len);
+    OCT_pad(&OCT, HFS_2048);
+    FF_2048_fromOctet(q, &OCT, HFLEN_2048);
 
     // Zero out beta since it's needed regardless of RNG
     FF_4096_zero(beta, FFLEN_4096);
@@ -1056,8 +1056,8 @@ void MTA_ZKWC_commit(csprng *RNG, PAILLIER_public_key *key, COMMITMENTS_BC_pub_m
 
     // Reduce alpha modulo curve order
     OCT_fromHex(&OCT, curve_order_hex);
-    FF_2048_zero(ff_q, HFLEN_2048);
-    BIG_1024_58_fromBytesLen(ff_q[0], OCT.val, OCT.len);
+    OCT_pad(&OCT, HFS_2048);
+    FF_2048_fromOctet(ff_q, &OCT, HFLEN_2048);
 
     FF_2048_copy(ff_alpha, rv->alpha, HFLEN_2048);
     FF_2048_mod(ff_alpha, ff_q, HFLEN_2048);
@@ -1155,8 +1155,8 @@ int MTA_ZKWC_verify(PAILLIER_private_key *key, COMMITMENTS_BC_priv_modulus *mod,
 
     // Reduce s1 modulo curve order
     OCT_fromHex(&OCT, curve_order_hex);
-    FF_2048_zero(ff_q, HFLEN_2048);
-    BIG_1024_58_fromBytesLen(ff_q[0], OCT.val, OCT.len);
+    OCT_pad(&OCT, HFS_2048);
+    FF_2048_fromOctet(ff_q, &OCT, HFLEN_2048);
 
     FF_2048_copy(ff_s1, p->s1, HFLEN_2048);
     FF_2048_mod(ff_s1, ff_q, HFLEN_2048);
