@@ -40,21 +40,21 @@ if __name__ == "__main__":
     paillier_pk2, paillier_sk2 = amcl.mpc.paillier_key_pair(rng)
 
     # ECDSA keys
-    rc, PK1, W1 = amcl.mpc.ecp_secp256k1_key_pair_generate(rng)
+    PK1, W1 = amcl.mpc.mpc_ecdsa_key_pair_generate(rng)
     rc = amcl.mpc.ecp_secp256k1_public_key_validate(PK1)
     assert rc == 0, f"Invalid ECDSA public key"
 
-    rc, PK2, W2 = amcl.mpc.ecp_secp256k1_key_pair_generate(rng)
+    PK2, W2 = amcl.mpc.mpc_ecdsa_key_pair_generate(rng)
     rc = amcl.mpc.ecp_secp256k1_public_key_validate(PK2)
     assert rc == 0, f"Invalid ECDSA public key"
 
     # Gamma values
-    rc, GAMMAPT1, GAMMA1 = amcl.mpc.ecp_secp256k1_key_pair_generate(rng)
-    rc, GAMMAPT2, GAMMA2 = amcl.mpc.ecp_secp256k1_key_pair_generate(rng)
+    GAMMAPT1, GAMMA1 = amcl.mpc.mpc_ecdsa_key_pair_generate(rng)
+    GAMMAPT2, GAMMA2 = amcl.mpc.mpc_ecdsa_key_pair_generate(rng)
 
     # K values
-    rc, TMP1, K1 = amcl.mpc.ecp_secp256k1_key_pair_generate(rng)
-    rc, TMP2, K2 = amcl.mpc.ecp_secp256k1_key_pair_generate(rng)
+    K1 = amcl.mpc.mpc_k_generate(rng)
+    K2 = amcl.mpc.mpc_k_generate(rng)
 
     # Message
     M = b'test message'

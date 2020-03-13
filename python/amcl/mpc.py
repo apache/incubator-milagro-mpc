@@ -28,6 +28,24 @@ from . import core_utils
 
 _ffi = core_utils._ffi
 _ffi.cdef("""
+#define EFS_SECP256K1 32
+
+typedef signed int sign32;
+typedef long unsigned int BIG_256_56[5];
+
+typedef struct
+{
+    BIG_256_56 g;
+    sign32 XES;
+} FP_SECP256K1;
+
+typedef struct
+{
+    FP_SECP256K1 x;
+    FP_SECP256K1 y;
+    FP_SECP256K1 z;
+} ECP_SECP256K1;
+
 typedef struct
 {
     BIG_512_60 n[8];
@@ -54,14 +72,15 @@ extern void PAILLIER_PRIVATE_KEY_KILL(PAILLIER_private_key *PRIV);
 extern void PAILLIER_PK_toOctet(octet *PK, PAILLIER_public_key *PUB);
 extern void PAILLIER_PK_fromOctet(PAILLIER_public_key *PUB, octet *PK);
 
-extern int  ECP_SECP256K1_KEY_PAIR_GENERATE(csprng *R,octet *s,octet *W);
-extern int  ECP_SECP256K1_PUBLIC_KEY_VALIDATE(octet *W);
+extern int ECP_SECP256K1_PUBLIC_KEY_VALIDATE(octet *W);
 
+extern void MPC_ECDSA_KEY_PAIR_GENERATE(csprng *RNG, octet *S, octet *W);
 extern int MPC_ECDSA_VERIFY(const octet *HM,octet *PK, octet *R,octet *S);
 extern void MPC_MTA_CLIENT1(csprng *RNG, PAILLIER_public_key* PUB, octet* A, octet* CA, octet* R);
 extern void MPC_MTA_CLIENT2(PAILLIER_private_key *PRIV, octet* CB, octet *ALPHA);
 extern void MPC_MTA_SERVER(csprng *RNG, PAILLIER_public_key *PUB, octet *B, octet *CA, octet *Z, octet *R, octet *CB, octet *BETA);
 extern void MPC_SUM_MTA(octet *A, octet *B, octet *ALPHA, octet *BETA, octet *SUM);
+extern void MPC_K_GENERATE(csprng *RNG, octet *K);
 extern void MPC_INVKGAMMA(const octet *KGAMMA1, const octet *KGAMMA2, octet *INVKGAMMA);
 extern int MPC_R(const octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R, octet *RP);
 extern void MPC_HASH(int sha, octet *M, octet *HM);
@@ -85,7 +104,7 @@ else:
     _libamcl_curve_secp256k1 = _ffi.dlopen("libamcl_curve_SECP256K1.so")
 
 # Constants
-FS_2048 = 256      # Size of an FF_2048 in bytes 
+FS_2048 = 256      # Size of an FF_2048 in bytes
 HFS_2048 = 128     # Half-suze of an FF_2048 in bytes
 FS_4096 = 512      # Size of an FF_4096 in bytes
 EGS_SECP256K1 = 32 # Size of an element of Z/qZ in bytes
@@ -117,6 +136,7 @@ def paillier_key_pair(rng, p=None, q=None):
     if p:
         p1, p1_val = core_utils.make_octet(None, p)
         q1, q1_val = core_utils.make_octet(None, q)
+        _ = p1_val, q1_val
         rng = _ffi.NULL
     else:
         p1 = _ffi.NULL
@@ -127,7 +147,14 @@ def paillier_key_pair(rng, p=None, q=None):
 
     _libamcl_paillier.PAILLIER_KEY_PAIR(rng, p1, q1, paillier_pk, paillier_sk)
 
+    if p1 is not _ffi.NULL:
+        core_utils.clear_octet(p1)
+
+    if q1 is not _ffi.NULL:
+        core_utils.clear_octet(q1)
+
     return paillier_pk, paillier_sk
+
 
 def paillier_private_key_kill(paillier_sk):
     """Kill a Paillier secret key
@@ -167,12 +194,14 @@ def paillier_pk_to_octet(paillier_pk):
 
     """
     n1, n1_val = core_utils.make_octet(FS_4096)
+    _ = n1_val
 
     _libamcl_paillier.PAILLIER_PK_toOctet(n1, paillier_pk)
 
     n2 = core_utils.to_str(n1)
 
     return n2
+
 
 def paillier_pk_from_octet(n):
     """Read Paillier public key from byte array
@@ -193,12 +222,14 @@ def paillier_pk_from_octet(n):
     paillier_pk = _ffi.new('PAILLIER_public_key*')
 
     n1, n1_val = core_utils.make_octet(None, n)
+    _ = n1_val
 
     _libamcl_paillier.PAILLIER_PK_fromOctet(paillier_pk, n1)
 
     return paillier_pk
 
-def ecp_secp256k1_key_pair_generate(rng, ecdsa_sk=None):
+
+def mpc_ecdsa_key_pair_generate(rng, ecdsa_sk=None):
     """Generate ECDSA key pair
 
     Generate ECDSA key pair
@@ -212,7 +243,6 @@ def ecp_secp256k1_key_pair_generate(rng, ecdsa_sk=None):
 
         ecdsa_sk: ECDSA secret key
         ecdsa_pk: ECDSA public key
-        rc: Zero for success or else an error code
 
     Raises:
 
@@ -224,13 +254,17 @@ def ecp_secp256k1_key_pair_generate(rng, ecdsa_sk=None):
         ecdsa_sk1, ecdsa_sk1_val = core_utils.make_octet(EGS_SECP256K1)
 
     ecdsa_pk1, ecdsa_pk1_val = core_utils.make_octet(2 * EFS_SECP256K1 + 1)
+    _ = ecdsa_pk1_val, ecdsa_sk1_val # Suppress warnings
 
-    rc = _libamcl_curve_secp256k1.ECP_SECP256K1_KEY_PAIR_GENERATE(rng, ecdsa_sk1, ecdsa_pk1)
+    _libamcl_mpc.MPC_ECDSA_KEY_PAIR_GENERATE(rng, ecdsa_sk1, ecdsa_pk1)
 
     ecdsa_sk2 = core_utils.to_str(ecdsa_sk1)
     ecdsa_pk2 = core_utils.to_str(ecdsa_pk1)
 
-    return rc, ecdsa_pk2, ecdsa_sk2
+    core_utils.clear_octet(ecdsa_sk1)
+
+    return ecdsa_pk2, ecdsa_sk2
+
 
 def ecp_secp256k1_public_key_validate(ecdsa_pk):
     """Validate an ECDSA public key
@@ -249,10 +283,12 @@ def ecp_secp256k1_public_key_validate(ecdsa_pk):
 
     """
     ecdsa_pk1, ecdsa_pk1_val = core_utils.make_octet(None, ecdsa_pk)
+    _ = ecdsa_pk1_val
 
     rc = _libamcl_curve_secp256k1.ECP_SECP256K1_PUBLIC_KEY_VALIDATE(ecdsa_pk1)
 
     return rc
+
 
 def mpc_mta_client1(rng, paillier_pk, a, r=None):
     """Client MTA first pass
@@ -276,18 +312,27 @@ def mpc_mta_client1(rng, paillier_pk, a, r=None):
     """
     if r:
         r1, r1_val = core_utils.make_octet(None, r)
+        _ = r1_val
         rng = _ffi.NULL
     else:
         r1 = _ffi.NULL
 
     a1, a1_val = core_utils.make_octet(None, a)
     ca1, ca1_val = core_utils.make_octet(FS_4096)
+    _ = a1_val, ca1_val
 
     _libamcl_mpc.MPC_MTA_CLIENT1(rng, paillier_pk, a1, ca1, r1)
 
     ca2 = core_utils.to_str(ca1)
 
+    # Clear memory
+    core_utils.clear_octet(a1)
+
+    if r1 is not _ffi.NULL:
+        core_utils.clear_octet(r1)
+
     return ca2
+
 
 def mpc_mta_client2(paillier_sk, cb):
     """Client MtA second pass
@@ -308,12 +353,15 @@ def mpc_mta_client2(paillier_sk, cb):
     """
     cb1, cb1_val = core_utils.make_octet(None, cb)
     alpha1, alpha1_val = core_utils.make_octet(EGS_SECP256K1)
+    _ = cb1_val, alpha1_val # Suppress warnings
 
     _libamcl_mpc.MPC_MTA_CLIENT2(paillier_sk, cb1, alpha1)
 
     alpha2 = core_utils.to_str(alpha1)
+    core_utils.clear_octet(alpha1)
 
     return alpha2
+
 
 def mpc_mta_server(rng, paillier_pk, b, ca, z=None, r=None):
     """Server MtA
@@ -340,6 +388,7 @@ def mpc_mta_server(rng, paillier_pk, b, ca, z=None, r=None):
     if r:
         r1, r1_val = core_utils.make_octet(None, r)
         z1, z1_val = core_utils.make_octet(None, z)
+        _ = r1_val, z1_val
         rng = _ffi.NULL
     else:
         r1 = _ffi.NULL
@@ -349,13 +398,25 @@ def mpc_mta_server(rng, paillier_pk, b, ca, z=None, r=None):
     ca1, ca1_val = core_utils.make_octet(None, ca)
     beta1, beta1_val = core_utils.make_octet(EGS_SECP256K1)
     cb1, cb1_val = core_utils.make_octet(FS_4096)
+    _ = b1_val, ca1_val, beta1_val, cb1_val
 
     _libamcl_mpc.MPC_MTA_SERVER(rng, paillier_pk, b1, ca1, z1, r1, cb1, beta1)
 
     beta2 = core_utils.to_str(beta1)
     cb2 = core_utils.to_str(cb1)
 
+    # Clear memory
+    core_utils.clear_octet(b1)
+    core_utils.clear_octet(beta1)
+
+    if r1 is not _ffi.NULL:
+        core_utils.clear_octet(r1)
+
+    if z1 is not _ffi.NULL:
+        core_utils.clear_octet(z1)
+
     return cb2, beta2
+
 
 def mpc_sum_mta(a, b, alpha, beta):
     """Sum of secret shares
@@ -382,12 +443,42 @@ def mpc_sum_mta(a, b, alpha, beta):
     beta1, beta1_val = core_utils.make_octet(None, beta)
 
     sum1, sum1_val = core_utils.make_octet(EGS_SECP256K1)
+    _ = a1_val, b1_val, alpha1_val, beta1_val, sum1_val # Suppress warnings
 
     _libamcl_mpc.MPC_SUM_MTA(a1, b1, alpha1, beta1, sum1)
 
     sum2 = core_utils.to_str(sum1)
 
+    core_utils.clear_octet(a1)
+    core_utils.clear_octet(b1)
+
     return sum2
+
+
+def mpc_k_generate(rng):
+    """ Generate random k mod curve order
+
+    Args::
+
+        rng: pointer to a cryptographically secure prng
+
+    Returns::
+
+        k: a random value modulo the curve order
+
+    Raises:
+
+    """
+    k, k_val = core_utils.make_octet(EGS_SECP256K1)
+    _ = k_val
+
+    _libamcl_mpc.MPC_K_GENERATE(rng, k)
+
+    k_str = core_utils.to_str(k)
+    core_utils.clear_octet(k)
+
+    return k_str
+
 
 def mpc_invkgamma(kgamma1, kgamma2):
     """Calculate the inverse of the sum of kgamma values
@@ -410,12 +501,14 @@ def mpc_invkgamma(kgamma1, kgamma2):
     kgamma21, kgamma21_val = core_utils.make_octet(None, kgamma2)
 
     invkgamma1, invkgamma1_val = core_utils.make_octet(EGS_SECP256K1)
+    _ = kgamma11_val, kgamma21_val, invkgamma1_val # Suppress warnings
 
     _libamcl_mpc.MPC_INVKGAMMA(kgamma11, kgamma21, invkgamma1)
 
     invkgamma2 = core_utils.to_str(invkgamma1)
 
     return invkgamma2
+
 
 def mpc_r(invkgamma, gammapt1, gammapt2):
     """R component
@@ -442,6 +535,7 @@ def mpc_r(invkgamma, gammapt1, gammapt2):
 
     r1, r1_val = core_utils.make_octet(EGS_SECP256K1)
     rp, rp_val = core_utils.make_octet(EFS_SECP256K1 + 1)
+    _ = invkgamma1_val, gammapt11_val, gammapt21_val, r1_val, rp_val
 
     rc = _libamcl_mpc.MPC_R(invkgamma1, gammapt11, gammapt21, r1, rp)
 
@@ -449,6 +543,7 @@ def mpc_r(invkgamma, gammapt1, gammapt2):
     rp_str = core_utils.to_str(rp)
 
     return rc, r2, rp_str
+
 
 def mpc_hash(message):
     """Hash the message value
@@ -468,12 +563,14 @@ def mpc_hash(message):
     """
     message1, message1_val = core_utils.make_octet(None, message)
     hm1, hm1_val = core_utils.make_octet(SHA256)
+    _ = message1_val, hm1_val
 
     _libamcl_mpc.MPC_HASH(SHA256, message1, hm1)
 
     hm2 = core_utils.to_str(hm1)
 
     return hm2
+
 
 def mpc_s(hm, r, k, sigma):
     """S component
@@ -501,12 +598,16 @@ def mpc_s(hm, r, k, sigma):
     sigma1, sigma1_val = core_utils.make_octet(None, sigma)
 
     s1, s1_val = core_utils.make_octet(EGS_SECP256K1)
+    _ = hm1_val, r1_val, k1_val, sigma1_val, s1_val
 
     rc = _libamcl_mpc.MPC_S(hm1, r1, k1, sigma1, s1)
 
     s2 = core_utils.to_str(s1)
 
+    core_utils.clear_octet(k1)
+
     return rc, s2
+
 
 def mpc_ecdsa_verify(hm, pk, r, s):
     """ECDSA Verify signature
@@ -531,10 +632,12 @@ def mpc_ecdsa_verify(hm, pk, r, s):
     pk1, pk1_val = core_utils.make_octet(None, pk)
     r1, r1_val = core_utils.make_octet(None, r)
     s1, s1_val = core_utils.make_octet(None, s)
+    _ = hm1_val, pk1_val, r1_val, s1_val
 
     rc = _libamcl_mpc.MPC_ECDSA_VERIFY(hm1, pk1, r1, s1)
 
     return rc
+
 
 def mpc_sum_s(s1, s2):
     """Sum of ECDSA s components
@@ -557,12 +660,14 @@ def mpc_sum_s(s1, s2):
     s21, s21_val = core_utils.make_octet(None, s2)
 
     s1, s1_val = core_utils.make_octet(EGS_SECP256K1)
+    _ = s11_val, s21_val, s1_val
 
     _libamcl_mpc.MPC_SUM_S(s11, s21, s1)
 
     s2 = core_utils.to_str(s1)
 
     return s2
+
 
 def mpc_sum_pk(pk1, pk2):
     """Sum of ECDSA public key shares
@@ -586,12 +691,14 @@ def mpc_sum_pk(pk1, pk2):
     pk21, pk21_val = core_utils.make_octet(None, pk2)
 
     pk1, pk1_val = core_utils.make_octet(EFS_SECP256K1 + 1)
+    _ = pk11_val, pk21_val, pk1_val
 
     rc = _libamcl_mpc.MPC_SUM_PK(pk11, pk21, pk1)
 
     pk2 = core_utils.to_str(pk1)
 
     return rc, pk2
+
 
 def mpc_dump_paillier_sk(paillier_sk):
     """Write Paillier public key to byte array
@@ -612,10 +719,17 @@ def mpc_dump_paillier_sk(paillier_sk):
     """
     p, p_val = core_utils.make_octet(HFS_2048)
     q, q_val = core_utils.make_octet(HFS_2048)
+    _ = p_val, q_val
 
     _libamcl_mpc.MPC_DUMP_PAILLIER_SK(paillier_sk, p, q)
 
     p2 = core_utils.to_str(p)
     q2 = core_utils.to_str(q)
+
+    # Clear memory
+    core_utils.clear_octet(p)
+    core_utils.clear_octet(q)
+    core_utils.clear_octet(p2)
+    core_utils.clear_octet(q2)
 
     return p2, q2
