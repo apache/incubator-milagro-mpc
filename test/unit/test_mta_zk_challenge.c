@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     const char *H2line = "H2 = ";
 
     PAILLIER_public_key key;
-    const char *Gline = "G = ";
+    const char *Nline = "N = ";
 
     char c1[2*FS_2048];
     octet C1 = {0, sizeof(c1), c1};
@@ -100,9 +100,7 @@ int main(int argc, char **argv)
         scan_FF_2048(fp, c.v,  line, Vline,  2 * FFLEN_2048);
         scan_FF_2048(fp, c.w,  line, Wline,  FFLEN_2048);
 
-        // pub.g is FFLEN_4096 long, but for this we only
-        // use the relevant HFLEN_4096 BIGs
-        scan_FF_4096(fp, key.g, line, Gline, HFLEN_4096);
+        scan_FF_4096(fp, key.n, line, Nline, HFLEN_4096);
 
         // Read ground truth
         scan_OCTET(fp, &E_GOLDEN, line, Eline);
