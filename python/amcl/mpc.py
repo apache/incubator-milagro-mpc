@@ -729,7 +729,5 @@ def mpc_dump_paillier_sk(paillier_sk):
     # Clear memory
     core_utils.clear_octet(p)
     core_utils.clear_octet(q)
-    core_utils.clear_octet(p2)
-    core_utils.clear_octet(q2)
 
     return p2, q2
