@@ -58,14 +58,14 @@ int main()
     COMMITMENTS_BC_setup(&RNG, &m, &P, &Q, NULL, NULL);
 
     // Check that b0, b1, alpha, ialpha are of the correct form
-    FF_2048_pow(e, m.b0, m.alpha, m.N, FFLEN_2048);
+    FF_2048_pow(e, m.b0, m.alpha, m.N, FFLEN_2048, FFLEN_2048);
     if (FF_2048_comp(e, m.b1, FFLEN_2048) != 0)
     {
         printf("FAILURE COMMITMENTS_BC_setup. b1 != b0^alpha");
         exit(EXIT_FAILURE);
     }
 
-    FF_2048_pow(e, m.b1, m.ialpha, m.N, FFLEN_2048);
+    FF_2048_pow(e, m.b1, m.ialpha, m.N, FFLEN_2048, FFLEN_2048);
     if (FF_2048_comp(e, m.b0, FFLEN_2048) != 0)
     {
         printf("FAILURE COMMITMENTS_BC_setup. b0 != b1^ialpha");

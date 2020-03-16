@@ -144,6 +144,5 @@ class TestVerify(unittest.TestCase):
 
         self.assertEqual(ec, schnorr.FAIL)
 
-
 if __name__ == '__main__':
     unittest.main()

@@ -46,7 +46,7 @@ extern "C"
  * @param R     Decommitment value. If RNG is null then this value is read and must be 256 bit long
  * @param C     Commitment value
  */
-extern void COMMITMENTS_NM_commit(csprng *RNG, octet *X, octet *R, octet *C);
+extern void COMMITMENTS_NM_commit(csprng *RNG, const octet *X, octet *R, octet *C);
 
 /*! \brief Decommit the value X
  *
@@ -55,7 +55,7 @@ extern void COMMITMENTS_NM_commit(csprng *RNG, octet *X, octet *R, octet *C);
  * @param C     Commitment value
  * @return      Returns 1 for a valid decommitment, 0 otherwise
  */
-extern int COMMITMENTS_NM_decommit(octet* X, octet* R, octet* C);
+extern int COMMITMENTS_NM_decommit(const octet* X, const octet* R, octet* C);
 
 /* Bit Commitment Setup API */
 

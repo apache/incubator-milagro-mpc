@@ -15,3 +15,8 @@
 
 file(GLOB EXAMPLES *.py)
 file(COPY ${EXAMPLES} DESTINATION "${PROJECT_BINARY_DIR}/python/examples")
+
+foreach(level ${PYTHON_RSA_LEVELS})
+  load_rsa_fields(${level})
+  configure_rsa_file("example_rsa.py.in" "${PROJECT_BINARY_DIR}/python/examples/example_rsa_${TFF}.py")
+endforeach()

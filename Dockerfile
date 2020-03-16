@@ -39,20 +39,6 @@ RUN apt-get update && \
 
 RUN pip3 install cffi
 
-# install golang
-RUN cd /tmp && \
-    wget https://dl.google.com/go/go1.13.linux-amd64.tar.gz && \
-    tar -xzf go1.13.linux-amd64.tar.gz && \
-    cp -r go /usr/local && \
-    echo 'export PATH=$PATH:/usr/local/go/bin' >> /root/.bashrc
-
-# configure GO
-RUN mkdir -p /root/go/bin && \
-    mkdir -p /root/go/pkg && \
-    mkdir -p /root/go/src && \
-    echo 'export GOPATH=/root/go' >> /root/.bashrc && \
-    echo 'export PATH=$GOPATH/bin:$PATH' >> /root/.bashrc
-
 # install AMCL
 RUN git clone https://github.com/apache/incubator-milagro-crypto-c.git && \
     cd incubator-milagro-crypto-c && \

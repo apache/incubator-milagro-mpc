@@ -75,17 +75,17 @@ extern void PAILLIER_PK_fromOctet(PAILLIER_public_key *PUB, octet *PK);
 extern int ECP_SECP256K1_PUBLIC_KEY_VALIDATE(octet *W);
 
 extern void MPC_ECDSA_KEY_PAIR_GENERATE(csprng *RNG, octet *S, octet *W);
-extern int MPC_ECDSA_VERIFY(octet *HM,octet *PK, octet *R,octet *S);
+extern int MPC_ECDSA_VERIFY(const octet *HM, octet *PK, octet *R, octet *S);
 extern void MPC_MTA_CLIENT1(csprng *RNG, PAILLIER_public_key* PUB, octet* A, octet* CA, octet* R);
 extern void MPC_MTA_CLIENT2(PAILLIER_private_key *PRIV, octet* CB, octet *ALPHA);
 extern void MPC_MTA_SERVER(csprng *RNG, PAILLIER_public_key *PUB, octet *B, octet *CA, octet *Z, octet *R, octet *CB, octet *BETA);
 extern void MPC_SUM_MTA(octet *A, octet *B, octet *ALPHA, octet *BETA, octet *SUM);
 extern void MPC_K_GENERATE(csprng *RNG, octet *K);
-extern void MPC_INVKGAMMA(octet *KGAMMA1, octet *KGAMMA2, octet *INVKGAMMA);
-extern extern int MPC_R(octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R, octet *RP);
+extern void MPC_INVKGAMMA(const octet *KGAMMA1, const octet *KGAMMA2, octet *INVKGAMMA);
+extern int MPC_R(const octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R, octet *RP);
 extern void MPC_HASH(int sha, octet *M, octet *HM);
-extern int MPC_S(octet *HM, octet *R, octet *K, octet *SIGMA, octet *S);
-extern void MPC_SUM_S(octet *S1, octet *S2, octet *S);
+extern int MPC_S(const octet *HM, const octet *R, const octet *K, const octet *SIGMA, octet *S);
+extern void MPC_SUM_S(const octet *S1, const octet *S2, octet *S);
 extern int MPC_SUM_PK(octet *PK1, octet *PK2, octet *PK);
 extern void MPC_DUMP_PAILLIER_SK(PAILLIER_private_key *PRIV, octet *P, octet *Q);
 """)

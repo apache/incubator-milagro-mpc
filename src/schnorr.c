@@ -19,7 +19,7 @@ under the License.
 
 #include "amcl/schnorr.h"
 
-void hash_octet(hash256 *sha, octet *O)
+static void hash_octet(hash256 *sha, const octet *O)
 {
     int i;
 
@@ -75,7 +75,7 @@ void SCHNORR_commit(csprng *RNG, octet *R, octet *C)
     BIG_256_56_zero(r);
 }
 
-void SCHNORR_challenge(octet *V, octet *C, octet *E)
+void SCHNORR_challenge(const octet *V, const octet *C, octet *E)
 {
     hash256 sha;
 
@@ -105,7 +105,7 @@ void SCHNORR_challenge(octet *V, octet *C, octet *E)
     E->len = SGS_SECP256K1;
 }
 
-void SCHNORR_prove(octet *R, octet *E, octet *X, octet *P)
+void SCHNORR_prove(const octet *R, const octet *E, const octet *X, octet *P)
 {
     BIG_256_56 r;
     BIG_256_56 e;
@@ -135,7 +135,7 @@ void SCHNORR_prove(octet *R, octet *E, octet *X, octet *P)
     BIG_256_56_dzero(d);
 }
 
-int SCHNORR_verify(octet *V, octet*C, octet *E, octet *P)
+int SCHNORR_verify(octet *V, octet*C, const octet *E, const octet *P)
 {
     int rc;
 
@@ -219,7 +219,7 @@ int SCHNORR_D_commit(csprng *RNG, octet *R, octet *A, octet *B, octet *C)
     return SCHNORR_OK;
 }
 
-void SCHNORR_D_challenge(octet *R, octet *V, octet *C, octet *E)
+void SCHNORR_D_challenge(const octet *R, const octet *V, const octet *C, octet *E)
 {
     hash256 sha;
 
@@ -250,7 +250,7 @@ void SCHNORR_D_challenge(octet *R, octet *V, octet *C, octet *E)
     E->len = MODBYTES_256_56;
 }
 
-void SCHNORR_D_prove(octet *A, octet *B, octet *E, octet *S, octet *L, octet *T, octet *U)
+void SCHNORR_D_prove(const octet *A, const octet *B, const octet *E, const octet *S, const octet *L, octet *T, octet *U)
 {
     BIG_256_56 r;
     BIG_256_56 e;
@@ -290,7 +290,7 @@ void SCHNORR_D_prove(octet *A, octet *B, octet *E, octet *S, octet *L, octet *T,
     BIG_256_56_dzero(d);
 }
 
-int SCHNORR_D_verify(octet *R, octet *V, octet *C, octet *E, octet *T, octet *U)
+int SCHNORR_D_verify(octet *R, octet *V, octet *C, const octet *E, const octet *T, const octet *U)
 {
     ECP_SECP256K1 G;
     ECP_SECP256K1 ECPR;

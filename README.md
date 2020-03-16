@@ -27,6 +27,8 @@
 [![Develop Build Status](https://travis-ci.org/apache/incubator-milagro-MPC.svg?branch=develop)](https://travis-ci.org/apache/incubator-milagro-MPC)
 [![Develop Coverage Status](https://coveralls.io/repos/github/apache/incubator-milagro-MPC/badge.svg?branch=develop)](https://coveralls.io/github/apache/incubator-milagro-MPC?branch=develop)
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=apache_incubator-milagro-MPC&metric=alert_status)](https://sonarcloud.io/dashboard?id=apache_incubator-milagro-MPC)
+
 * **category**:    Library
 * **copyright**:   2020 The Apache Software Foundation
 * **license**:     ASL 2.0 ([Apache License Version 2.0, January 2004](http://www.apache.org/licenses/LICENSE-2.0))
@@ -107,20 +109,20 @@ via the file
 
 Build and run tests using docker
 
-```
+```sh
 docker build --no-cache -t libmpc .
 docker run --cap-add SYS_PTRACE --rm libmpc
 ```
 
 Generate coverage figures
 
-```
+```sh
 docker run --rm libmpc ./scripts/coverage.sh
 ```
 
 or copy to host
 
-```
+```sh
 CONTAINER_ID=$(docker run --cap-add SYS_PTRACE -d libmpc ./scripts/coverage.sh)
 docker logs $CONTAINER_ID
 docker cp ${CONTAINER_ID}:"/root/target/Coverage/coverage" ./
@@ -130,6 +132,22 @@ docker rm -f ${CONTAINER_ID} || true
 ## Python
 
 There is a Python wrapper in ./python.
+You can to specify the RSA levels to build in the wrappers using
+the cmake flag `PYTHON_RSA_LEVELS`. Supported levels are 2048 and 4096.
+E.g.
+
+```
+cmake -DPYTHON_RSA_LEVELS="2048,4096" ..
+```
+
+In order for the RSA wrappers to work, the appropriate dynamic
+libraries need to be generated and installed for AMCL. For instance, to
+install the dynamic libraries for RSA 2048 and 4069, modify the AMCL cmake
+build as follows.
+
+```
+cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D AMCL_CHUNK=64 -D AMCL_CURVE="BLS381,SECP256K1" -D AMCL_RSA="2048,4096" -D BUILD_PAILLIER=ON -D BUILD_PYTHON=ON -D BUILD_BLS=ON -D BUILD_WCC=OFF -D BUILD_MPIN=ON -D BUILD_X509=OFF -D CMAKE_INSTALL_PREFIX=/usr/local ..
+```
 
 ## Virtual machine
 

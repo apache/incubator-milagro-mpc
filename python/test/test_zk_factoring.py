@@ -22,7 +22,7 @@ under the License.
 import os
 import sys
 import json
-from unittest import TestCase
+import unittest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -37,7 +37,7 @@ e_hex = "32c670610e73c428785944ab7b582371"
 y_hex = "b4ebebd6177b2eb04149aa463ede7ba2216657e3b4de42f496c0d493b4d734131e63edcde042d951b9bf285622b9d69e9ee170156deeb173725032a952068e68b18f69bd4e52677d48d846055988877ce9e97b962f01e3f425f3101a6a589f020c858b1ee5ae8f79e4c63ce2356d8a9aa703100b3b3588d0aae7d7857b672d1beb25afc90a93045837aca1c39511816d4fc84ad0db35edf9adac810c46965868e79a5eb9509f9d7c315c5439daf561b312c0dd276263464409aef75a65c157277ba0bcef2cb1929995ba6749a8c54187cf2a9cfc9febc40bee8b149973590f9d34ae8c79111792e92b5fcdbd993f6ce8ad1558f5f8e691c3ce2ca9b2c15f599c"
 
 
-class TestProve(TestCase):
+class TestProve(unittest.TestCase):
     """ Test ZK factoring Prove """
 
     def setUp(self):
@@ -75,7 +75,7 @@ class TestProve(TestCase):
         self.assertEqual(e, self.e)
         self.assertEqual(y, self.y)
 
-class TestVerify(TestCase):
+class TestVerify(unittest.TestCase):
     """ Test ZK factoring Verify """
 
     def setUp(self):
@@ -101,3 +101,7 @@ class TestVerify(TestCase):
         ec = factoring_zk.verify(self.tv[0]['Y'], self.tv[0]['E'], self.tv[0]['N'])
 
         self.assertEqual(ec, factoring_zk.FAIL)
+
+if __name__ == '__main__':
+    # Run tests
+    unittest.main()

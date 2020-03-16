@@ -28,7 +28,7 @@ static char* curve_order_hex = "fffffffffffffffffffffffffffffffebaaedce6af48a03b
 
 /* Octet manipulation utilities */
 
-void OCT_hash(hash256 *sha, octet *O)
+static void OCT_hash(hash256 *sha, const octet *O)
 {
     int i;
 
@@ -104,8 +104,13 @@ void hash_RP_params(hash256 *sha, PAILLIER_public_key *key, COMMITMENTS_BC_pub_m
     char oct[FS_2048];
     octet OCT = {0, sizeof(oct), oct};
 
+    BIG_512_60 g[HFLEN_4096];
+
     // Process Paillier Public key
-    FF_4096_toOctet(&OCT, key->g, HFLEN_4096);
+    FF_4096_copy(g, key->n, HFLEN_4096);
+    FF_4096_inc(g, 1, HFLEN_4096);
+    FF_4096_norm(g, HFLEN_4096);
+    FF_4096_toOctet(&OCT, g, HFLEN_4096);
     OCT_hash(sha, &OCT);
 
     // Process Bit Commitment modulus
@@ -264,7 +269,7 @@ void MPC_MTA_SERVER(csprng *RNG, PAILLIER_public_key *PUB, octet *B, octet *CA, 
 }
 
 /* sum = a1.b1 + alpha + beta  */
-void MPC_SUM_MTA(octet *A, octet *B, octet *ALPHA, octet *BETA,  octet *SUM)
+void MPC_SUM_MTA(const octet *A, const octet *B, const octet *ALPHA, const octet *BETA,  octet *SUM)
 {
     BIG_256_56 a;
     BIG_256_56 b;
@@ -331,8 +336,8 @@ void MTA_RP_commit(csprng *RNG, PAILLIER_private_key *key, COMMITMENTS_BC_pub_mo
 
     // Curve order
     OCT_fromHex(&OCT, curve_order_hex);
-    FF_2048_zero(q, HFLEN_2048);
-    BIG_512_60_fromBytesLen(q[0],OCT.val,OCT.len);
+    OCT_pad(&OCT, HFS_2048);
+    FF_2048_fromOctet(q, &OCT, HFLEN_2048);
 
     FF_2048_mul(n, key->p, key->q, HFLEN_2048);
     FF_2048_copy(g, n, FFLEN_2048);
@@ -387,7 +392,7 @@ void MTA_RP_commit(csprng *RNG, PAILLIER_private_key *key, COMMITMENTS_BC_pub_mo
     FF_2048_zero(dws, HFLEN_2048);
 }
 
-void MTA_RP_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod, octet *CT, MTA_RP_commitment *c, octet *E)
+void MTA_RP_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod, const octet *CT, MTA_RP_commitment *c, octet *E)
 {
     hash256 sha;
 
@@ -464,13 +469,13 @@ void MTA_RP_prove(PAILLIER_private_key *key, MTA_RP_commitment_rv *rv, octet *M,
     // Compute s = beta * r^e mod N using CRT
     FF_2048_amod(hws, r, 2*FFLEN_2048, key->p, HFLEN_2048);
     FF_2048_dmod(sp, rv->beta, key->p, HFLEN_2048);
-    FF_2048_pow(hws, hws, e, key->p, HFLEN_2048);
+    FF_2048_pow(hws, hws, e, key->p, HFLEN_2048, HFLEN_2048);
     FF_2048_mul(ws1, sp, hws,  HFLEN_2048);
     FF_2048_dmod(sp, ws1, key->p, HFLEN_2048);
 
     FF_2048_amod(hws, r, 2*FFLEN_2048, key->q, HFLEN_2048);
     FF_2048_dmod(sq, rv->beta, key->q, HFLEN_2048);
-    FF_2048_pow(hws, hws, e, key->q, HFLEN_2048);
+    FF_2048_pow(hws, hws, e, key->q, HFLEN_2048, HFLEN_2048);
     FF_2048_mul(ws1, sq, hws,  HFLEN_2048);
     FF_2048_dmod(sq, ws1, key->q, HFLEN_2048);
 
@@ -559,7 +564,9 @@ int MTA_RP_verify(PAILLIER_public_key *key, COMMITMENTS_BC_priv_modulus *mod, oc
 
     BIG_512_60 e_4096[HFLEN_4096];
     BIG_512_60 s1[HFLEN_4096];
-    BIG_512_60 ws_4096[FFLEN_4096];
+    BIG_512_60 ws1_4096[FFLEN_4096];
+    BIG_512_60 ws2_4096[FFLEN_4096];
+    BIG_512_60 dws_4096[2 * FFLEN_4096];
 
     char oct[FS_2048];
     octet OCT = {0, sizeof(oct), oct};
@@ -611,13 +618,18 @@ int MTA_RP_verify(PAILLIER_public_key *key, COMMITMENTS_BC_priv_modulus *mod, oc
     OCT_pad(&OCT, HFS_4096);
     FF_4096_fromOctet(s1, &OCT, HFLEN_4096);
 
-    FF_4096_fromOctet(ws_4096, CT, FFLEN_4096);
-    FF_4096_invmodp(ws_4096, ws_4096, key->n2, FFLEN_4096);
+    FF_4096_fromOctet(ws1_4096, CT, FFLEN_4096);
+    FF_4096_invmodp(ws1_4096, ws1_4096, key->n2, FFLEN_4096);
 
     // u_proof = g^s1 * s^N * c^(-e) mod N^2
-    FF_4096_pow3(ws_4096, key->g, s1, p->s, key->n, ws_4096, e_4096, key->n2, FFLEN_4096, HFLEN_4096);
+    FF_4096_mul(ws2_4096, key->n, s1, HFLEN_4096);
+    FF_4096_inc(ws2_4096, 1, FFLEN_4096);
+    FF_4096_norm(ws2_4096, FFLEN_4096);
+    FF_4096_pow2(ws1_4096, p->s, key->n, ws1_4096, e_4096, key->n2, FFLEN_4096, HFLEN_4096);
+    FF_4096_mul(dws_4096, ws1_4096, ws2_4096, FFLEN_4096);
+    FF_4096_dmod(ws1_4096, dws_4096, key->n2, FFLEN_4096);
 
-    if(FF_4096_comp(ws_4096, co->u, FFLEN_4096) != 0)
+    if(FF_4096_comp(ws1_4096, co->u, FFLEN_4096) != 0)
     {
         return MTA_FAIL;
     }
@@ -673,15 +685,17 @@ void MTA_ZK_commit(csprng *RNG, PAILLIER_public_key *key, COMMITMENTS_BC_pub_mod
     BIG_512_60 alpha[HFLEN_4096];
     BIG_512_60 beta[FFLEN_4096];
     BIG_512_60 gamma[HFLEN_4096];
-    BIG_512_60 ws[FFLEN_4096];
+    BIG_512_60 ws1[FFLEN_4096];
+    BIG_512_60 ws2[FFLEN_4096];
+    BIG_512_60 dws[2 * FFLEN_4096];
 
     char oct[2 * FS_2048];
     octet OCT = {0, sizeof(oct), oct};
 
     // Curve order
     OCT_fromHex(&OCT, curve_order_hex);
-    FF_2048_zero(q, HFLEN_2048);
-    BIG_512_60_fromBytesLen(q[0],OCT.val,OCT.len);
+    OCT_pad(&OCT, HFS_2048);
+    FF_2048_fromOctet(q, &OCT, HFLEN_2048);
 
     // Zero out beta since it's needed regardless of RNG
     FF_4096_zero(beta, FFLEN_4096);
@@ -753,15 +767,20 @@ void MTA_ZK_commit(csprng *RNG, PAILLIER_public_key *key, COMMITMENTS_BC_pub_mod
     FF_2048_skpow2(c->w,  mod->b0, tws, mod->b1, rv->tau,  mod->N, FFLEN_2048, FFLEN_2048 + HFLEN_2048);
 
     // Compute v = c1^alpha * g^gamma * beta^N mod n2
-    FF_4096_fromOctet(ws, C1, FFLEN_4096);
+    FF_4096_fromOctet(ws2, C1, FFLEN_4096);
 
     FF_2048_toOctet(&OCT, rv->alpha, HFLEN_2048);
     OCT_pad(&OCT, HFS_4096);
     FF_4096_fromOctet(alpha, &OCT, HFLEN_4096);
 
-    FF_4096_skpow3(ws, ws, alpha, key->g, gamma, beta, key->n, key->n2, FFLEN_4096, HFLEN_4096);
+    FF_4096_mul(ws1, key->n, gamma, HFLEN_4096);
+    FF_4096_inc(ws1, 1, FFLEN_4096);
+    FF_4096_norm(ws1, FFLEN_4096);
+    FF_4096_skpow2(ws2, ws2, alpha, beta, key->n, key->n2, FFLEN_4096, HFLEN_4096);
+    FF_4096_mul(dws, ws1, ws2, FFLEN_4096);
+    FF_4096_dmod(ws1, dws, key->n2, FFLEN_4096);
 
-    FF_4096_toOctet(&OCT, ws, FFLEN_4096);
+    FF_4096_toOctet(&OCT, ws1, FFLEN_4096);
     FF_2048_fromOctet(c->v, &OCT, 2 * FFLEN_2048);
 
     // Clean memory
@@ -770,7 +789,7 @@ void MTA_ZK_commit(csprng *RNG, PAILLIER_public_key *key, COMMITMENTS_BC_pub_mod
     FF_4096_zero(gamma, HFLEN_4096);
 }
 
-void MTA_ZK_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod, octet *C1, octet *C2, MTA_ZK_commitment *c, octet *E)
+void MTA_ZK_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod, const octet *C1, const octet *C2, MTA_ZK_commitment *c, octet *E)
 {
     hash256 sha;
     char digest[SHA256];
@@ -826,7 +845,7 @@ void MTA_ZK_prove(PAILLIER_public_key *key, MTA_ZK_commitment_rv *rv, octet *X, 
     FF_2048_fromOctet(n, &OCT, FFLEN_2048);
 
     FF_2048_dmod(ws, dws, n, FFLEN_2048);
-    FF_2048_skpow(ws, ws, e, n, FFLEN_2048, HFLEN_2048);
+    FF_2048_pow(ws, ws, e, n, FFLEN_2048, HFLEN_2048);
     FF_2048_mul(dws, rv->beta, ws, FFLEN_2048);
     FF_2048_dmod(p->s, dws, n, FFLEN_2048);
 
@@ -1056,8 +1075,8 @@ void MTA_ZKWC_commit(csprng *RNG, PAILLIER_public_key *key, COMMITMENTS_BC_pub_m
 
     // Reduce alpha modulo curve order
     OCT_fromHex(&OCT, curve_order_hex);
-    FF_2048_zero(ff_q, HFLEN_2048);
-    BIG_1024_58_fromBytesLen(ff_q[0], OCT.val, OCT.len);
+    OCT_pad(&OCT, HFS_2048);
+    FF_2048_fromOctet(ff_q, &OCT, HFLEN_2048);
 
     FF_2048_copy(ff_alpha, rv->alpha, HFLEN_2048);
     FF_2048_mod(ff_alpha, ff_q, HFLEN_2048);
@@ -1070,7 +1089,7 @@ void MTA_ZKWC_commit(csprng *RNG, PAILLIER_public_key *key, COMMITMENTS_BC_pub_m
     ECP_SECP256K1_mul(&(c->U), alpha);
 }
 
-void MTA_ZKWC_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod, octet *C1, octet *C2, octet *X, MTA_ZKWC_commitment *c, octet *E)
+void MTA_ZKWC_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod, const octet *C1, const octet *C2, const octet *X, MTA_ZKWC_commitment *c, octet *E)
 {
     hash256 sha;
     char digest[SHA256];
@@ -1155,8 +1174,8 @@ int MTA_ZKWC_verify(PAILLIER_private_key *key, COMMITMENTS_BC_priv_modulus *mod,
 
     // Reduce s1 modulo curve order
     OCT_fromHex(&OCT, curve_order_hex);
-    FF_2048_zero(ff_q, HFLEN_2048);
-    BIG_1024_58_fromBytesLen(ff_q[0], OCT.val, OCT.len);
+    OCT_pad(&OCT, HFS_2048);
+    FF_2048_fromOctet(ff_q, &OCT, HFLEN_2048);
 
     FF_2048_copy(ff_s1, p->s1, HFLEN_2048);
     FF_2048_mod(ff_s1, ff_q, HFLEN_2048);
