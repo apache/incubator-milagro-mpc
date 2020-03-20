@@ -90,6 +90,15 @@ int MPC_ECDSA_VERIFY(const octet *HM,octet *PK, octet *R,octet *S);
  */
 void MPC_K_GENERATE(csprng *RNG, octet *K);
 
+/** \brief Generate a random K for and ECDSA signature
+ *
+ *  Generate a random K modulo the curve order
+ *
+ *  @param RNG               Pointer to a cryptographically secure PRNG
+ *  @param K                 Destination octet for the randomly generated value
+ */
+void MPC_K_GENERATE(csprng *RNG, octet *K);
+
 /** \brief Calculate the inverse of the sum of kgamma values
  *
  *  Calculate the inverse of the sum of kgamma values

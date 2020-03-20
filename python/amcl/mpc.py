@@ -75,7 +75,7 @@ extern void PAILLIER_PK_fromOctet(PAILLIER_public_key *PUB, octet *PK);
 extern int ECP_SECP256K1_PUBLIC_KEY_VALIDATE(octet *W);
 
 extern void MPC_ECDSA_KEY_PAIR_GENERATE(csprng *RNG, octet *S, octet *W);
-extern int MPC_ECDSA_VERIFY(const octet *HM,octet *PK, octet *R,octet *S);
+extern int MPC_ECDSA_VERIFY(const octet *HM, octet *PK, octet *R, octet *S);
 extern void MPC_MTA_CLIENT1(csprng *RNG, PAILLIER_public_key* PUB, octet* A, octet* CA, octet* R);
 extern void MPC_MTA_CLIENT2(PAILLIER_private_key *PRIV, octet* CB, octet *ALPHA);
 extern void MPC_MTA_SERVER(csprng *RNG, PAILLIER_public_key *PUB, octet *B, octet *CA, octet *Z, octet *R, octet *CB, octet *BETA);
@@ -729,7 +729,5 @@ def mpc_dump_paillier_sk(paillier_sk):
     # Clear memory
     core_utils.clear_octet(p)
     core_utils.clear_octet(q)
-    core_utils.clear_octet(p2)
-    core_utils.clear_octet(q2)
 
     return p2, q2

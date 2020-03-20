@@ -26,7 +26,6 @@ under the License.
 /* Generate ECDSA key pair */
 void MPC_ECDSA_KEY_PAIR_GENERATE(csprng *RNG, octet* S, octet *W)
 {
-
     BIG_256_56 s;
     BIG_256_56 q;
 
