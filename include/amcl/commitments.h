@@ -89,7 +89,7 @@ typedef struct
 
 /*! \brief Set up an RSA modulus and the necessary values.
  *
- * RNG is only used to generate the values not explicitely specified.
+ * RNG is only used to generate the values not explicitly specified.
  * This allows using safe primes P and Q generated externally while
  * still randomly generating B0 and ALPHA. In turn, this allows the
  * user to generate P and Q with ad hoc libraries for the generation of

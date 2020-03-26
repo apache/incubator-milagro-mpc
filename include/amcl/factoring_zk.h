@@ -19,7 +19,7 @@ under the License.
 
 /**
  * @file factoring_zk.h
- * @brief ZK proof of knwledge of factoring declarations
+ * @brief ZK proof of knowledge of factoring declarations
  *
  */
 
@@ -54,14 +54,14 @@ extern "C"
  *  @param  P           First prime of the factorization
  *  @param  Q           Second prime of the factorization
  *  @param  R           Random value used in the proof. If RNG is NULL this is read
- *  @param  E           Fisrt component of the ZK proof
+ *  @param  E           First component of the ZK proof
  *  @param  Y           Second component of the ZK proof
  */
 void FACTORING_ZK_prove(csprng *RNG, octet *P, octet *Q, octet *R, octet *E, octet *Y);
 
 /** \brief Verify ZK proof of knowledge of factoring of N
  *
- *  Verify that (E, Y) is a valid proof of knowldge of factoring of N
+ *  Verify that (E, Y) is a valid proof of knowledge of factoring of N
  *
  *  @param  N           Public integer, the RSA modulus
  *  @param  E           Fisrt component of the ZK proof
