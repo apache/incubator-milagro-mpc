@@ -77,7 +77,7 @@ extern void SCHNORR_challenge(const octet *V, const octet *C, octet *E);
  * @param R     Secret value used for the commitment
  * @param E     Challenge received from the verifier
  * @param X     Secret exponent of the DLOG. V = x.G
- * @param P     Proof of knowldege of the DLOG
+ * @param P     Proof of knowledge of the DLOG
  */
 extern void SCHNORR_prove(const octet *R, const octet *E, const octet *X, octet *P);
 
@@ -93,7 +93,7 @@ extern int SCHNORR_verify(octet *V, octet *C, const octet *E, const octet *P);
 
 /* Double Schnorr's proofs API */
 
-// The double Schnorr Proof allows to prove knwoldedge of
+// The double Schnorr Proof allows to prove knowledge of
 // s,l s.t. V = s.R + l.G for some R ECP
 
 /*! \brief Generate a commitment for the proof
@@ -127,8 +127,8 @@ extern void SCHNORR_D_challenge(const octet *R, const octet *V, const octet *C, 
  * @param E     Challenge received from the verifier
  * @param S     Secret exponent of the DLOG. V = s.R + l.G
  * @param L     Secret exponent of the DLOG. V = s.R + l.G
- * @param T     First component of the proof of knowldege of the DLOG
- * @param U     Second component of the proof of knowldege of the DLOG
+ * @param T     First component of the proof of knowledge of the DLOG
+ * @param U     Second component of the proof of knowledge of the DLOG
  */
 extern void SCHNORR_D_prove(const octet *A, const octet *B, const octet *E, const octet *S, const octet *L, octet *T, octet *U);
 
