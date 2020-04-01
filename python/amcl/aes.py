@@ -41,7 +41,9 @@ else:
 
 
 # Constants
-AES_KEY = 32 # Length in bytes of an AES key
+KEYL = 16 # Length in bytes of an AES key
+TAGL = 16 # Length in bytes of tag
+IVL = 12 # Length in bytes of IV
 
 
 def gcm_encrypt(aes_key, iv, header, plaintext):
@@ -69,7 +71,7 @@ def gcm_encrypt(aes_key, iv, header, plaintext):
     iv1, iv1_val = core_utils.make_octet(None, iv)
     header1, header1_val = core_utils.make_octet(None, header)
     plaintext1, plaintext1_val = core_utils.make_octet(None, plaintext)
-    tag1, tag1_val = core_utils.make_octet(AES_KEY)
+    tag1, tag1_val = core_utils.make_octet(TAGL)
     ciphertext1, ciphertext1_val = core_utils.make_octet(len(plaintext))
     _ = aes_key1_val, iv1_val, header1_val, plaintext1_val, tag1_val, ciphertext1_val # Suppress warnings
 
@@ -118,7 +120,7 @@ def gcm_decrypt(aes_key, iv, header, ciphertext):
     iv1, iv1_val = core_utils.make_octet(None, iv)
     header1, header1_val = core_utils.make_octet(None, header)
     ciphertext1, ciphertext1_val = core_utils.make_octet(None, ciphertext)
-    tag1, tag1_val = core_utils.make_octet(AES_KEY)
+    tag1, tag1_val = core_utils.make_octet(TAGL)
     plaintext1, plaintext1_val = core_utils.make_octet(len(ciphertext))
     _ = aes_key1_val, iv1_val, header1_val, plaintext1_val, tag1_val, ciphertext1_val # Suppress warnings
 
