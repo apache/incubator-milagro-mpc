@@ -60,6 +60,7 @@ int main(int argc, char **argv)
     COMMITMENTS_BC_priv_modulus m;
     const char *Nline =  "N = ";
     const char *PQline = "PQ = ";
+    const char *IPQline = "IPQ = ";
 
     COMMITMENTS_BC_priv_modulus m_golden;
     const char *IALPHAline = "IALPHA = ";
@@ -88,6 +89,7 @@ int main(int argc, char **argv)
         // Ground truth
         scan_FF_2048(fp, m_golden.P, line, Pline, HFLEN_2048);
         scan_FF_2048(fp, m_golden.Q, line, Qline, HFLEN_2048);
+        scan_FF_2048(fp, m_golden.invPQ, line, IPQline, HFLEN_2048);
         scan_FF_2048(fp, m_golden.pq, line, PQline, FFLEN_2048);
         scan_FF_2048(fp, m_golden.N, line, Nline, FFLEN_2048);
         scan_FF_2048(fp, m_golden.alpha, line, ALPHAline, FFLEN_2048);
@@ -102,6 +104,7 @@ int main(int argc, char **argv)
 
             compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup P",      m.P,      m_golden.P,      HFLEN_2048);
             compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup Q",      m.Q,      m_golden.Q,      HFLEN_2048);
+            compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup invPQ",  m.invPQ,  m_golden.invPQ,  HFLEN_2048);
             compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup N",      m.N,      m_golden.N,      FFLEN_2048);
             compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup pq",     m.pq,     m_golden.pq,     FFLEN_2048);
             compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup alpha",  m.alpha,  m_golden.alpha,  FFLEN_2048);
