@@ -71,6 +71,7 @@ typedef struct
 {
     BIG_1024_58 P[HFLEN_2048];      /**< Safe prime P = 2p+1 */
     BIG_1024_58 Q[HFLEN_2048];      /**< Safe prime Q = 2q+1 */
+    BIG_1024_58 invPQ[HFLEN_2048];  /**< Precomputed P^(-1) mod Q */
     BIG_1024_58 pq[FFLEN_2048];     /**< Precomputed product of p and q */
     BIG_1024_58 N[FFLEN_2048];      /**< Public part of the modulus */
     BIG_1024_58 alpha[FFLEN_2048];  /**< Secret exponent of the DLOG b1 = b0^alpha*/

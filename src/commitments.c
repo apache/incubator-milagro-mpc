@@ -229,6 +229,7 @@ void COMMITMENTS_BC_setup(csprng *RNG, COMMITMENTS_BC_priv_modulus *m, octet *P,
 
     FF_2048_mul(m->N, m->P, m->Q, HFLEN_2048);
     FF_2048_mul(m->pq, p, q, HFLEN_2048);
+    FF_2048_invmodp(m->invPQ, m->P, m->Q, HFLEN_2048);
 
     /* Load or generate generator b0 and DLOG exponent alpha */
 
@@ -239,7 +240,7 @@ void COMMITMENTS_BC_setup(csprng *RNG, COMMITMENTS_BC_priv_modulus *m, octet *P,
         bc_generator(RNG, gp, p, m->P, HFLEN_2048);
         bc_generator(RNG, gq, q, m->Q, HFLEN_2048);
 
-        FF_2048_crt(m->b0, gp, gq, m->P, m->Q, HFLEN_2048);
+        FF_2048_crt(m->b0, gp, gq, m->P, m->invPQ, m->N, HFLEN_2048);
     }
     else
     {
@@ -276,7 +277,7 @@ void COMMITMENTS_BC_setup(csprng *RNG, COMMITMENTS_BC_priv_modulus *m, octet *P,
     FF_2048_skpow(gp, gp, ap, m->P, HFLEN_2048, HFLEN_2048);
     FF_2048_skpow(gq, gq, aq, m->Q, HFLEN_2048, HFLEN_2048);
 
-    FF_2048_crt(m->b1, gp, gq, m->P, m->Q, HFLEN_2048);
+    FF_2048_crt(m->b1, gp, gq, m->P, m->invPQ, m->N, HFLEN_2048);
 
     // Clean memory
     FF_2048_zero(p,  HFLEN_2048);

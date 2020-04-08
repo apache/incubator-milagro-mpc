@@ -326,6 +326,8 @@ void MTA_RP_commit(csprng *RNG, PAILLIER_private_key *key, COMMITMENTS_BC_pub_mo
     BIG_1024_58 n[FFLEN_2048];
     BIG_1024_58 g[FFLEN_2048];
     BIG_1024_58 q[HFLEN_2048];
+    BIG_1024_58 invp2q2[FFLEN_2048];
+    BIG_1024_58 n2[2 * FFLEN_2048];
     BIG_1024_58 ws1[FFLEN_2048];
     BIG_1024_58 ws2[FFLEN_2048];
     BIG_1024_58 dws[2 * FFLEN_2048];
@@ -342,6 +344,9 @@ void MTA_RP_commit(csprng *RNG, PAILLIER_private_key *key, COMMITMENTS_BC_pub_mo
     FF_2048_mul(n, key->p, key->q, HFLEN_2048);
     FF_2048_copy(g, n, FFLEN_2048);
     FF_2048_inc(g, 1, FFLEN_2048);
+    FF_2048_sqr(n2, n, FFLEN_2048);
+    FF_2048_norm(n2, 2 * FFLEN_2048);
+    FF_2048_invmodp(invp2q2, key->p2, key->q2, FFLEN_2048);
 
     if (RNG != NULL)
     {
@@ -382,7 +387,7 @@ void MTA_RP_commit(csprng *RNG, PAILLIER_private_key *key, COMMITMENTS_BC_pub_mo
     // Compute u using CRT
     FF_2048_skpow2(ws1, g, rv->alpha, rv->beta, n, key->p2, FFLEN_2048, FFLEN_2048);
     FF_2048_skpow2(ws2, g, rv->alpha, rv->beta, n, key->q2, FFLEN_2048, FFLEN_2048);
-    FF_2048_crt(dws, ws1, ws2, key->p2, key->q2, FFLEN_2048);
+    FF_2048_crt(dws1, ws1, ws2, key->p2, invp2q2, n2, FFLEN_2048);
 
     // Convert u as FF_4096 since it is only used as such
     FF_2048_toOctet(&OCT, dws, 2 * FFLEN_2048);
@@ -479,7 +484,8 @@ void MTA_RP_prove(PAILLIER_private_key *key, MTA_RP_commitment_rv *rv, octet *M,
     FF_2048_mul(ws1, sq, hws,  HFLEN_2048);
     FF_2048_dmod(sq, ws1, key->q, HFLEN_2048);
 
-    FF_2048_crt(ws1, sp, sq, key->p, key->q, HFLEN_2048);
+    FF_2048_mul(ws2, key->p, key->q, HFLEN_2048);
+    FF_2048_crt(ws1, sp, sq, key->p, key->invpq, ws2, HFLEN_2048);
 
     // Convert s to FF_4096 since it is only used as such
     FF_2048_toOctet(&OCT, ws1, FFLEN_2048);

@@ -104,6 +104,7 @@ void FACTORING_ZK_prove(csprng *RNG, octet *P, octet *Q, octet *R, octet *E, oct
 
     BIG_1024_58 p[HFLEN_2048];
     BIG_1024_58 q[HFLEN_2048];
+    BIG_1024_58 invpq[HFLEN_2048];
     BIG_1024_58 n[FFLEN_2048];
 
     BIG_1024_58 r[FFLEN_2048];
@@ -124,6 +125,7 @@ void FACTORING_ZK_prove(csprng *RNG, octet *P, octet *Q, octet *R, octet *E, oct
     FF_2048_fromOctet(p, P, HFLEN_2048);
     FF_2048_fromOctet(q, Q, HFLEN_2048);
     FF_2048_mul(n, p, q, HFLEN_2048);
+    FF_2048_invmodp(invpq, p, q, HFLEN_2048);
 
     if (RNG != NULL)
     {
@@ -175,7 +177,7 @@ void FACTORING_ZK_prove(csprng *RNG, octet *P, octet *Q, octet *R, octet *E, oct
         FF_2048_skpow(zrq, hws, rq, q, HFLEN_2048, HFLEN_2048);
 
         // Combine Z_i ^ r mod N with CRT
-        FF_2048_crt(ws, zrp, zrq, p, q, HFLEN_2048);
+        FF_2048_crt(ws, zrp, zrq, p, invpq, n, HFLEN_2048);
 
         // Process Z_i ^ r mod N in H
         FF_2048_toOctet(&W, ws, FFLEN_2048);
