@@ -77,6 +77,7 @@ int main()
     // Check that modulus was correctly killed
     ff_2048_cleaned(m.P,      "P",      HFLEN_2048);
     ff_2048_cleaned(m.Q,      "Q",      HFLEN_2048);
+    ff_2048_cleaned(m.invPQ,  "invPQ",  HFLEN_2048);
     ff_2048_cleaned(m.pq,     "pq",     FFLEN_2048);
     ff_2048_cleaned(m.alpha,  "alpha",  FFLEN_2048);
     ff_2048_cleaned(m.ialpha, "ialpha", FFLEN_2048);

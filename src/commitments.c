@@ -279,6 +279,7 @@ void COMMITMENTS_BC_kill_priv_modulus(COMMITMENTS_BC_priv_modulus *m)
 {
     FF_2048_zero(m->P, HFLEN_2048);
     FF_2048_zero(m->Q, HFLEN_2048);
+    FF_2048_zero(m->invPQ, HFLEN_2048);
     FF_2048_zero(m->pq, FFLEN_2048);
     FF_2048_zero(m->alpha, FFLEN_2048);
     FF_2048_zero(m->ialpha, FFLEN_2048);
