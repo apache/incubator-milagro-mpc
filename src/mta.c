@@ -527,10 +527,13 @@ void MTA_triple_power(BIG_1024_58 *proof, BIG_1024_58 *h1, BIG_1024_58 *h2, BIG_
     BIG_1024_58 hws2[HFLEN_2048];
     BIG_1024_58 hws3[HFLEN_2048];
     BIG_1024_58 hws4[HFLEN_2048];
+    BIG_1024_58 eneg[HFLEN_2048];
 
     FF_2048_copy(hws1, p, HFLEN_2048);
     FF_2048_dec(hws1, 1, HFLEN_2048);
     FF_2048_amod(hws4, s2, FFLEN_2048 + HFLEN_2048, hws1, HFLEN_2048);
+    FF_2048_sub(eneg, hws1, e, HFLEN_2048);
+    FF_2048_norm(eneg, HFLEN_2048);
 
     if (reduce_s1)
     {
@@ -545,8 +548,7 @@ void MTA_triple_power(BIG_1024_58 *proof, BIG_1024_58 *h1, BIG_1024_58 *h2, BIG_
     FF_2048_dmod(hws2, h2, p, HFLEN_2048);
 
     FF_2048_dmod(proof, z, p, HFLEN_2048);
-    FF_2048_invmodp(proof, proof, p, HFLEN_2048);
-    FF_2048_skpow3(proof, hws1, hws3, hws2, hws4, proof, e, p, HFLEN_2048, HFLEN_2048);
+    FF_2048_skpow3(proof, hws1, hws3, hws2, hws4, proof, eneg, p, HFLEN_2048, HFLEN_2048);
 
     // Clean memory
     FF_2048_zero(hws1, HFLEN_2048);
