@@ -118,7 +118,7 @@ static int is_safe_prime(BIG_1024_58 *p, BIG_1024_58 *P, csprng *RNG, int n)
     FF_2048_copy(Pm1, P, n);
     FF_2048_dec(Pm1, 1, n);
 
-    FF_2048_pow(f, f, Pm1, P, n, n);
+    FF_2048_nt_pow(f, f, Pm1, P, n, n);
     FF_2048_dec(f, 1, n);
     if (FF_2048_iszilch(f, n))
     {
@@ -172,9 +172,10 @@ void bc_generator(csprng *RNG, BIG_1024_58* x, BIG_1024_58 *P, int n)
 
     do
     {
-        FF_2048_power(x, r, 2, P, n);
+        FF_2048_nt_pow_int(x, r, 2, P, n);
         FF_2048_inc(r, 1, n);
-    } while (FF_2048_isunity(x, n));
+    }
+    while (FF_2048_isunity(x, n));
 }
 
 void COMMITMENTS_BC_setup(csprng *RNG, COMMITMENTS_BC_priv_modulus *m, octet *P, octet *Q, octet *B0, octet *ALPHA)
@@ -261,8 +262,8 @@ void COMMITMENTS_BC_setup(csprng *RNG, COMMITMENTS_BC_priv_modulus *m, octet *P,
     FF_2048_dmod(ap, m->alpha, p, HFLEN_2048);
     FF_2048_dmod(aq, m->alpha, q, HFLEN_2048);
 
-    FF_2048_skpow(gp, gp, ap, m->P, HFLEN_2048, HFLEN_2048);
-    FF_2048_skpow(gq, gq, aq, m->Q, HFLEN_2048, HFLEN_2048);
+    FF_2048_ct_pow(gp, gp, ap, m->P, HFLEN_2048, HFLEN_2048);
+    FF_2048_ct_pow(gq, gq, aq, m->Q, HFLEN_2048, HFLEN_2048);
 
     FF_2048_crt(m->b1, gp, gq, m->P, m->invPQ, m->N, HFLEN_2048);
 

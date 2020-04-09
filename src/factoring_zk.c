@@ -170,11 +170,11 @@ void FACTORING_ZK_prove(csprng *RNG, octet *P, octet *Q, octet *R, octet *E, oct
 
         // Compute Z_i ^ r mod P
         FF_2048_dmod(hws, ws, p, HFLEN_2048);
-        FF_2048_skpow(zrp, hws, rp, p, HFLEN_2048, HFLEN_2048);
+        FF_2048_ct_pow(zrp, hws, rp, p, HFLEN_2048, HFLEN_2048);
 
         // Compute Z_i ^ r mod Q
         FF_2048_dmod(hws, ws, q, HFLEN_2048);
-        FF_2048_skpow(zrq, hws, rq, q, HFLEN_2048, HFLEN_2048);
+        FF_2048_ct_pow(zrq, hws, rq, q, HFLEN_2048, HFLEN_2048);
 
         // Combine Z_i ^ r mod N with CRT
         FF_2048_crt(ws, zrp, zrq, p, invpq, n, HFLEN_2048);
@@ -282,7 +282,7 @@ int FACTORING_ZK_verify(octet *N, octet *E, octet *Y)
         hash_oct(&sha_prime, &W);
 
         // Compute Z_i ^ r mod N and process it in H
-        FF_2048_skpow(ws, ws, exp, n, FFLEN_2048, 2 * FFLEN_2048);
+        FF_2048_ct_pow(ws, ws, exp, n, FFLEN_2048, 2 * FFLEN_2048);
         FF_2048_invmodp(ws, ws, n, FFLEN_2048);
 
         FF_2048_toOctet(&W, ws, FFLEN_2048);

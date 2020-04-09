@@ -50,7 +50,7 @@ int main()
     /* Test utility to find generators of G_p as subgroup of Z/PZ */
     bc_generator(&RNG, x, P, HFLEN_2048);
     assert(NULL, "bc_generator - returned unity", !FF_2048_isunity(x, HFLEN_2048));
-    FF_2048_pow(x, x, p, P, HFLEN_2048, HFLEN_2048);
+    FF_2048_nt_pow(x, x, p, P, HFLEN_2048, HFLEN_2048);
     assert(NULL, "bc_generator - order is not P", FF_2048_isunity(x, HFLEN_2048));
 
     /* Test safe prime primality test */
