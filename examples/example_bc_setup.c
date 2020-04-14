@@ -67,7 +67,7 @@ int main()
     printf("\n\tB1     = ");
     FF_2048_output(m.b1, FFLEN_2048);
 
-    printf("Clear secret values from the modulus");
+    printf("\n\nClear secret values from the modulus");
     COMMITMENTS_BC_kill_priv_modulus(&m);
 
     printf("\n\tP      = ");
@@ -86,6 +86,7 @@ int main()
     FF_2048_output(m.b0, FFLEN_2048);
     printf("\n\tB1     = ");
     FF_2048_output(m.b1, FFLEN_2048);
+    printf("\n");
 
     // Clean memory
     OCT_clear(&P);

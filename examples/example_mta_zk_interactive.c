@@ -121,7 +121,7 @@ int main()
 
     PAILLIER_KEY_PAIR(NULL, &P, &Q, &pub_key, &priv_key);
 
-    printf("Run MTA Range Proof\nParameters:\n");
+    printf("Run MTA interactive ZK Proof\nParameters:\n");
     printf("\tPaillier Key\n");
     printf("\t\tP = ");
     OCT_output(&P);
@@ -229,9 +229,6 @@ int main()
     // Verifier - read commitment and proof from octets
     MTA_ZK_proof_fromOctets(&proof, &S, &S1, &S2, &T1, &T2);
     MTA_ZK_commitment_fromOctets(&c, &Z, &Z1, &T, &V, &W);
-
-    // Verifier - compute deterministic challenge
-    MTA_ZK_challenge(&pub_key, &pub_mod, &C1, &C2, &c, &E);
 
     printf("\n[Verifier] Verification\n");
 
