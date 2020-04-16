@@ -61,6 +61,7 @@ typedef struct
     BIG_1024_58 lq[1];
     BIG_1024_58 invp[2];
     BIG_1024_58 invq[2];
+    BIG_1024_58 invpq[1];
     BIG_1024_58 p2[2];
     BIG_1024_58 q2[2];
     BIG_1024_58 mp[1];

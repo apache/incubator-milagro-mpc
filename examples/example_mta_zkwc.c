@@ -125,7 +125,7 @@ int main()
 
     PAILLIER_KEY_PAIR(NULL, &P, &Q, &pub_key, &priv_key);
 
-    printf("Run MTA Range Proof\nParameters:\n");
+    printf("Run MTA ZK Proof with check\nParameters:\n");
     printf("\tPaillier Key\n");
     printf("\t\tP = ");
     OCT_output(&P);

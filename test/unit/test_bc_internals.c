@@ -25,9 +25,6 @@
 
 char *Phex = "CA5F37B7C0DDF6530B30A41116588218DE95F1F36B807FD7C28E4C467EE3F35967BC01D28B71F8A627A353675A81C86A1FF03DCECAF1686891183FA317BA34A4A1148D40A89F1F3AC0C200511C6CFE02342CD75354C25A2E069886DD4FB73BD365660D163F1282B143119AB8F375A73875EC16B634F52593B73BC6D875F2D3EF";
 
-char *X0hex = "4f2f4a6e3ee87e36d1c4f653478fe7cead1d6bfdf67e106f3a26709924123831a18002638685f6ddafcfa33f17eab7cfaf15f28b7bdf798f71b18462db94d9a97ad250738076703522f9e947c2c6dec7045917f39bb602ab3cf1d00766ac7c641dcf7ba02e6b236b19354dddbef694e7c5a5307ead266dc69e39781cc17217b8";
-char *X1hex = "1241075d9b641c4f3da110d5c0fb5b7e7334e7d826c6a4ee76ebb1ae780ef1d78fa5579660a5ed3e881075f51fe4a018a526be4da49fce408842391f925b2baf4af87c62f0c92166b54020b9878a2e17fad87b4d801ea1cc786f29a877cf95020484166bfc8dbbe799c8934aca74f34ac51bac8b4753191d302c813f6691cf79";
-
 int main()
 {
     int rc;
@@ -37,40 +34,24 @@ int main()
 
     BIG_1024_58 P[HFLEN_2048];
     BIG_1024_58 p[HFLEN_2048];
-    BIG_1024_58 x0[HFLEN_2048];
-    BIG_1024_58 x1[HFLEN_2048];
     BIG_1024_58 x[HFLEN_2048];
 
-    // Load values
+    // Load P and p = (P-1)/2
     OCT_fromHex(&O, Phex);
     FF_2048_fromOctet(P, &O, HFLEN_2048);
     FF_2048_copy(p, P, HFLEN_2048);
     FF_2048_shr(p, HFLEN_2048);
 
-    OCT_fromHex(&O, X0hex);
-    FF_2048_fromOctet(x0, &O, HFLEN_2048);
-
-    OCT_fromHex(&O, X1hex);
-    FF_2048_fromOctet(x1, &O, HFLEN_2048);
-
     // Deterministic RNG for testing
     csprng RNG;
     char seed[32] = {0};
-
-    /* Test utility to find generators of G_pq as subgroup of Z/PQZ */
-
-    // Using seed 0 the generated number has order p
-    // and is not squared
     RAND_seed(&RNG, 32, seed);
-    bc_generator(&RNG, x, p, P, HFLEN_2048);
-    compare_FF_2048(NULL, 0, "bc_generator. Seed 0", x, x0, HFLEN_2048);
 
-    // Using seed 1 the generated number has order 2p
-    // and is squared
-    seed[0]+=1;
-    RAND_seed(&RNG, 32, seed);
-    bc_generator(&RNG, x, p, P, HFLEN_2048);
-    compare_FF_2048(NULL, 0, "bc_generator. Seed 1", x, x1, HFLEN_2048);
+    /* Test utility to find generators of G_p as subgroup of Z/PZ */
+    bc_generator(&RNG, x, P, HFLEN_2048);
+    assert(NULL, "bc_generator - returned unity", !FF_2048_isunity(x, HFLEN_2048));
+    FF_2048_nt_pow(x, x, p, P, HFLEN_2048, HFLEN_2048);
+    assert(NULL, "bc_generator - order is not P", FF_2048_isunity(x, HFLEN_2048));
 
     /* Test safe prime primality test */
 
