@@ -26,6 +26,23 @@ under the License.
 
 static char* curve_order_hex = "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141";
 
+/* Remark 1
+ *
+ * The generation of some random blinding values in this file uses
+ * a modular reduction, producing a slightly biased distribution.
+ * However, the random numbers reduced have significatively more
+ * bits of entropy than the modulus, making this bias negligible.
+ *
+ * In particular we have moduli
+ * |q^3|    ~ 768
+ * |Nt*q|   ~ 2048 + 256
+ * |Nt*q^3| ~ 2048 + 768
+ *
+ * used (respectively) to reduce random numbers of size 1024, 3096
+ * and 3096. Each of these random numbers has at least 256 bits of
+ * extra entropy, making the exploitation of this bias not viable.
+ */
+
 /* Octet manipulation utilities */
 
 static void OCT_hash(hash256 *sha, const octet *O)
@@ -349,10 +366,11 @@ void MTA_RP_commit(csprng *RNG, PAILLIER_private_key *key, COMMITMENTS_BC_pub_mo
 
     if (RNG != NULL)
     {
-        // Generate alpha in [0, .., q^3]
         FF_2048_sqr(ws1, q, HFLEN_2048);
         FF_2048_mul(ws2, q, ws1, HFLEN_2048);
 
+        // Generate alpha in [0, .., q^3]
+        // See Remark 1 at the top for more information
         FF_2048_zero(rv->alpha, FFLEN_2048);
         FF_2048_random(rv->alpha, RNG, HFLEN_2048);
         FF_2048_mod(rv->alpha, ws2, HFLEN_2048);
@@ -361,11 +379,13 @@ void MTA_RP_commit(csprng *RNG, PAILLIER_private_key *key, COMMITMENTS_BC_pub_mo
         FF_2048_randomnum(rv->beta, n, RNG, FFLEN_2048);
 
         // Generate gamma in [0, .., Nt * q^3]
+        // See Remark 1 at the top for more information
         FF_2048_amul(dws1, ws2, HFLEN_2048, mod->N, FFLEN_2048);
         FF_2048_random(rv->gamma, RNG, FFLEN_2048 + HFLEN_2048);
         FF_2048_mod(rv->gamma, dws1, FFLEN_2048 + HFLEN_2048);
 
         // Generate rho in [0, .., Nt * q]
+        // See Remark 1 at the top for more information
         FF_2048_amul(dws1, q, HFLEN_2048, mod->N, FFLEN_2048);
         FF_2048_random(rv->rho, RNG, FFLEN_2048 + HFLEN_2048);
         FF_2048_mod(rv->rho, dws1, FFLEN_2048 + HFLEN_2048);
@@ -727,10 +747,11 @@ void MTA_ZK_commit(csprng *RNG, PAILLIER_public_key *key, COMMITMENTS_BC_pub_mod
 
     if (RNG != NULL)
     {
-        // Generate alpha in [0, .., q^3]
         FF_2048_sqr(q3, q, HFLEN_2048);
         FF_2048_mul(q3, q, q3, HFLEN_2048);
 
+        // Generate alpha in [0, .., q^3]
+        // See Remark 1 at the top for more information
         FF_2048_zero(rv->alpha, FFLEN_2048);
         FF_2048_random(rv->alpha, RNG, HFLEN_2048);
         FF_2048_mod(rv->alpha, q3, HFLEN_2048);
@@ -746,6 +767,7 @@ void MTA_ZK_commit(csprng *RNG, PAILLIER_public_key *key, COMMITMENTS_BC_pub_mod
         FF_2048_fromOctet(rv->gamma, &OCT, FFLEN_2048);
 
         // Generate rho, tau, sigma in [0, .., Nt * q]
+        // See Remark 1 at the top for more information
         FF_2048_amul(tws, q, HFLEN_2048, mod->N, FFLEN_2048);
         FF_2048_random(rv->rho, RNG, FFLEN_2048 + HFLEN_2048);
         FF_2048_mod(rv->rho, tws, FFLEN_2048 + HFLEN_2048);
@@ -757,6 +779,7 @@ void MTA_ZK_commit(csprng *RNG, PAILLIER_public_key *key, COMMITMENTS_BC_pub_mod
         FF_2048_mod(rv->sigma, tws, FFLEN_2048 + HFLEN_2048);
 
         // Generate rho1 in [0, .., Nt * q^3]
+        // See Remark 1 at the top for more information
         FF_2048_amul(tws, q3, HFLEN_2048, mod->N, FFLEN_2048);
         FF_2048_random(rv->rho1, RNG, FFLEN_2048 + HFLEN_2048);
         FF_2048_mod(rv->rho1, tws, FFLEN_2048 + HFLEN_2048);
