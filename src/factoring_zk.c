@@ -241,7 +241,17 @@ int FACTORING_ZK_verify(octet *N, octet *E, octet *Y)
     char w[FS_2048];
     octet W = {0, sizeof(w), w};
 
-    // 0 <= Y <= A by construction
+    // Check bounds for 0 <= Y < A
+    if(Y->len > FACTORING_ZK_A)
+    {
+        return FACTORING_ZK_OUT_OF_BOUNDS;
+    }
+
+    // Check bounds for 0 <= E < B
+    if(E->len > FACTORING_ZK_B)
+    {
+        return FACTORING_ZK_OUT_OF_BOUNDS;
+    }
 
     // Process N in the hash function H(N, ?)
     HASH256_init(&sha);

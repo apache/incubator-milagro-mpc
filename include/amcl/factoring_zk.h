@@ -43,10 +43,12 @@ extern "C"
 #define HFS_2048 MODBYTES_1024_58 * HFLEN_2048 /**< Half 2048 field size in bytes */
 #endif
 
-#define FACTORING_ZK_B 16 /**< Security parameter, length in bytes */
+#define FACTORING_ZK_A FS_2048  /**< Proof, length in bytes */
+#define FACTORING_ZK_B 16       /**< Security parameter, length in bytes */
 
-#define FACTORING_ZK_OK   0  /**< Proof successfully verified */
-#define FACTORING_ZK_FAIL 91 /**< Invalid proof */
+#define FACTORING_ZK_OK   0           /**< Proof successfully verified */
+#define FACTORING_ZK_FAIL 91          /**< Invalid proof */
+#define FACTORING_ZK_OUT_OF_BOUNDS 92 /**< Invalid proof bounds */
 
 /** \brief Prove knowledge of the modulus m in ZK
  *

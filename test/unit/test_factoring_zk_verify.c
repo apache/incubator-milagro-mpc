@@ -93,10 +93,30 @@ int main(int argc, char **argv)
     }
 
     /* Test unhappy path */
-    E.val[0]++;
+    char *t[FS_2048 + 1];
+    octet T = {0, sizeof(t), t};
 
-    rc = FACTORING_ZK_verify(&N, &E, &Y);
+    // Invalid E
+    OCT_copy(&T, &E);
+    T.val[0]++;
+
+    rc = FACTORING_ZK_verify(&N, &T, &Y);
     assert(NULL, "FACTORING_ZK_verify. Invalid E", rc == FACTORING_ZK_FAIL);
+
+    // E out of bounds
+    OCT_copy(&T, &E);
+    T.len++;
+
+    rc = FACTORING_ZK_verify(&N, &T, &Y);
+    assert(NULL, "FACTORING_ZK_verify. E out of bounds", rc == FACTORING_ZK_OUT_OF_BOUNDS);
+
+    // Y out of bounds
+    OCT_copy(&T, &Y);
+    T.len++;
+
+    rc = FACTORING_ZK_verify(&N, &E, &T);
+    assert(NULL, "FACTORING_ZK_verify. Y out of bounds", rc == FACTORING_ZK_OUT_OF_BOUNDS);
+
 
     printf("SUCCESS\n");
     exit(EXIT_SUCCESS);
