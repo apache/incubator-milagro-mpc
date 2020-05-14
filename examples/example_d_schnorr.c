@@ -44,6 +44,12 @@ int main()
     char v[SFS_SECP256K1+1];
     octet V = {0, sizeof(v), v};
 
+    char id[32];
+    octet ID = {0, sizeof(id), id};
+
+    char ad[32];
+    octet AD = {0, sizeof(ad), ad};
+
     char a[SGS_SECP256K1];
     octet A = {0, sizeof(a), a};
 
@@ -71,6 +77,10 @@ int main()
     ECP_SECP256K1_generator(&G);
     ECP_SECP256K1_generator(&ECPR);
 
+    // Generate ID and AD
+    OCT_rand(&ID, &RNG, ID.len);
+    OCT_rand(&AD, &RNG, AD.len);
+
     // Generate public R
     BIG_256_56_randomnum(r, q, &RNG);
     ECP_SECP256K1_mul(&ECPR, r);
@@ -91,14 +101,18 @@ int main()
     ECP_SECP256K1_toOctet(&V, &G, 1);
 
     printf("Double Schnorr's Proof of knowledge of a DLOG. V = s.R + l.G\n");
-    printf("\ts = ");
+    printf("\ts  = ");
     OCT_output(&S);
-    printf("\tl = ");
+    printf("\tl  = ");
     OCT_output(&L);
-    printf("\tR = ");
+    printf("\tR  = ");
     OCT_output(&R);
-    printf("\tV = ");
+    printf("\tV  = ");
     OCT_output(&V);
+    printf("\tID = ");
+    OCT_output(&ID);
+    printf("\tAD = ");
+    OCT_output(&AD);
 
     printf("\nGenerate a commitment C = a.R + b.G\n");
     rc = SCHNORR_D_commit(&RNG, &R, &A, &B, &C);
@@ -116,7 +130,7 @@ int main()
     OCT_output(&C);
 
     printf("\nGenerate a challenge from the public parameters\n");
-    SCHNORR_D_challenge(&R, &V, &C, &E);
+    SCHNORR_D_challenge(&R, &V, &C, &ID, &AD, &E);
 
     printf("\te = ");
     OCT_output(&E);

@@ -35,6 +35,12 @@ int main()
     char v[SFS_SECP256K1+1];
     octet V = {0, sizeof(v), v};
 
+    char id[32];
+    octet ID = {0, sizeof(id), id};
+
+    char ad[32];
+    octet AD = {0, sizeof(ad), ad};
+
     char r[SGS_SECP256K1];
     octet R = {0, sizeof(r), r};
 
@@ -51,6 +57,10 @@ int main()
     char seed[32] = {0};
     csprng RNG;
     RAND_seed(&RNG, 32, seed);
+
+    // Generate ID and AD
+    OCT_rand(&ID, &RNG, ID.len);
+    OCT_rand(&AD, &RNG, AD.len);
 
     // Generate DLOG
     BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
@@ -79,7 +89,7 @@ int main()
     OCT_output(&C);
 
     printf("\nGenerate a challenge from the public parameters\n");
-    SCHNORR_challenge(&V, &C, &E);
+    SCHNORR_challenge(&V, &C, &ID, &AD, &E);
 
     printf("\te = ");
     OCT_output(&E);

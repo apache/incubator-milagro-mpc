@@ -36,6 +36,12 @@ int main()
     char n[FS_2048];
     octet N = {0, sizeof(n), n};
 
+    char id[32];
+    octet ID = {0, sizeof(id), id};
+
+    char ad[32];
+    octet AD = {0, sizeof(ad), ad};
+
     char e[FACTORING_ZK_B];
     octet E = {0, sizeof(e), e};
 
@@ -46,6 +52,10 @@ int main()
     char seed[64] = {0};
     csprng RNG;
     RAND_seed(&RNG, 32, seed);
+
+    // Generate ID and AD
+    OCT_rand(&ID, &RNG, ID.len);
+    OCT_rand(&AD, &RNG, AD.len);
 
     // Load RSA modulus
     OCT_fromHex(&P, P_hex);
@@ -62,7 +72,7 @@ int main()
 
     // ZK proof
     printf("\nGenerate proof\n");
-    FACTORING_ZK_prove(&RNG, &P, &Q, NULL, &E, &Y);
+    FACTORING_ZK_prove(&RNG, &P, &Q, &ID, &AD, NULL, &E, &Y);
 
     printf("\tE = ");
     OCT_output(&E);
@@ -73,7 +83,7 @@ int main()
 
     // Verify proof
     printf("\nVerify prove (E, Y) for integer N\n");
-    if(FACTORING_ZK_verify(&N, &E, &Y) == FACTORING_ZK_OK)
+    if(FACTORING_ZK_verify(&N, &E, &Y, &ID, &AD) == FACTORING_ZK_OK)
     {
         printf("\tSuccess!\n");
     }

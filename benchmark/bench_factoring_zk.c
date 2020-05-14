@@ -27,6 +27,9 @@ under the License.
 #define MIN_TIME 5.0
 #define MIN_ITERS 10
 
+char *ID_str = "unique_identifier_123";
+char *AD_hex = "d7d3155616778fb436a1eb2070892205";
+
 char *P_hex = "e008507e09c24d756280f3d94912fb9ac16c0a8a1757ee01a350736acfc7f65880f87eca55d6680253383fc546d03fd9ebab7d8fa746455180888cb7c17edf58d3327296468e5ab736374bc9a0fa02606ed5d3a4a5fb1677891f87fbf3c655c3e0549a86b17b7ddce07c8f73e253105e59f5d3ed2c7ba5bdf8495df40ae71a7f";
 char *Q_hex = "dbffe278edd44c2655714e5a4cc82e66e46063f9ab69df9d0ed20eb3d7f2d8c7d985df71c28707f32b961d160ca938e9cf909cd77c4f8c630aec34b67714cbfd4942d7147c509db131bc2d6a667eb30df146f64b710f8f5247848b0a75738a38772e31014fd63f0b769209928d586499616dcc90700b393156e12eea7e15a835";
 char *N_hex = "c0870b552afb6c8c09f79e39ad6ca17ca93085c2cd7a726ade69574961ff9ce8ad33c7dda2e0703a3b0010c2e5bb7552c74164ce8dd011d85e5969090df53fe10e39cbe530704da32ff07228a6b6da34a5929e8a231c3080d812dc6e93affd81682339a6aee192927c582da8941bebf46e13c4ea3918a1477951fa66d367e70d8551b1869316d48317e0702d7bce242a326000f3dc763c44eba2044a1df713a94c1339edd464b145dcadf94e6e61be73dc270c878e1a28be720df2209202d00e101c3b255b757eaf547acd863d51eb676b851511b3dadeda926714719dceddd3af7908893ae65f2b95ee5c4d36cc6862cbe6886a62d7c1e2d0db48c399a6d44b";
@@ -49,6 +52,12 @@ int main()
     char n[FS_2048];
     octet N = {0, sizeof(n), n};
 
+    char id[32];
+    octet ID = {0, sizeof(id), id};
+
+    char ad[32];
+    octet AD = {0, sizeof(ad), ad};
+
     char r[FS_2048];
     octet R = {0, sizeof(r), r};
 
@@ -59,6 +68,9 @@ int main()
     octet Y = {0, sizeof(y), y};
 
     // Load values
+    OCT_jstring(&ID, ID_str);
+    OCT_fromHex(&AD, AD_hex);
+
     OCT_fromHex(&P, P_hex);
     OCT_fromHex(&Q, Q_hex);
     OCT_fromHex(&N, N_hex);
@@ -73,7 +85,7 @@ int main()
     start = clock();
     do
     {
-        FACTORING_ZK_prove(NULL, &P, &Q, &R, &E, &Y);
+        FACTORING_ZK_prove(NULL, &P, &Q, &ID, &AD, &R, &E, &Y);
         iterations++;
         elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
     }
@@ -87,7 +99,7 @@ int main()
     start = clock();
     do
     {
-        rc = FACTORING_ZK_verify(&N, &E, &Y);
+        rc = FACTORING_ZK_verify(&N, &E, &Y, &ID, &AD);
         iterations++;
         elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
     }
