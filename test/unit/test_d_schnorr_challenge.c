@@ -24,6 +24,8 @@
 /* Double Schnorr's Proof challenge unit test */
 
 #define LINE_LEN 256
+#define IDLEN 16
+#define ADLEN 16
 
 int main(int argc, char **argv)
 {
@@ -49,6 +51,15 @@ int main(int argc, char **argv)
     octet V = {0, sizeof(v), v};
     const char *Vline = "V = ";
 
+    char id[IDLEN];
+    octet ID = {0, sizeof(id), id};
+    const char *IDline = "ID = ";
+
+    char ad[ADLEN];
+    octet AD = {0, sizeof(ad), ad};
+    octet *AD_ptr = NULL;
+    const char *ADline = "AD = ";
+
     char c[SFS_SECP256K1+1];
     octet C = {0, sizeof(c), c};
     const char *Cline = "C = ";
@@ -61,7 +72,7 @@ int main(int argc, char **argv)
     octet E = {0, sizeof(e), e};
 
     // Line terminating a test vector
-    const char *last_line = Eline;
+    const char *last_line = ADline;
 
     /* Test happy path using test vectors */
     fp = fopen(argv[1], "r");
@@ -75,6 +86,10 @@ int main(int argc, char **argv)
     {
         scan_int(&testNo, line, TESTline);
 
+        // Read ID and AD
+        scan_OCTET(fp, &ID, line, IDline);
+        scan_OCTET(fp, &AD, line, ADline);
+
         // Read inputs
         scan_OCTET(fp, &R, line, Rline);
         scan_OCTET(fp, &V, line, Vline);
@@ -85,11 +100,20 @@ int main(int argc, char **argv)
 
         if (!strncmp(line, last_line, strlen(last_line)))
         {
-            SCHNORR_D_challenge(&R, &V, &C, &E);
+            // Also input AD if it is not empty
+            if (AD.len > 0)
+            {
+                AD_ptr = &AD;
+            }
+
+            SCHNORR_D_challenge(&R, &V, &C, &ID, AD_ptr, &E);
             compare_OCT(fp, testNo, "SCHNORR_D_challenge", &E, &E_GOLDEN);
 
             // Mark that at least one test vector was executed
             test_run = 1;
+
+            // Restore AD_ptr
+            AD_ptr = NULL;
         }
     }
 

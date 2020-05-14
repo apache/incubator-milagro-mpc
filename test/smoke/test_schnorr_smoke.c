@@ -29,6 +29,12 @@ int main()
     BIG_256_56 q;
     ECP_SECP256K1 G;
 
+    char id[32];
+    octet ID = {0, sizeof(id), id};
+
+    char ad[32];
+    octet AD = {0, sizeof(ad), ad};
+
     char x_char[SGS_SECP256K1];
     octet X = {0, sizeof(x_char), x_char};
 
@@ -52,6 +58,9 @@ int main()
     csprng RNG;
     RAND_seed(&RNG, 32, seed);
 
+    OCT_rand(&ID, &RNG, ID.len);
+    OCT_rand(&AD, &RNG, AD.len);
+
     BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
     BIG_256_56_randomnum(x, q, &RNG);
 
@@ -65,7 +74,7 @@ int main()
 
     SCHNORR_commit(&RNG, &R, &C);
 
-    SCHNORR_challenge(&V, &C, &E);
+    SCHNORR_challenge(&V, &C, &ID, &AD, &E);
 
     SCHNORR_prove(&R, &E, &X, &P);
 
