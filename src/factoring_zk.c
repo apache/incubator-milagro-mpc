@@ -90,10 +90,10 @@ void generator(hash256 *sha, int k, octet *O)
 /*
  *  Zi = MGF_SHA256(N, i)
  *  X  = H(Z1^r, Z2^r)
- *  e  = H'(N, Z1, Z2, X)
+ *  e  = H'(N, Z1, Z2, X, ID, AD)
  *  y  = r + (N - phi(N)) * e
  */
-void FACTORING_ZK_prove(csprng *RNG, octet *P, octet *Q, octet *R, octet *E, octet *Y)
+void FACTORING_ZK_prove(csprng *RNG, octet *P, octet *Q, octet *ID, octet *AD, octet *R, octet *E, octet *Y)
 {
     int i;
 
@@ -188,8 +188,15 @@ void FACTORING_ZK_prove(csprng *RNG, octet *P, octet *Q, octet *R, octet *E, oct
     HASH256_hash(&sha_x, W.val);
     W.len = SHA256;
 
-    // Compute e = H(N, Z1, Z2, X)
+    // Compute e = H(N, Z1, Z2, X, ID, AD)
     hash_oct(&sha_prime, &W);
+    hash_oct(&sha_prime, ID);
+
+    if (AD != NULL)
+    {
+        hash_oct(&sha_prime, AD);
+    }
+
     HASH256_hash(&sha_prime, W.val);
     W.len = FACTORING_ZK_B;
 
@@ -222,7 +229,7 @@ void FACTORING_ZK_prove(csprng *RNG, octet *P, octet *Q, octet *R, octet *E, oct
     FF_2048_zero(hws, HFLEN_2048);
 }
 
-int FACTORING_ZK_verify(octet *N, octet *E, octet *Y)
+int FACTORING_ZK_verify(octet *N, octet *E, octet *Y, octet *ID, octet *AD)
 {
     int i;
 
@@ -303,8 +310,15 @@ int FACTORING_ZK_verify(octet *N, octet *E, octet *Y)
     HASH256_hash(&sha_x, W.val);
     W.len = SHA256;
 
-    // Compute e = H(N, Z1, Z2, X)
+    // Compute e = H(N, Z1, Z2, X, ID, AD)
     hash_oct(&sha_prime, &W);
+    hash_oct(&sha_prime, ID);
+
+    if (AD != NULL)
+    {
+        hash_oct(&sha_prime, AD);
+    }
+
     HASH256_hash(&sha_prime, W.val);
     W.len = FACTORING_ZK_B;
 

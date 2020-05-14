@@ -55,11 +55,13 @@ extern "C"
  *  @param  RNG         Cryptographically secure PRNG
  *  @param  P           First prime of the factorization
  *  @param  Q           Second prime of the factorization
+ *  @param  ID          Prover unique identifier
+ *  @param  AD          Additional data to bind in the proof - Optional
  *  @param  R           Random value used in the proof. If RNG is NULL this is read
  *  @param  E           First component of the ZK proof
  *  @param  Y           Second component of the ZK proof
  */
-void FACTORING_ZK_prove(csprng *RNG, octet *P, octet *Q, octet *R, octet *E, octet *Y);
+void FACTORING_ZK_prove(csprng *RNG, octet *P, octet *Q, octet *ID, octet *AD, octet *R, octet *E, octet *Y);
 
 /** \brief Verify ZK proof of knowledge of factoring of N
  *
@@ -68,9 +70,11 @@ void FACTORING_ZK_prove(csprng *RNG, octet *P, octet *Q, octet *R, octet *E, oct
  *  @param  N           Public integer, the RSA modulus
  *  @param  E           Fisrt component of the ZK proof
  *  @param  Y           Second component of the ZK proof
+ *  @param  ID          Prover unique identifier
+ *  @param  AD          Additional data to bind in the proof - Optional
  *  @return             1 if the proof is valid, 0 otherwise
  */
-int FACTORING_ZK_verify(octet *N, octet *E, octet *Y);
+int FACTORING_ZK_verify(octet *N, octet *E, octet *Y, octet *ID, octet *AD);
 
 #ifdef __cplusplus
 }

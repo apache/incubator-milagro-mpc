@@ -75,7 +75,7 @@ void SCHNORR_commit(csprng *RNG, octet *R, octet *C)
     BIG_256_56_zero(r);
 }
 
-void SCHNORR_challenge(const octet *V, const octet *C, octet *E)
+void SCHNORR_challenge(const octet *V, const octet *C, octet *ID, octet *AD, octet *E)
 {
     hash256 sha;
 
@@ -91,11 +91,18 @@ void SCHNORR_challenge(const octet *V, const octet *C, octet *E)
     ECP_SECP256K1_generator(&G);
     ECP_SECP256K1_toOctet(&O, &G, true);
 
-    // e = H(G,C,V) mod q
+    // e = H(G,C,V,ID,AD) mod q
     HASH256_init(&sha);
     hash_octet(&sha, &O);
     hash_octet(&sha, C);
     hash_octet(&sha, V);
+    hash_octet(&sha, ID);
+
+    if (AD != NULL)
+    {
+        hash_octet(&sha, AD);
+    }
+
     HASH256_hash(&sha, o);
 
     BIG_256_56_fromBytesLen(e, o, SHA256);
@@ -219,7 +226,7 @@ int SCHNORR_D_commit(csprng *RNG, octet *R, octet *A, octet *B, octet *C)
     return SCHNORR_OK;
 }
 
-void SCHNORR_D_challenge(const octet *R, const octet *V, const octet *C, octet *E)
+void SCHNORR_D_challenge(const octet *R, const octet *V, const octet *C, octet *ID, octet *AD, octet *E)
 {
     hash256 sha;
 
@@ -235,12 +242,19 @@ void SCHNORR_D_challenge(const octet *R, const octet *V, const octet *C, octet *
     ECP_SECP256K1_generator(&G);
     ECP_SECP256K1_toOctet(&O, &G, true);
 
-    // e = H(G,R,C,V) mod q
+    // e = H(G,R,C,V,ID,AD) mod q
     HASH256_init(&sha);
     hash_octet(&sha, &O);
     hash_octet(&sha, R);
     hash_octet(&sha, C);
     hash_octet(&sha, V);
+    hash_octet(&sha, ID);
+
+    if (AD != NULL)
+    {
+        hash_octet(&sha, AD);
+    }
+
     HASH256_hash(&sha, o);
 
     BIG_256_56_fromBytesLen(e, o, SHA256);
