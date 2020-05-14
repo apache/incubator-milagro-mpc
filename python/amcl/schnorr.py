@@ -30,7 +30,7 @@ _ffi = core_utils._ffi
 _ffi.cdef("""
 extern void SCHNORR_random_challenge(csprng *RNG, octet *E);
 extern void SCHNORR_commit(csprng *RNG, octet *R, octet *C);
-extern void SCHNORR_challenge(const octet *V, const octet *C, octet *E);
+extern void SCHNORR_challenge(const octet *V, const octet *C, octet *ID, octet *AD, octet *E);
 extern void SCHNORR_prove(const octet *R, const octet *E, const octet *X, octet *P);
 extern int SCHNORR_verify(octet *V, octet *C, const octet *E, const octet *P);
 """)
@@ -121,7 +121,7 @@ def commit(rng, r=None):
     return r, core_utils.to_str(C)
 
 
-def challenge(V, C):
+def challenge(V, C, ID, AD=None):
     """Generate a deterministic challenge for the Schnorr's Proof
 
     Generates a deterministic value r in [0, .., q] suitable as a
@@ -130,8 +130,10 @@ def challenge(V, C):
 
     Args::
 
-        V : Public ECP of the DLOG. V = x.G
-        C : Commitment for the Schnorr's Proof
+        V  : Public ECP of the DLOG. V = x.G
+        C  : Commitment for the Schnorr's Proof
+        ID : Unique idenitifier of the prover
+        AD : Additional data to bind in the challenge. Optional
 
     Returns::
 
@@ -140,14 +142,21 @@ def challenge(V, C):
     Raises:
 
     """
-    V_oct, V_val = core_utils.make_octet(None, V)
-    C_oct, C_val = core_utils.make_octet(None, C)
-    _ = V_val, C_val # Suppress warning
+    if AD is None:
+        AD_oct = _ffi.NULL
+    else:
+        AD_oct, AD_val = core_utils.make_octet(None, AD)
+        _ = AD_val # Suppress warning
+
+    V_oct, V_val   = core_utils.make_octet(None, V)
+    C_oct, C_val   = core_utils.make_octet(None, C)
+    ID_oct, ID_val = core_utils.make_octet(None, ID)
+    _ = V_val, C_val, ID_val # Suppress warning
 
     e, e_val = core_utils.make_octet(EGS)
     _ = e_val # Suppress warning
 
-    _libamcl_mpc.SCHNORR_challenge(V_oct, C_oct, e)
+    _libamcl_mpc.SCHNORR_challenge(V_oct, C_oct, ID_oct, AD_oct, e)
 
     return core_utils.to_str(e)
 
