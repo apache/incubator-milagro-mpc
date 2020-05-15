@@ -48,8 +48,7 @@ int main()
     char y[FS_2048];
     octet Y = {0, sizeof(y), y};
 
-    BIG_1024_58 zero[HFLEN_2048];
-    FF_2048_zero(zero, HFLEN_2048);
+    FACTORING_ZK_modulus m;
 
     // Deterministic RNG for testing
     char seed[64] = {0};
@@ -65,12 +64,33 @@ int main()
     OCT_fromHex(&N, N_hex);
 
     // ZK proof
-    FACTORING_ZK_prove(&RNG, &P, &Q, &ID, &AD, NULL, &E, &Y);
+    FACTORING_ZK_modulus_fromOctets(&m, &P, &Q);
+    FACTORING_ZK_prove(&RNG, &m, &ID, &AD, NULL, &E, &Y);
 
     // Verify proof
     if (FACTORING_ZK_verify(&N, &E, &Y, &ID, &AD) != FACTORING_ZK_OK)
     {
         printf("FAILURE FACTORING_ZK_verify\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Clean memory
+    FACTORING_ZK_modulus_kill(&m);
+    if (!FF_2048_iszilch(m.p, HFLEN_2048))
+    {
+        printf("FAILURE FACTORING_ZK_modulus_kill p\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (!FF_2048_iszilch(m.q, HFLEN_2048))
+    {
+        printf("FAILURE FACTORING_ZK_modulus_kill q\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (!FF_2048_iszilch(m.invpq, HFLEN_2048))
+    {
+        printf("FAILURE FACTORING_ZK_modulus_kill invpq\n");
         exit(EXIT_FAILURE);
     }
 

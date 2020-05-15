@@ -50,18 +50,26 @@ extern "C"
 #define FACTORING_ZK_FAIL 91          /**< Invalid proof */
 #define FACTORING_ZK_OUT_OF_BOUNDS 92 /**< Invalid proof bounds */
 
+/*! \brief Modulus to prove knowledge of factoring */
+typedef struct
+{
+    BIG_1024_58 p[HFLEN_2048];     /**< First factor of the modulus */
+    BIG_1024_58 q[HFLEN_2048];     /**< Second factor of the modulus */
+    BIG_1024_58 invpq[HFLEN_2048]; /**< Precomputed inverse for CRT */
+    BIG_1024_58 n[FFLEN_2048];     /**< Modulus */
+} FACTORING_ZK_modulus;
+
 /** \brief Prove knowledge of the modulus m in ZK
  *
  *  @param  RNG         Cryptographically secure PRNG
- *  @param  P           First prime of the factorization
- *  @param  Q           Second prime of the factorization
+ *  @param  m           Modulus to prove knowldege of factoring
  *  @param  ID          Prover unique identifier
  *  @param  AD          Additional data to bind in the proof - Optional
  *  @param  R           Random value used in the proof. If RNG is NULL this is read
  *  @param  E           First component of the ZK proof
  *  @param  Y           Second component of the ZK proof
  */
-void FACTORING_ZK_prove(csprng *RNG, octet *P, octet *Q, octet *ID, octet *AD, octet *R, octet *E, octet *Y);
+void FACTORING_ZK_prove(csprng *RNG, FACTORING_ZK_modulus *m, const octet *ID, const octet *AD, octet *R, octet *E, octet *Y);
 
 /** \brief Verify ZK proof of knowledge of factoring of N
  *
@@ -74,7 +82,21 @@ void FACTORING_ZK_prove(csprng *RNG, octet *P, octet *Q, octet *ID, octet *AD, o
  *  @param  AD          Additional data to bind in the proof - Optional
  *  @return             1 if the proof is valid, 0 otherwise
  */
-int FACTORING_ZK_verify(octet *N, octet *E, octet *Y, octet *ID, octet *AD);
+int FACTORING_ZK_verify(octet *N, octet *E, octet *Y, const octet *ID, const octet *AD);
+
+/** \brief Read a modulus from octets
+ *
+ *  @param  m           The destination modulus
+ *  @param  P           The first factor of the modulus
+ *  @param  Q           The second factor of the modulus 
+ */
+void FACTORING_ZK_modulus_fromOctets(FACTORING_ZK_modulus *m, octet *P, octet *Q);
+
+/** \brief Clean memory associated to a modulus 
+ *
+ *  @param  m           The modulus to clean 
+ */
+void FACTORING_ZK_modulus_kill(FACTORING_ZK_modulus *m);
 
 #ifdef __cplusplus
 }

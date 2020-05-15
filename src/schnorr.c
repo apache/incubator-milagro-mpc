@@ -75,7 +75,7 @@ void SCHNORR_commit(csprng *RNG, octet *R, octet *C)
     BIG_256_56_zero(r);
 }
 
-void SCHNORR_challenge(const octet *V, const octet *C, octet *ID, octet *AD, octet *E)
+void SCHNORR_challenge(const octet *V, const octet *C, const octet *ID, const octet *AD, octet *E)
 {
     hash256 sha;
 
@@ -226,7 +226,7 @@ int SCHNORR_D_commit(csprng *RNG, octet *R, octet *A, octet *B, octet *C)
     return SCHNORR_OK;
 }
 
-void SCHNORR_D_challenge(const octet *R, const octet *V, const octet *C, octet *ID, octet *AD, octet *E)
+void SCHNORR_D_challenge(const octet *R, const octet *V, const octet *C, const octet *ID, const octet *AD, octet *E)
 {
     hash256 sha;
 

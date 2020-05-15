@@ -48,6 +48,8 @@ int main()
     char y[FS_2048];
     octet Y = {0, sizeof(y), y};
 
+    FACTORING_ZK_modulus m;
+
     // Deterministic RNG for testing
     char seed[64] = {0};
     csprng RNG;
@@ -72,7 +74,8 @@ int main()
 
     // ZK proof
     printf("\nGenerate proof\n");
-    FACTORING_ZK_prove(&RNG, &P, &Q, &ID, &AD, NULL, &E, &Y);
+    FACTORING_ZK_modulus_fromOctets(&m, &P, &Q);
+    FACTORING_ZK_prove(&RNG, &m, &ID, &AD, NULL, &E, &Y);
 
     printf("\tE = ");
     OCT_output(&E);
@@ -91,4 +94,7 @@ int main()
     {
         printf("\tFailure!\n");
     }
+
+    // Clean memory
+    FACTORING_ZK_modulus_kill(&m);
 }

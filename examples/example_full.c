@@ -136,6 +136,8 @@ void key_material_zkp(csprng *RNG, key_material *km, octet *C, octet *P, octet *
     char q[HFS_2048];
     octet M_Q = {0, sizeof(q), q};
 
+    FACTORING_ZK_modulus m;
+
     /* Prove knowledge of DLOG PK = s.G */
 
     SCHNORR_commit(RNG, &R, C);
@@ -161,7 +163,8 @@ void key_material_zkp(csprng *RNG, key_material *km, octet *C, octet *P, octet *
     FF_2048_toOctet(&M_P, km->paillier_sk.p, HFLEN_2048);
     FF_2048_toOctet(&M_Q, km->paillier_sk.q, HFLEN_2048);
 
-    FACTORING_ZK_prove(RNG, &M_P, &M_Q, ID, AD, NULL, E, Y);
+    FACTORING_ZK_modulus_fromOctets(&m, &M_P, &M_Q);
+    FACTORING_ZK_prove(RNG, &m, ID, AD, NULL, E, Y);
 
     printf("\n\tProve knowledge of the Paillier Secret Key\n");
     printf("\t\tE = ");
@@ -171,6 +174,7 @@ void key_material_zkp(csprng *RNG, key_material *km, octet *C, octet *P, octet *
 
     OCT_clear(&M_P);
     OCT_clear(&M_Q);
+    FACTORING_ZK_modulus_kill(&m);
 }
 
 int key_material_verify_zkp(key_material *km, octet *C, octet *P, octet *E, octet *Y, octet *ID, octet *AD)

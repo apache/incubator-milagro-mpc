@@ -28,8 +28,18 @@ from . import core_utils
 
 _ffi = core_utils._ffi
 _ffi.cdef("""
-void FACTORING_ZK_prove(csprng *RNG, octet *P, octet *Q, octet *ID, octet *AD, octet *R, octet *E, octet *Y);
-int FACTORING_ZK_verify(octet *N, octet *E, octet *Y, octet *ID, octet *AD);
+typedef struct
+{
+    BIG_1024_58 p[1];
+    BIG_1024_58 q[1];
+    BIG_1024_58 invpq[1];
+    BIG_1024_58 n[2];
+} FACTORING_ZK_modulus;
+
+void FACTORING_ZK_prove(csprng *RNG, FACTORING_ZK_modulus *m, const octet *ID, const octet *AD, octet *R, octet *E, octet *Y);
+int FACTORING_ZK_verify(octet *N, octet *E, octet *Y, const octet *ID, const octet *AD);
+void FACTORING_ZK_modulus_fromOctets(FACTORING_ZK_modulus *m, octet *P, octet *Q);
+void FACTORING_ZK_modulus_kill(FACTORING_ZK_modulus *m);
 """)
 
 if (platform.system() == 'Windows'):
@@ -94,9 +104,13 @@ def prove(rng, p, q, id, ad=None, r=None):
     id_oct, id_val = core_utils.make_octet(None, id)
     _ = p_val, q_val, e_val, y_val, id_val # Suppress warnings
 
-    _libamcl_mpc.FACTORING_ZK_prove(rng, p_oct, q_oct, id_oct, ad_oct, r_oct, e_oct, y_oct)
+    modulus = _ffi.new('FACTORING_ZK_modulus*')
+
+    _libamcl_mpc.FACTORING_ZK_modulus_fromOctets(modulus, p_oct, q_oct)
+    _libamcl_mpc.FACTORING_ZK_prove(rng, modulus, id_oct, ad_oct, r_oct, e_oct, y_oct)
 
     # Clear memory
+    _libamcl_mpc.FACTORING_ZK_modulus_kill(modulus)
     core_utils.clear_octet(p_oct)
     core_utils.clear_octet(q_oct)
 

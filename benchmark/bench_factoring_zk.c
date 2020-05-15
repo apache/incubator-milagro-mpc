@@ -67,6 +67,8 @@ int main()
     char y[FS_2048];
     octet Y = {0, sizeof(y), y};
 
+    FACTORING_ZK_modulus m;
+
     // Load values
     OCT_jstring(&ID, ID_str);
     OCT_fromHex(&AD, AD_hex);
@@ -85,14 +87,28 @@ int main()
     start = clock();
     do
     {
-        FACTORING_ZK_prove(NULL, &P, &Q, &ID, &AD, &R, &E, &Y);
+        FACTORING_ZK_modulus_fromOctets(&m, &P, &Q);
         iterations++;
         elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
     }
     while (elapsed < MIN_TIME || iterations < MIN_ITERS);
 
     elapsed = MILLISECOND * elapsed / iterations;
-    printf("\tFACTORING_ZK_prove\t%8d iterations\t", iterations);
+    printf("\tFACTORING_ZK_modulus_fromOctets\t%8d iterations\t", iterations);
+    printf("%8.2lf ms per iteration\n", elapsed);
+
+    iterations = 0;
+    start = clock();
+    do
+    {
+        FACTORING_ZK_prove(NULL, &m, &ID, &AD, &R, &E, &Y);
+        iterations++;
+        elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
+    }
+    while (elapsed < MIN_TIME || iterations < MIN_ITERS);
+
+    elapsed = MILLISECOND * elapsed / iterations;
+    printf("\tFACTORING_ZK_prove\t\t%8d iterations\t", iterations);
     printf("%8.2lf ms per iteration\n", elapsed);
 
     iterations = 0;
@@ -112,8 +128,22 @@ int main()
     }
 
     elapsed = MILLISECOND * elapsed / iterations;
-    printf("\tFACTORING_ZK_verify\t%8d iterations\t", iterations);
+    printf("\tFACTORING_ZK_verify\t\t%8d iterations\t", iterations);
     printf("%8.2lf ms per iteration\n", elapsed);
+
+    iterations = 0;
+    start = clock();
+    do
+    {
+        FACTORING_ZK_modulus_kill(&m);
+        iterations++;
+        elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
+    }
+    while (elapsed < MIN_TIME || iterations < MIN_ITERS);
+
+    elapsed = MICROSECOND * elapsed / iterations;
+    printf("\tFACTORING_ZK_modulus_kill\t%8d iterations\t", iterations);
+    printf("%8.2lf us per iteration\n", elapsed);
 
     exit(EXIT_SUCCESS);
 }

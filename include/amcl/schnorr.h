@@ -72,7 +72,7 @@ extern void SCHNORR_commit(csprng *RNG, octet *R, octet *C);
  * @param AD    Additional data to bind in the challenge - Optional
  * @param E     Challenge generated
  */
-extern void SCHNORR_challenge(const octet *V, const octet *C, octet *ID, octet *AD, octet *E);
+extern void SCHNORR_challenge(const octet *V, const octet *C, const octet *ID, const octet *AD, octet *E);
 
 /*! \brief Generate the proof for the given commitment and challenge
  *
@@ -122,7 +122,7 @@ extern int SCHNORR_D_commit(csprng *RNG, octet *R, octet *A, octet *B, octet *C)
  * @param AD    Additional data to bind in the challenge - Optional
  * @param E     Challenge generated
  */
-extern void SCHNORR_D_challenge(const octet *R, const octet *V, const octet *C, octet* ID, octet *AD, octet *E);
+extern void SCHNORR_D_challenge(const octet *R, const octet *V, const octet *C, const octet* ID, const octet *AD, octet *E);
 
 /*! \brief Generate the proof for the given commitment and challenge
  *

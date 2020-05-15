@@ -82,6 +82,8 @@ int main(int argc, char **argv)
     char y[FS_2048];
     octet Y = {0, sizeof(y), y};
 
+    FACTORING_ZK_modulus m;
+
     // Line terminating a test vector
     const char *last_line = Yline;
 
@@ -120,7 +122,8 @@ int main(int argc, char **argv)
                 AD_ptr = &AD;
             }
 
-            FACTORING_ZK_prove(NULL, &P, &Q, &ID, AD_ptr, &R, &E, &Y);
+            FACTORING_ZK_modulus_fromOctets(&m, &P, &Q);
+            FACTORING_ZK_prove(NULL, &m, &ID, AD_ptr, &R, &E, &Y);
 
             compare_OCT(fp, testNo, "FACTORING_ZK_prove E", &E, &EGOLDEN);
             compare_OCT(fp, testNo, "FACTORING_ZK_prove Y", &Y, &YGOLDEN);
