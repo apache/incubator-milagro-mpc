@@ -27,6 +27,12 @@ char *N_hex = "c0870b552afb6c8c09f79e39ad6ca17ca93085c2cd7a726ade69574961ff9ce8a
 
 int main()
 {
+    char id[32];
+    octet ID = {0, sizeof(id), id};
+
+    char ad[32];
+    octet AD = {0, sizeof(ad), ad};
+
     char p[HFS_2048] = {0};
     octet P = {0, sizeof(p), p};
 
@@ -42,13 +48,15 @@ int main()
     char y[FS_2048];
     octet Y = {0, sizeof(y), y};
 
-    BIG_1024_58 zero[HFLEN_2048];
-    FF_2048_zero(zero, HFLEN_2048);
+    FACTORING_ZK_modulus m;
 
     // Deterministic RNG for testing
     char seed[64] = {0};
     csprng RNG;
     RAND_seed(&RNG, 32, seed);
+
+    OCT_rand(&ID, &RNG, ID.len);
+    OCT_rand(&AD, &RNG, AD.len);
 
     // Load RSA modulus
     OCT_fromHex(&P, P_hex);
@@ -56,12 +64,33 @@ int main()
     OCT_fromHex(&N, N_hex);
 
     // ZK proof
-    FACTORING_ZK_prove(&RNG, &P, &Q, NULL, &E, &Y);
+    FACTORING_ZK_modulus_fromOctets(&m, &P, &Q);
+    FACTORING_ZK_prove(&RNG, &m, &ID, &AD, NULL, &E, &Y);
 
     // Verify proof
-    if (FACTORING_ZK_verify(&N, &E, &Y) != FACTORING_ZK_OK)
+    if (FACTORING_ZK_verify(&N, &E, &Y, &ID, &AD) != FACTORING_ZK_OK)
     {
         printf("FAILURE FACTORING_ZK_verify\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Clean memory
+    FACTORING_ZK_modulus_kill(&m);
+    if (!FF_2048_iszilch(m.p, HFLEN_2048))
+    {
+        printf("FAILURE FACTORING_ZK_modulus_kill p\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (!FF_2048_iszilch(m.q, HFLEN_2048))
+    {
+        printf("FAILURE FACTORING_ZK_modulus_kill q\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (!FF_2048_iszilch(m.invpq, HFLEN_2048))
+    {
+        printf("FAILURE FACTORING_ZK_modulus_kill invpq\n");
         exit(EXIT_FAILURE);
     }
 

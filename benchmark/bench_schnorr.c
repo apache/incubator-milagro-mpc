@@ -27,6 +27,9 @@ under the License.
 #define MIN_TIME    5.0
 #define MIN_ITERS   10
 
+char *ID_str = "unique_identifier_123";
+char *AD_hex = "d7d3155616778fb436a1eb2070892205";
+
 char *R_hex = "803ccd21cddad626e15f21b1ad787949e9beef08e6e68a9e00df59dec16ed290";
 char *X_hex = "fab4ce512dff74bd9c71c89a14de5b877af45dca0329ee3fcb72611c0784fef3";
 char *V_hex = "032cf4b348c9d00718f01ed98923e164df53b5e8bc4c2250662ed2df784e1784f4";
@@ -45,6 +48,12 @@ int main()
     char v[SFS_SECP256K1+1];
     octet V = {0, sizeof(v), v};
 
+    char id[32];
+    octet ID = {0, sizeof(id), id};
+
+    char ad[32];
+    octet AD = {0, sizeof(ad), ad};
+
     char r[SGS_SECP256K1];
     octet R = {0, sizeof(r), r};
 
@@ -58,6 +67,9 @@ int main()
     octet P = {0, sizeof(p), p};
 
     // Load values
+    OCT_jstring(&ID, ID_str);
+    OCT_fromHex(&AD, AD_hex);
+
     OCT_fromHex(&R, R_hex);
     OCT_fromHex(&X, X_hex);
     OCT_fromHex(&V, V_hex);
@@ -85,7 +97,7 @@ int main()
     start=clock();
     do
     {
-        SCHNORR_challenge(&V, &C, &E);
+        SCHNORR_challenge(&V, &C, &ID, &AD, &E);
         iterations++;
         elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
     }

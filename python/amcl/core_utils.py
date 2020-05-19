@@ -197,6 +197,8 @@ def generate_random(rng, length):
 
     """
     random_value1, random_value1_val = make_octet(length)
+    _ = random_value1_val # Suppress warning
+
     _libamcl_core.generateRandom(rng, random_value1)
 
     random_value = to_str(random_value1)

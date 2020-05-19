@@ -24,6 +24,8 @@ under the License.
 #include "amcl/factoring_zk.h"
 
 #define LINE_LEN 2000
+#define IDLEN 16
+#define ADLEN 16
 
 int main(int argc, char **argv)
 {
@@ -54,8 +56,17 @@ int main(int argc, char **argv)
     octet Y = {0, sizeof(y), y};
     const char *Yline = "Y = ";
 
+    char id[IDLEN];
+    octet ID = {0, sizeof(id), id};
+    const char *IDline = "ID = ";
+
+    char ad[IDLEN];
+    octet AD = {0, sizeof(ad), ad};
+    octet *AD_ptr = NULL;
+    const char *ADline = "AD = ";
+
     // Line terminating a test vector
-    const char *last_line = Yline;
+    const char *last_line = ADline;
 
     fp = fopen(argv[1], "r");
     if (fp == NULL)
@@ -70,13 +81,23 @@ int main(int argc, char **argv)
     {
         scan_int(&testNo, line, TESTline);
 
+        // Read ID and AD
+        scan_OCTET(fp, &ID, line, IDline);
+        scan_OCTET(fp, &AD, line, ADline);
+
         scan_OCTET(fp, &N, line, Nline);
         scan_OCTET(fp, &E, line, Eline);
         scan_OCTET(fp, &Y, line, Yline);
 
         if (!strncmp(line, last_line, strlen(last_line)))
         {
-            rc = FACTORING_ZK_verify(&N, &E, &Y);
+            // Also input AD if it is not empty
+            if (AD.len > 0)
+            {
+                AD_ptr = &AD;
+            }
+
+            rc = FACTORING_ZK_verify(&N, &E, &Y, &ID, AD_ptr);
             assert_tv(fp, testNo, "FACTORING_ZK_verify", rc == FACTORING_ZK_OK);
 
             // Mark that at least one test vector was executed
@@ -93,10 +114,30 @@ int main(int argc, char **argv)
     }
 
     /* Test unhappy path */
-    E.val[0]++;
+    char t[FS_2048 + 1];
+    octet T = {0, sizeof(t), t};
 
-    rc = FACTORING_ZK_verify(&N, &E, &Y);
+    // Invalid E
+    OCT_copy(&T, &E);
+    T.val[0]++;
+
+    rc = FACTORING_ZK_verify(&N, &T, &Y, &ID, &AD);
     assert(NULL, "FACTORING_ZK_verify. Invalid E", rc == FACTORING_ZK_FAIL);
+
+    // E out of bounds
+    OCT_copy(&T, &E);
+    T.len++;
+
+    rc = FACTORING_ZK_verify(&N, &T, &Y, &ID, &AD);
+    assert(NULL, "FACTORING_ZK_verify. E out of bounds", rc == FACTORING_ZK_OUT_OF_BOUNDS);
+
+    // Y out of bounds
+    OCT_copy(&T, &Y);
+    T.len++;
+
+    rc = FACTORING_ZK_verify(&N, &E, &T, &ID, &AD);
+    assert(NULL, "FACTORING_ZK_verify. Y out of bounds", rc == FACTORING_ZK_OUT_OF_BOUNDS);
+
 
     printf("SUCCESS\n");
     exit(EXIT_SUCCESS);

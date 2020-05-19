@@ -31,19 +31,23 @@ q_hex = "dbffe278edd44c2655714e5a4cc82e66e46063f9ab69df9d0ed20eb3d7f2d8c7d985df7
 n_hex = "c0870b552afb6c8c09f79e39ad6ca17ca93085c2cd7a726ade69574961ff9ce8ad33c7dda2e0703a3b0010c2e5bb7552c74164ce8dd011d85e5969090df53fe10e39cbe530704da32ff07228a6b6da34a5929e8a231c3080d812dc6e93affd81682339a6aee192927c582da8941bebf46e13c4ea3918a1477951fa66d367e70d8551b1869316d48317e0702d7bce242a326000f3dc763c44eba2044a1df713a94c1339edd464b145dcadf94e6e61be73dc270c878e1a28be720df2209202d00e101c3b255b757eaf547acd863d51eb676b851511b3dadeda926714719dceddd3af7908893ae65f2b95ee5c4d36cc6862cbe6886a62d7c1e2d0db48c399a6d44b"
 r_hex = "c05f6c79e81fab2f1aa6af48dc5afa89a21c0aee03e93944cacfefef1be90f41ec8c2055760beafa9ed87dd67dbd56b33a2568dfec62a03f06c4f8449a93eee858507f4b602bf305e1c9968d9f5b6dc3120c27e053a1d7e51590e0bacb8d36c27bccce1a57c1e3aeb0832905d4e2bb8eaee883b4df042d8660cf3e0c9777b6be34c18bef02347f92cb71f372f61c018860211932dd46de8f925212d7afe6dd2f3cda05f8d5a6bd1b138b66c5efd7fca31f926c721f6d4207b97fc01cdf325da21233f6df37adbcd67472b332f7490a4a96e0fef31beef55b9446067b8e8d807384e3d31051c7a1f27296a6ae111b30c3d1f3f81666fd9ad99df531bb68428029"
 
+uid = b"unique_user_identifier"
+ad_hex = "d7d3155616778fb436a1eb2070892205" 
+
 if __name__ == "__main__":
-    p = bytes.fromhex(p_hex)
-    q = bytes.fromhex(q_hex)
-    n = bytes.fromhex(n_hex)
-    r = bytes.fromhex(r_hex)
+    p =  bytes.fromhex(p_hex)
+    q =  bytes.fromhex(q_hex)
+    n =  bytes.fromhex(n_hex)
+    r =  bytes.fromhex(r_hex)
+    ad = bytes.fromhex(ad_hex)
 
     # Generate quantities for benchmark
-    e, y = factoring_zk.prove(None, p, q, r)
-    assert factoring_zk.verify(n, e, y) == factoring_zk.OK
+    e, y = factoring_zk.prove(None, p, q, uid, ad=ad, r=r)
+    assert factoring_zk.verify(n, e, y, uid, ad=ad) == factoring_zk.OK
 
     # Run benchmark
-    fncall = lambda: factoring_zk.prove(None, p, q, r)
+    fncall = lambda: factoring_zk.prove(None, p, q, uid, ad=ad, r=r)
     time_func("prove ", fncall)
 
-    fncall = lambda: factoring_zk.verify(n, e, y)
+    fncall = lambda: factoring_zk.verify(n, e, y, uid, ad=ad)
     time_func("verify", fncall)

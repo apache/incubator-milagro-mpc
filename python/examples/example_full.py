@@ -66,7 +66,7 @@ def generate_key_material(rng, player):
     return key_material
 
 
-def generate_key_material_zkp(rng, key_material):
+def generate_key_material_zkp(rng, key_material, ID, AD=None):
     """ Generate ZK Proofs for key material
 
     Generate a commitment to the ECDSA PK, a Schnorr's
@@ -98,19 +98,19 @@ def generate_key_material_zkp(rng, key_material):
 
     # Generate Schnorr's proof for ECDSA PK
     sr, sc = schnorr.commit(rng)
-    e = schnorr.challenge(key_material['ecdsa_pk'], sc)
+    e = schnorr.challenge(key_material['ecdsa_pk'], sc, ID, AD=AD)
     sp = schnorr.prove(sr, e, key_material['ecdsa_sk'])
 
     # Generate ZKP of knowledge of factorization for
     # Paillier key pair
     psk_p, psk_q = mpc.mpc_dump_paillier_sk(key_material['paillier_sk'])
 
-    fe, fy = factoring_zk.prove(rng, psk_p, psk_q)
+    fe, fy = factoring_zk.prove(rng, psk_p, psk_q, ID, ad=AD)
 
     return r, c, sc, sp, fe, fy
 
 
-def verify_key_material(key_material, r, c, sc, sp, fe, fy, player):
+def verify_key_material(key_material, r, c, sc, sp, fe, fy, player, ID, AD=None):
     """ Verify key material
 
     Verify the conunterparty key material using the
@@ -137,13 +137,13 @@ def verify_key_material(key_material, r, c, sc, sp, fe, fy, player):
     assert rc == commitments.OK, f"[{player}] Failure decommitting ecdsa_pk. rc {rc}"
 
     # Verify ECDSA PK Schnorr's proof
-    e = schnorr.challenge(key_material['ecdsa_pk'], sc)
+    e = schnorr.challenge(key_material['ecdsa_pk'], sc, ID, AD=AD)
     rc = schnorr.verify(key_material['ecdsa_pk'], sc, e, sp)
     assert rc == schnorr.OK, f"[{player}] Invalid ECDSA PK Schnorr Proof. rc {rc}"
 
     # Verify factoring ZKP
     n = mpc.paillier_pk_to_octet(key_material['paillier_pk'])
-    rc = factoring_zk.verify(n, fe, fy)
+    rc = factoring_zk.verify(n, fe, fy, ID, ad=AD)
     assert rc == factoring_zk.OK, f"[{player}] Invalid Factoring ZKP. rc {rc}"
 
 
@@ -151,6 +151,9 @@ if __name__ == "__main__":
     seed = bytes.fromhex(seed_hex)
     rng = core_utils.create_csprng(seed)
 
+
+    alice_id = b"alice_unique_identifier"
+    bob_id   = b"bob_unique_identifier"
 
     ### Key setup ###
 
@@ -160,12 +163,16 @@ if __name__ == "__main__":
     key_material1 = generate_key_material(rng, "Alice")
     key_material2 = generate_key_material(rng, "Bob")
 
+    # Generate and exchange nonce for liveliness
+    alice_ad = core_utils.generate_random(rng, 32)
+    bob_ad   = core_utils.generate_random(rng, 32)
+
     print("[Alice] Generate ECDSA and Paillier key pairs")
     print("[Bob] Generate ECDSA and Paillier key pairs")
 
     # Generate key material ZKP
-    r1, c1, sc1, sp1, fe1, fy1 = generate_key_material_zkp(rng, key_material1)
-    r2, c2, sc2, sp2, fe2, fy2 = generate_key_material_zkp(rng, key_material2)
+    r1, c1, sc1, sp1, fe1, fy1 = generate_key_material_zkp(rng, key_material1, alice_id, AD = alice_ad)
+    r2, c2, sc2, sp2, fe2, fy2 = generate_key_material_zkp(rng, key_material2, bob_id,   AD = bob_ad)
 
     print("[Alice] Generate commitment to ECDSA PK and ZKPs")
     print("[Bob] Generate commitment to ECDSA PK and ZKPs")
@@ -190,10 +197,10 @@ if __name__ == "__main__":
     }
 
     print("[Alice] Verify ZKP")
-    verify_key_material(c_key_material1, r2, c2, sc2, sp2, fe2, fy2, "Alice")
+    verify_key_material(c_key_material1, r2, c2, sc2, sp2, fe2, fy2, "Alice", bob_id, AD=bob_ad)
 
     print("[Bob] Verify ZKP")
-    verify_key_material(c_key_material2, r1, c1, sc1, sp1, fe1, fy1, "Bob")
+    verify_key_material(c_key_material2, r1, c1, sc1, sp1, fe1, fy1, "Bob", alice_id, AD=alice_ad)
 
     # Recombine full ECDSA PK
     rc, ecdsa_full_pk1 = mpc.mpc_sum_pk(key_material1['ecdsa_pk'], c_key_material1['ecdsa_pk'])
@@ -208,7 +215,7 @@ if __name__ == "__main__":
     # Message
     M = b'test message'
 
-    print(f"\nSign message '{M.encode('utf-8')}'")
+    print(f"\nSign message '{M.decode('utf-8')}'")
 
     # Generate k, gamma and gamma.G
     print("[Alice] Generate k, gamma and gamma.G")
@@ -219,12 +226,16 @@ if __name__ == "__main__":
     GAMMA2, gamma2 = mpc.mpc_ecdsa_key_pair_generate(rng)
     k2 = mpc.mpc_k_generate(rng)
 
-    ## Commit to GAMMA1, GAMMA2
+    ## Commit to GAMMA1, GAMMA2 and exchange nonces for liveliness
     print("[Alice] Commit to GAMMA1")
     GAMMAR1, GAMMAC1 = commitments.nm_commit(rng, GAMMA1)
 
+    bob_ad = core_utils.generate_random(rng, 32)
+
     print("[Bob] Commit to GAMMA2")
     GAMMAR2, GAMMAC2 = commitments.nm_commit(rng, GAMMA2)
+
+    alice_ad = core_utils.generate_random(rng, 32)
 
     ## Engage in MTA with k_i, gamma_j
 
@@ -275,12 +286,12 @@ if __name__ == "__main__":
     # Generate Schnorr's Proofs
     print("[Alice] Generate Schnorr's Proof")
     GAMMA_schnorr_r1, GAMMA_schnorr_c1 = schnorr.commit(rng)
-    GAMMA_schnorr_e1 = schnorr.challenge(GAMMA1, GAMMA_schnorr_c1)
+    GAMMA_schnorr_e1 = schnorr.challenge(GAMMA1, GAMMA_schnorr_c1, alice_id, AD = alice_ad)
     GAMMA_schnorr_p1 = schnorr.prove(GAMMA_schnorr_r1, GAMMA_schnorr_e1, gamma1)
 
     print("[Bob] Generate Schnorr's Proof")
     GAMMA_schnorr_r2, GAMMA_schnorr_c2 = schnorr.commit(rng)
-    GAMMA_schnorr_e2 = schnorr.challenge(GAMMA2, GAMMA_schnorr_c2)
+    GAMMA_schnorr_e2 = schnorr.challenge(GAMMA2, GAMMA_schnorr_c2, bob_id, AD = bob_ad)
     GAMMA_schnorr_p2 = schnorr.prove(GAMMA_schnorr_r2, GAMMA_schnorr_e2, gamma2)
 
     print("[Alice] Transmit decommitment and Schnorr Proof for GAMMA1")
@@ -290,14 +301,14 @@ if __name__ == "__main__":
     rc = commitments.nm_decommit(GAMMA2, GAMMAR2, GAMMAC2)
     assert rc == commitments.OK, f'[Alice] Error decommitting GAMMA2. rc {rc}'
 
-    GAMMA_schnorr_e2 = schnorr.challenge(GAMMA2, GAMMA_schnorr_c2)
+    GAMMA_schnorr_e2 = schnorr.challenge(GAMMA2, GAMMA_schnorr_c2, bob_id, AD=bob_ad)
     rc = schnorr.verify(GAMMA2, GAMMA_schnorr_c2, GAMMA_schnorr_e2, GAMMA_schnorr_p2)
     assert rc == schnorr.OK, f'[Alice] Error verifying Schnorr proof for GAMMA2'
 
     rc = commitments.nm_decommit(GAMMA1, GAMMAR1, GAMMAC1)
     assert rc == commitments.OK, f'[Bob] Error decommitting GAMMA1. rc {rc}'
 
-    GAMMA_schnorr_e1 = schnorr.challenge(GAMMA1, GAMMA_schnorr_c1)
+    GAMMA_schnorr_e1 = schnorr.challenge(GAMMA1, GAMMA_schnorr_c1, alice_id, AD=alice_ad)
     rc = schnorr.verify(GAMMA1, GAMMA_schnorr_c1, GAMMA_schnorr_e1, GAMMA_schnorr_p1)
     assert rc == schnorr.OK, f'[Bob] Error verifying Schnorr proof for GAMMA1'
 
