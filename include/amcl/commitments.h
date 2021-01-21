@@ -34,8 +34,8 @@ extern "C"
 {
 #endif
 
-#define COMMITMENTS_OK   0   /** < Success */
-#define COMMITMENTS_FAIL 81  /** < Invalid Commitment */
+#define COMMITMENTS_OK   0   /**< Success */
+#define COMMITMENTS_FAIL 81  /**< Invalid Commitment */
 
 /* NM Commitment Scheme API */
 
@@ -71,6 +71,7 @@ typedef struct
 {
     BIG_1024_58 P[HFLEN_2048];      /**< Safe prime P = 2p+1 */
     BIG_1024_58 Q[HFLEN_2048];      /**< Safe prime Q = 2q+1 */
+    BIG_1024_58 invPQ[HFLEN_2048];  /**< Precomputed P^(-1) mod Q */
     BIG_1024_58 pq[FFLEN_2048];     /**< Precomputed product of p and q */
     BIG_1024_58 N[FFLEN_2048];      /**< Public part of the modulus */
     BIG_1024_58 alpha[FFLEN_2048];  /**< Secret exponent of the DLOG b1 = b0^alpha*/
@@ -89,7 +90,7 @@ typedef struct
 
 /*! \brief Set up an RSA modulus and the necessary values.
  *
- * RNG is only used to generate the values not explicitely specified.
+ * RNG is only used to generate the values not explicitly specified.
  * This allows using safe primes P and Q generated externally while
  * still randomly generating B0 and ALPHA. In turn, this allows the
  * user to generate P and Q with ad hoc libraries for the generation of

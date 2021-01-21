@@ -15,3 +15,8 @@
 
 file(GLOB BENCH *.py)
 file(COPY ${BENCH} DESTINATION "${PROJECT_BINARY_DIR}/python/benchmark")
+
+foreach(level ${PYTHON_RSA_LEVELS})
+  load_rsa_fields(${level})
+  configure_rsa_file("bench_rsa.py.in" "${PROJECT_BINARY_DIR}/python/benchmark/bench_rsa_${TFF}.py")
+endforeach()

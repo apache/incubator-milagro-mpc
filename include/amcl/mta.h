@@ -44,7 +44,7 @@ extern "C" {
 
 /*! \brief Client MTA first pass
  *
- *  Encrypt multplicative share, \f$ a \f$, of secret \f$ s = a.b \f$
+ *  Encrypt multiplicative share, \f$ a \f$, of secret \f$ s = a.b \f$
  *
  *  @param  RNG              Pointer to a cryptographically secure random number generator
  *  @param  PUB              Paillier Public key
@@ -120,7 +120,7 @@ void MPC_SUM_MTA(const octet *A, const octet *B, const octet *ALPHA, const octet
  *
  *  <ol>
  *  <li> \f$ e \in_R [0, \ldots, q] \f$
- *  <ol>
+ *  </ol>
  *
  *  @param RNG               csprng for random generation
  *  @param E                 Destination octet for the challenge.
@@ -172,7 +172,7 @@ typedef struct
  *  @param key         Paillier key used to encrypt M
  *  @param mod         Public BC modulus of the verifier
  *  @param M           Message to prove knowledge and range
- *  @param c           Destinaton commitment
+ *  @param c           Destination commitment
  *  @param rv          Random values associated to the commitment. If RNG is NULL this is read
  */
 extern void MTA_RP_commit(csprng *RNG, PAILLIER_private_key *key, COMMITMENTS_BC_pub_modulus *mod,  octet *M, MTA_RP_commitment *c, MTA_RP_commitment_rv *rv);
@@ -333,7 +333,7 @@ typedef struct
  *  @param X           Message to prove knowledge and range
  *  @param Y           Message to prove knowledge
  *  @param C1          Base Paillier Ciphertext
- *  @param c           Destinaton commitment
+ *  @param c           Destination commitment
  *  @param rv          Random values associated to the commitment. If RNG is NULL this is read
  */
 extern void MTA_ZK_commit(csprng *RNG, PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod,  octet *X, octet *Y, octet *C1, MTA_ZK_commitment *c, MTA_ZK_commitment_rv *rv);
@@ -457,7 +457,7 @@ typedef MTA_ZK_commitment_rv MTA_ZKWC_commitment_rv;
 /** \brief Public commitment for the Receiver ZKP with check */
 typedef struct
 {
-    MTA_ZK_commitment zkc;    /**< Commitment for the base Recevier ZKP */
+    MTA_ZK_commitment zkc;    /**< Commitment for the base Receiver ZKP */
     ECP_SECP256K1 U;          /**< Commitment for the DLOG knowledge proof */
 } MTA_ZKWC_commitment;
 
@@ -481,7 +481,7 @@ typedef MTA_ZK_proof MTA_ZKWC_proof;
  *  <li> \f$ t  = h_1^{y}h_2^{\sigma}            \text{ }\mathrm{mod}\text{ }\tilde{N} \f$
  *  <li> \f$ w  = h_1^{\gamma}h_2^{\tau}         \text{ }\mathrm{mod}\text{ }\tilde{N} \f$
  *  <li> \f$ v  = c1^{\alpha}g^{\gamma}\beta^{N} \text{ }\mathrm{mod}\text{ }N^2 \f$
- *  <li> \f$ U  = \alpha.G
+ *  <li> \f$ U  = \alpha.G \f$
  *  </ol>
  *
  *  @param RNG         csprng for random generation
@@ -490,7 +490,7 @@ typedef MTA_ZK_proof MTA_ZKWC_proof;
  *  @param X           Message to prove knowledge and range
  *  @param Y           Message to prove knowledge
  *  @param C1          Base Paillier Ciphertext
- *  @param c           Destinaton commitment
+ *  @param c           Destination commitment
  *  @param rv          Random values associated to the commitment. If RNG is NULL this is read
  */
 extern void MTA_ZKWC_commit(csprng *RNG, PAILLIER_public_key *key, COMMITMENTS_BC_pub_modulus *mod,  octet *X, octet *Y, octet *C1, MTA_ZKWC_commitment *c, MTA_ZKWC_commitment_rv *rv);
@@ -507,6 +507,7 @@ extern void MTA_ZKWC_commit(csprng *RNG, PAILLIER_public_key *key, COMMITMENTS_B
  *  @param mod         Public BC modulus of the verifier
  *  @param C1          Base Paillier Ciphertext
  *  @param C2          New Paillier Ciphertext to prove knowledge and range
+ *  @param X           Public exponent of the associated DLOG to prove knowledge
  *  @param c           Commitment of the prover
  *  @param E           Destination challenge
  */
@@ -516,7 +517,7 @@ extern void MTA_ZKWC_challenge(PAILLIER_public_key *key, COMMITMENTS_BC_pub_modu
  *
  *  Generate a proof of knowledge of x, y and a range proof for x.
  *  These values are the same as for the ZKP without check. The
- *  knwoledge of the DLOG can be verified using the value U in the
+ *  knowledge of the DLOG can be verified using the value U in the
  *  commitment
  *
  *  <ol>

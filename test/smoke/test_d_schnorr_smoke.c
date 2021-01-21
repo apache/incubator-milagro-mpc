@@ -32,6 +32,12 @@ int main()
     ECP_SECP256K1 G;
     ECP_SECP256K1 ECPR;
 
+    char id[32];
+    octet ID = {0, sizeof(id), id};
+
+    char ad[32];
+    octet AD = {0, sizeof(ad), ad};
+
     char oct_s[SGS_SECP256K1];
     octet S = {0, sizeof(oct_s), oct_s};
 
@@ -71,6 +77,10 @@ int main()
     ECP_SECP256K1_generator(&G);
     ECP_SECP256K1_generator(&ECPR);
 
+    // Generate ID and AD
+    OCT_rand(&ID, &RNG, ID.len);
+    OCT_rand(&AD, &RNG, AD.len);
+
     // Generate public R
     BIG_256_56_randomnum(r, q, &RNG);
     ECP_SECP256K1_mul(&ECPR, r);
@@ -98,7 +108,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    SCHNORR_D_challenge(&R, &V, &C, &E);
+    SCHNORR_D_challenge(&R, &V, &C, &ID, &AD, &E);
     SCHNORR_D_prove(&A, &B, &E, &S, &L, &T, &U);
 
     rc = SCHNORR_D_verify(&R, &V, &C, &E, &T, &U);

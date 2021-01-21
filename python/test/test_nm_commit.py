@@ -22,7 +22,7 @@ under the License.
 import os
 import sys
 import json
-from unittest import TestCase
+import unittest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -38,7 +38,7 @@ for vector in vectors:
             vector[key] = bytes.fromhex(val)
 
 
-class TestNMCommit(TestCase):
+class TestNMCommit(unittest.TestCase):
     """ Test NM Commitment Commit """
 
     def setUp(self):
@@ -71,7 +71,7 @@ class TestNMCommit(TestCase):
         self.assertEqual(c, self.c_golden)
 
 
-class TestNMDecommit(TestCase):
+class TestNMDecommit(unittest.TestCase):
     """ Test NM Commitment Decommit """
 
     def test_tv(self):
@@ -88,3 +88,7 @@ class TestNMDecommit(TestCase):
         rc = commitments.nm_decommit(vector['X'], vector['X'], vector['C'])
 
         self.assertEqual(rc, commitments.FAIL)
+
+if __name__ == '__main__':
+    # Run tests
+    unittest.main()

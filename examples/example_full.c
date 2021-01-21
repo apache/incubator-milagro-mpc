@@ -49,11 +49,15 @@ char *A_Q_hex = "dbffe278edd44c2655714e5a4cc82e66e46063f9ab69df9d0ed20eb3d7f2d8c
 char *B_P_hex = "efa013403e9ea93daf97f1dd4b42eba602410e048852b20cd448d51793ac2ee725e79eaac82d22cdd6cfb966cba62904a26da47d7a6085fba194e24eddbc92f66a0bd990c8cb9abf98fff48d52d33215d68f6f030cd9440f85987b2ab44332646ea38bc218fedc83a24cf57b7615c0fc9289778f7ba60f4ed71c7c3c571054fb";
 char *B_Q_hex = "f95b9d7027be3950de9a050eba7301d5234ad89bf260d47e94a724b49759ab9a8fca22fe484e5e5ddf0845734cd3322d271e146e1e6eed6e16a2740c294097cd65deeacbfa563cce42065720836d421bcfd73c6dcab3aa0c4d480ac445e9ba11fb7825559b29ab4f9f6f079acbd0dc5c38702f386b3c95107540195a4508401b";
 
+// Unique identifiers for actors
+char *alice_id = "alice_unique_id";
+char *bob_id   = "bob_unique_id";
+
 int generate_key_material(csprng *RNG, key_material *km, octet *P, octet *Q)
 {
     int rc;
 
-    char pk[2 * EFS_SECP256K1 + 1];
+    char pk[EFS_SECP256K1 + 1];
     octet PK = {0, sizeof(pk), pk};
 
     char out[2][FS_2048];
@@ -65,12 +69,7 @@ int generate_key_material(csprng *RNG, key_material *km, octet *P, octet *Q)
     // ECDSA Key Pair
     printf("\n\tGenerate ECDSA key pair\n");
 
-    rc = ECP_SECP256K1_KEY_PAIR_GENERATE(RNG, km->SK, &PK);
-    if (rc != 0)
-    {
-        return rc;
-    }
-
+    MPC_ECDSA_KEY_PAIR_GENERATE(RNG, km->SK, &PK);
     rc = ECP_SECP256K1_PUBLIC_KEY_VALIDATE(&PK);
     if (rc != 0)
     {
@@ -123,7 +122,7 @@ int generate_key_material(csprng *RNG, key_material *km, octet *P, octet *Q)
     return MPC_OK;
 }
 
-void key_material_zkp(csprng *RNG, key_material *km, octet *C, octet *P, octet *E, octet *Y)
+void key_material_zkp(csprng *RNG, key_material *km, octet *C, octet *P, octet *E, octet *Y, octet *ID, octet *AD)
 {
     char r[EGS_SECP256K1];
     octet R = {0, sizeof(r), r};
@@ -137,10 +136,12 @@ void key_material_zkp(csprng *RNG, key_material *km, octet *C, octet *P, octet *
     char q[HFS_2048];
     octet M_Q = {0, sizeof(q), q};
 
+    FACTORING_ZK_modulus m;
+
     /* Prove knowledge of DLOG PK = s.G */
 
     SCHNORR_commit(RNG, &R, C);
-    SCHNORR_challenge(km->PK, C, &S_E);
+    SCHNORR_challenge(km->PK, C, ID, AD, &S_E);
     SCHNORR_prove(&R, &S_E, km->SK, P);
 
     printf("\n\tProve knowledge of ECDSA sk\n");
@@ -150,6 +151,10 @@ void key_material_zkp(csprng *RNG, key_material *km, octet *C, octet *P, octet *
     OCT_output(&S_E);
     printf("\t\tP = ");
     OCT_output(P);
+    printf("\t\tID = ");
+    OCT_output(ID);
+    printf("\t\tAD = ");
+    OCT_output(AD);
 
     OCT_clear(&R);
 
@@ -158,7 +163,8 @@ void key_material_zkp(csprng *RNG, key_material *km, octet *C, octet *P, octet *
     FF_2048_toOctet(&M_P, km->paillier_sk.p, HFLEN_2048);
     FF_2048_toOctet(&M_Q, km->paillier_sk.q, HFLEN_2048);
 
-    FACTORING_ZK_prove(RNG, &M_P, &M_Q, NULL, E, Y);
+    FACTORING_ZK_modulus_fromOctets(&m, &M_P, &M_Q);
+    FACTORING_ZK_prove(RNG, &m, ID, AD, NULL, E, Y);
 
     printf("\n\tProve knowledge of the Paillier Secret Key\n");
     printf("\t\tE = ");
@@ -168,9 +174,10 @@ void key_material_zkp(csprng *RNG, key_material *km, octet *C, octet *P, octet *
 
     OCT_clear(&M_P);
     OCT_clear(&M_Q);
+    FACTORING_ZK_modulus_kill(&m);
 }
 
-int key_material_verify_zkp(key_material *km, octet *C, octet *P, octet *E, octet *Y)
+int key_material_verify_zkp(key_material *km, octet *C, octet *P, octet *E, octet *Y, octet *ID, octet *AD)
 {
     int rc;
 
@@ -183,7 +190,7 @@ int key_material_verify_zkp(key_material *km, octet *C, octet *P, octet *E, octe
     /* Verify Schnorr Proof for counterparty PK */
     printf("\n\tVerify Proof of knowledge of ECDSA sk\n");
 
-    SCHNORR_challenge(km->CPK, C, &S_E);
+    SCHNORR_challenge(km->CPK, C, ID, AD, &S_E);
     rc = SCHNORR_verify(km->CPK, C, &S_E, P);
     if (rc != SCHNORR_OK)
     {
@@ -197,7 +204,7 @@ int key_material_verify_zkp(key_material *km, octet *C, octet *P, octet *E, octe
 
     PAILLIER_PK_toOctet(&N, &km->paillier_cpk);
 
-    rc = FACTORING_ZK_verify(&N, E, Y);
+    rc = FACTORING_ZK_verify(&N, E, Y, ID, AD);
     if (rc != FACTORING_ZK_OK)
     {
         return rc;
@@ -211,7 +218,8 @@ int key_material_verify_zkp(key_material *km, octet *C, octet *P, octet *E, octe
 /* Key Setup.
  *
  * Step 1.  Generate ECDSA key pair, Paillier key pair and Bit Commitment modulus
- * Setp 1A. Commit to ECDSA public Key, generating commitment and decommitment values.
+ * Setp 1A. Commit to ECDSA public Key, generating commitment and decommitment values. Send nonce
+ *          for liveliness.
  * Step 1B. Transmit Paillier public key, Bit Commitment public modulus and the commitment value
  *
  * Upon receipt of the commitment value from the other party:
@@ -231,6 +239,15 @@ void key_setup(csprng *RNG, key_material *alice_km, key_material *bob_km)
 
     char safe_q[HFS_2048];
     octet SAFE_Q = {0, sizeof(safe_q), safe_q};
+
+    // Octets for NIZKP ID and AD
+    char id[2][32];
+    octet A_ID = {0, sizeof(id[0]), id[0]};
+    octet B_ID = {0, sizeof(id[1]), id[1]};
+
+    char ad[2][32];
+    octet A_AD = {0, sizeof(ad[0]), ad[0]};
+    octet B_AD = {0, sizeof(ad[1]), ad[1]};
 
     // Octets for Non Malleable Commitments
     char commit_r[2][SHA256];
@@ -262,9 +279,12 @@ void key_setup(csprng *RNG, key_material *alice_km, key_material *bob_km)
     char paillier_pk[FS_2048];
     octet PAILLIER_PK = {0, sizeof(paillier_pk), paillier_pk};
 
-    /* Alice - generate key material and commitment */
+    /* Alice - generate key material, commitment and AD*/
 
     printf("\n[Alice] Generate key material\n");
+
+    OCT_jstring(&A_ID, alice_id);
+    OCT_rand(&B_AD, RNG, B_AD.len);
 
     OCT_fromHex(&SAFE_P, A_P_hex);
     OCT_fromHex(&SAFE_Q, A_Q_hex);
@@ -292,9 +312,12 @@ void key_setup(csprng *RNG, key_material *alice_km, key_material *bob_km)
     PAILLIER_PK_fromOctet(&bob_km->paillier_cpk, &PAILLIER_PK);
     COMMITMENTS_BC_export_public_modulus(&bob_km->bc_cpm, &alice_km->bc_sm);
 
-    /* Bob - generate key material and commitment */
+    /* Bob - generate key material, commitment and AD */
 
     printf("\n[Bob] Generate key material\n");
+
+    OCT_jstring(&B_ID, bob_id);
+    OCT_rand(&A_AD, RNG, A_AD.len);
 
     OCT_fromHex(&SAFE_P, B_P_hex);
     OCT_fromHex(&SAFE_Q, B_Q_hex);
@@ -377,21 +400,21 @@ void key_setup(csprng *RNG, key_material *alice_km, key_material *bob_km)
     /* Alice - generate key material ZKP */
 
     printf("\n[Alice] Prove correctness of key material\n");
-    key_material_zkp(RNG, alice_km, &A_KZKP_C, &A_KZKP_P, &A_KZKP_E, &A_KZKP_Y);
+    key_material_zkp(RNG, alice_km, &A_KZKP_C, &A_KZKP_P, &A_KZKP_E, &A_KZKP_Y, &A_ID, &A_AD);
 
     printf("\n[Alice] Transmit C, P, E, Y\n");
 
     /* Bob - generate key material ZKP */
 
     printf("\n[Bob] Prove correctness of key material\n");
-    key_material_zkp(RNG, bob_km, &B_KZKP_C, &B_KZKP_P, &B_KZKP_E, &B_KZKP_Y);
+    key_material_zkp(RNG, bob_km, &B_KZKP_C, &B_KZKP_P, &B_KZKP_E, &B_KZKP_Y, &B_ID, &B_AD);
 
     printf("\n[Bob] Transmit C, P, E, Y\n");
 
     /* Alice/Bob - verify key material ZKP */
 
     printf("\n[Alice] Verify Key Material ZKP\n");
-    rc = key_material_verify_zkp(alice_km, &B_KZKP_C, &B_KZKP_P, &B_KZKP_E, &B_KZKP_Y);
+    rc = key_material_verify_zkp(alice_km, &B_KZKP_C, &B_KZKP_P, &B_KZKP_E, &B_KZKP_Y, &B_ID, &B_AD);
     if (rc != MPC_OK)
     {
         printf("\n FAILURE invalid ZKP for Bob key material. rc %d\n", rc);
@@ -399,7 +422,7 @@ void key_setup(csprng *RNG, key_material *alice_km, key_material *bob_km)
     }
 
     printf("\n[Bob] Verify Key Material ZKP\n");
-    rc = key_material_verify_zkp(bob_km, &A_KZKP_C, &A_KZKP_P, &A_KZKP_E, &A_KZKP_Y);
+    rc = key_material_verify_zkp(bob_km, &A_KZKP_C, &A_KZKP_P, &A_KZKP_E, &A_KZKP_Y, &A_ID, &A_AD);
     if (rc != MPC_OK)
     {
         printf("\n FAILURE invalid ZKP for Alice key material. rc %d\n", rc);
@@ -768,7 +791,8 @@ void mtawc(csprng *RNG, key_material *alice_km, key_material *bob_km, octet *K, 
 /* Phase 5 interactive proof of consistency of the signature shares
  *
  * Step 1.  Each player generates random values phi and rho and commitments
- *          V, A and commits to the value (V, A)
+ *          V, A and commits to the value (V, A). It also generates a nonce
+ *          for liveliness
  * Step 2.  The values (V, A) are decommited and the players prove they are
  *          well formed
  * Step 2A. The well formedness proofs are transmitted and verified
@@ -807,6 +831,15 @@ void phase5(csprng *RNG, octet *RP1, octet *RP2, octet *R1, octet *R2, octet *HM
     octet T1 = {0, sizeof(t[0]), t[0]};
     octet T2 = {0, sizeof(t[1]), t[1]};
     octet *T[2] = {&T1, &T2};
+
+    // Octets for NIZKP ID and AD
+    char id[2][32];
+    octet A_ID = {0, sizeof(id[0]), id[0]};
+    octet B_ID = {0, sizeof(id[1]), id[1]};
+
+    char ad[2][32];
+    octet A_AD = {0, sizeof(ad[0]), ad[0]};
+    octet B_AD = {0, sizeof(ad[1]), ad[1]};
 
     // Octets for Non Malleable Commitments
     char double_ecp[2 * EFS_SECP256K1 + 2];
@@ -862,6 +895,9 @@ void phase5(csprng *RNG, octet *RP1, octet *RP2, octet *R1, octet *R2, octet *HM
 
     printf("\n[Alice] Generate commitment (V, A) for Phase5 proof and nm commit to it\n");
 
+    OCT_jstring(&A_ID, alice_id);
+    OCT_rand(&B_AD, RNG, B_AD.len);
+
     rc = MPC_PHASE5_commit(RNG, RP1, S1, &PHI1, &RHO1, &V1, &A1);
     if (rc != MPC_OK)
     {
@@ -895,6 +931,9 @@ void phase5(csprng *RNG, octet *RP1, octet *RP2, octet *R1, octet *R2, octet *HM
     /* Bob - commitment */
 
     printf("\n[Bob] Generate commitment (V, A) for Phase5 proof and nm commit to it\n");
+
+    OCT_jstring(&B_ID, bob_id);
+    OCT_rand(&A_AD, RNG, A_AD.len);
 
     rc = MPC_PHASE5_commit(RNG, RP2, S2, &PHI2, &RHO2, &V2, &A2);
     if (rc != MPC_OK)
@@ -961,7 +1000,7 @@ void phase5(csprng *RNG, octet *RP1, octet *RP2, octet *R1, octet *R2, octet *HM
     printf("\n[Alice] Generate DSchnorr Proof for PHI, SK, V\n");
 
     SCHNORR_D_commit(RNG, RP1, &SCHNORR_A1, &SCHNORR_B1, &SCHNORR_D1);
-    SCHNORR_D_challenge(RP1, &V1, &SCHNORR_D1, &SCHNORR_E1);
+    SCHNORR_D_challenge(RP1, &V1, &SCHNORR_D1, &A_ID, &A_AD, &SCHNORR_E1);
     SCHNORR_D_prove(&SCHNORR_A1, &SCHNORR_B1, &SCHNORR_E1, S1, &PHI1, &SCHNORR_T1, &SCHNORR_U1);
 
     printf("\tD = ");
@@ -976,7 +1015,7 @@ void phase5(csprng *RNG, octet *RP1, octet *RP2, octet *R1, octet *R2, octet *HM
     printf("\n[Alice] Generate Schnorr Proof for A, RHO\n");
 
     SCHNORR_commit(RNG, &SCHNORR_R1, &SCHNORR_C1);
-    SCHNORR_challenge(&A1, &SCHNORR_C1, &SCHNORR_E1);
+    SCHNORR_challenge(&A1, &SCHNORR_C1, &A_ID, &A_AD, &SCHNORR_E1);
     SCHNORR_prove(&SCHNORR_R1, &SCHNORR_E1, &RHO1, &SCHNORR_P1);
 
     printf("\tC = ");
@@ -991,7 +1030,7 @@ void phase5(csprng *RNG, octet *RP1, octet *RP2, octet *R1, octet *R2, octet *HM
     printf("\n[Bob] Generate DSchnorr Proof for PHI, SK, V\n");
 
     SCHNORR_D_commit(RNG, RP2, &SCHNORR_A2, &SCHNORR_B2, &SCHNORR_D2);
-    SCHNORR_D_challenge(RP2, &V2, &SCHNORR_D2, &SCHNORR_E2);
+    SCHNORR_D_challenge(RP2, &V2, &SCHNORR_D2, &B_ID, &B_AD, &SCHNORR_E2);
     SCHNORR_D_prove(&SCHNORR_A2, &SCHNORR_B2, &SCHNORR_E2, S2, &PHI2, &SCHNORR_T2, &SCHNORR_U2);
 
     printf("\tC = ");
@@ -1006,7 +1045,7 @@ void phase5(csprng *RNG, octet *RP1, octet *RP2, octet *R1, octet *R2, octet *HM
     printf("\n[Bob] Generate Schnorr Proof for A, RHO\n");
 
     SCHNORR_commit(RNG, &SCHNORR_R2, &SCHNORR_C2);
-    SCHNORR_challenge(&A2, &SCHNORR_C2, &SCHNORR_E2);
+    SCHNORR_challenge(&A2, &SCHNORR_C2, &B_ID, &B_AD, &SCHNORR_E2);
     SCHNORR_prove(&SCHNORR_R2, &SCHNORR_E2, &RHO2, &SCHNORR_P2);
 
     printf("\tC = ");
@@ -1022,7 +1061,7 @@ void phase5(csprng *RNG, octet *RP1, octet *RP2, octet *R1, octet *R2, octet *HM
 
     printf("\tVerify Proof for V\n");
 
-    SCHNORR_D_challenge(RP2, &V2, &SCHNORR_D2, &SCHNORR_E2);
+    SCHNORR_D_challenge(RP2, &V2, &SCHNORR_D2, &B_ID, &B_AD, &SCHNORR_E2);
     printf("\t\tE = ");
     OCT_output(&SCHNORR_E2);
 
@@ -1037,7 +1076,7 @@ void phase5(csprng *RNG, octet *RP1, octet *RP2, octet *R1, octet *R2, octet *HM
 
     printf("\n\tVerify Proof for A\n");
 
-    SCHNORR_challenge(&A2, &SCHNORR_C2, &SCHNORR_E2);
+    SCHNORR_challenge(&A2, &SCHNORR_C2, &B_ID, &B_AD, &SCHNORR_E2);
     printf("\t\tE = ");
     OCT_output(&SCHNORR_E2);
 
@@ -1054,7 +1093,7 @@ void phase5(csprng *RNG, octet *RP1, octet *RP2, octet *R1, octet *R2, octet *HM
 
     printf("\tVerify Proof for V\n");
 
-    SCHNORR_D_challenge(RP1, &V1, &SCHNORR_D1, &SCHNORR_E1);
+    SCHNORR_D_challenge(RP1, &V1, &SCHNORR_D1, &A_ID, &A_AD, &SCHNORR_E1);
     printf("\t\tE = ");
     OCT_output(&SCHNORR_E1);
 
@@ -1069,7 +1108,7 @@ void phase5(csprng *RNG, octet *RP1, octet *RP2, octet *R1, octet *R2, octet *HM
 
     printf("\n\tVerify Proof for A\n");
 
-    SCHNORR_challenge(&A1, &SCHNORR_C1, &SCHNORR_E1);
+    SCHNORR_challenge(&A1, &SCHNORR_C1, &A_ID, &A_AD, &SCHNORR_E1);
     printf("\t\tE = ");
     OCT_output(&SCHNORR_E1);
 
@@ -1185,6 +1224,7 @@ void phase5(csprng *RNG, octet *RP1, octet *RP2, octet *R1, octet *R2, octet *HM
 /* Signature.
  *
  * Step 1.  Each player generates random k, gamma and commits to gamma.G
+ *          It also generates a nonce for liveliness
  * Step 2.  Each player performs a MTA with shares k_i, gamma_j
  * Step 2A. Each player performs a MTAWC with shares k_i, sk_j
  * Step 3.  Each player sums the output of the MTA runs with the product k_i * gamma_i
@@ -1216,6 +1256,15 @@ void signature(csprng *RNG, octet *M, key_material *alice_km, key_material *bob_
     char gammapt[2][EFS_SECP256K1 + 1];
     octet GAMMAPT1 = {0, sizeof(gammapt[0]), gammapt[0]};
     octet GAMMAPT2 = {0, sizeof(gammapt[1]), gammapt[1]};
+
+    // Octets for NIZKP ID and AD
+    char id[2][32];
+    octet A_ID = {0, sizeof(id[0]), id[0]};
+    octet B_ID = {0, sizeof(id[1]), id[1]};
+
+    char ad[2][32];
+    octet A_AD = {0, sizeof(ad[0]), ad[0]};
+    octet B_AD = {0, sizeof(ad[1]), ad[1]};
 
     // Octets for Non Malleable Commitments
     char commit_r[2][SHA256];
@@ -1293,11 +1342,14 @@ void signature(csprng *RNG, octet *M, key_material *alice_km, key_material *bob_
 
     printf("\n[Alice] Generate random K and GAMMA and commit to GAMMA.G\n");
 
+    OCT_jstring(&A_ID, alice_id);
+    OCT_rand(&B_AD, RNG, B_AD.len);
+
     BIG_256_56_randomnum(k1, q, RNG);
     BIG_256_56_toBytes(K1.val, k1);
     K1.len = EGS_SECP256K1;
 
-    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG, &GAMMA1, &NCP);
+    MPC_ECDSA_KEY_PAIR_GENERATE(RNG, &GAMMA1, &NCP);
     ECP_SECP256K1_fromOctet(&P, &NCP);
     ECP_SECP256K1_toOctet(&GAMMAPT1, &P, true);
 
@@ -1323,11 +1375,14 @@ void signature(csprng *RNG, octet *M, key_material *alice_km, key_material *bob_
 
     printf("\n[Bob] Generate random K and GAMMA and commit to GAMMA.G\n");
 
+    OCT_jstring(&B_ID, bob_id);
+    OCT_rand(&A_AD, RNG, A_AD.len);
+
     BIG_256_56_randomnum(k2, q, RNG);
     BIG_256_56_toBytes(K2.val, k2);
     K2.len = EGS_SECP256K1;
 
-    ECP_SECP256K1_KEY_PAIR_GENERATE(RNG, &GAMMA2, &NCP);
+    MPC_ECDSA_KEY_PAIR_GENERATE(RNG, &GAMMA2, &NCP);
     ECP_SECP256K1_fromOctet(&P, &NCP);
     ECP_SECP256K1_toOctet(&GAMMAPT2, &P, true);
 
@@ -1408,7 +1463,7 @@ void signature(csprng *RNG, octet *M, key_material *alice_km, key_material *bob_
     printf("\n[Alice] Generate Schnorr Proof for DLOG GAMMA, GAMMA.G\n");
 
     SCHNORR_commit(RNG, &SCHNORR_R1, &SCHNORR_C1);
-    SCHNORR_challenge(&GAMMAPT1, &SCHNORR_C1, &SCHNORR_E1);
+    SCHNORR_challenge(&GAMMAPT1, &SCHNORR_C1, &A_ID, &A_AD, &SCHNORR_E1);
     SCHNORR_prove(&SCHNORR_R1, &SCHNORR_E1, &GAMMA1, &SCHNORR_P1);
 
     printf("\tC = ");
@@ -1425,7 +1480,7 @@ void signature(csprng *RNG, octet *M, key_material *alice_km, key_material *bob_
     printf("\n[Bob] Generate Schnorr Proof for DLOG GAMMA, GAMMA.G\n");
 
     SCHNORR_commit(RNG, &SCHNORR_R2, &SCHNORR_C2);
-    SCHNORR_challenge(&GAMMAPT2, &SCHNORR_C2, &SCHNORR_E2);
+    SCHNORR_challenge(&GAMMAPT2, &SCHNORR_C2, &B_ID, &B_AD, &SCHNORR_E2);
     SCHNORR_prove(&SCHNORR_R2, &SCHNORR_E2, &GAMMA2, &SCHNORR_P2);
 
     printf("\tC = ");
@@ -1453,7 +1508,7 @@ void signature(csprng *RNG, octet *M, key_material *alice_km, key_material *bob_
     printf("\n[Alice] Verify Schnorr Proof for GAMMA.G\n");
 
     OCT_clear(&SCHNORR_E2);
-    SCHNORR_challenge(&GAMMAPT2, &SCHNORR_C2, &SCHNORR_E2);
+    SCHNORR_challenge(&GAMMAPT2, &SCHNORR_C2, &B_ID, &B_AD, &SCHNORR_E2);
 
     printf("\tE = ");
     OCT_output(&SCHNORR_E2);
@@ -1483,7 +1538,7 @@ void signature(csprng *RNG, octet *M, key_material *alice_km, key_material *bob_
     printf("\n[Bob] Verify Schnorr Proof for GAMMA.G\n");
 
     OCT_clear(&SCHNORR_E1);
-    SCHNORR_challenge(&GAMMAPT1, &SCHNORR_C1, &SCHNORR_E1);
+    SCHNORR_challenge(&GAMMAPT1, &SCHNORR_C1, &A_ID, &A_AD, &SCHNORR_E1);
 
     printf("\tE = ");
     OCT_output(&SCHNORR_E1);

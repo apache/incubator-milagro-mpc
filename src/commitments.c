@@ -118,7 +118,7 @@ static int is_safe_prime(BIG_1024_58 *p, BIG_1024_58 *P, csprng *RNG, int n)
     FF_2048_copy(Pm1, P, n);
     FF_2048_dec(Pm1, 1, n);
 
-    FF_2048_pow(f, f, Pm1, P, n);
+    FF_2048_nt_pow(f, f, Pm1, P, n, n);
     FF_2048_dec(f, 1, n);
     if (FF_2048_iszilch(f, n))
     {
@@ -160,34 +160,22 @@ void generate_safe_prime(csprng *RNG, BIG_1024_58 *p, BIG_1024_58 *P, int n)
  * Find random element of order p in Z/PZ
  * Assuming P = 2p + 1 is a safe prime, i.e. phi(P) = 2p
  */
-void bc_generator(csprng *RNG, BIG_1024_58* x, BIG_1024_58 *p, BIG_1024_58 *P, int n)
+void bc_generator(csprng *RNG, BIG_1024_58* x, BIG_1024_58 *P, int n)
 {
 #ifndef C99
-    BIG_1024_58 e[FFLEN_2048];
+    BIG_1024_58 r[FFLEN_2048];
 #else
-    BIG_1024_58 e[n];
+    BIG_1024_58 r[n];
 #endif
 
-    FF_2048_randomnum(x, P, RNG, n);
+    FF_2048_randomnum(r, P, RNG, n);
 
-    // While ord(x) = 2, try the next
-    FF_2048_power(e, x, 2, P, n);
-    FF_2048_dec(e, 1, n);
-    while (FF_2048_iszilch(e, n))
+    do
     {
-        FF_2048_inc(x, 1, n);
-
-        FF_2048_power(e, x, 2, P, n);
-        FF_2048_dec(e, 1, n);
+        FF_2048_nt_pow_int(x, r, 2, P, n);
+        FF_2048_inc(r, 1, n);
     }
-
-    // If ord(x) = 2p, square it.
-    FF_2048_skpow(e, x, p, P, n, n);
-    FF_2048_dec(e, 1, n);
-    if (!FF_2048_iszilch(e, n))
-    {
-        FF_2048_power(x, x, 2, P, n);
-    }
+    while (FF_2048_isunity(x, n));
 }
 
 void COMMITMENTS_BC_setup(csprng *RNG, COMMITMENTS_BC_priv_modulus *m, octet *P, octet *Q, octet *B0, octet *ALPHA)
@@ -229,6 +217,7 @@ void COMMITMENTS_BC_setup(csprng *RNG, COMMITMENTS_BC_priv_modulus *m, octet *P,
 
     FF_2048_mul(m->N, m->P, m->Q, HFLEN_2048);
     FF_2048_mul(m->pq, p, q, HFLEN_2048);
+    FF_2048_invmodp(m->invPQ, m->P, m->Q, HFLEN_2048);
 
     /* Load or generate generator b0 and DLOG exponent alpha */
 
@@ -236,10 +225,10 @@ void COMMITMENTS_BC_setup(csprng *RNG, COMMITMENTS_BC_priv_modulus *m, octet *P,
     {
         // Find a generator of G_pq in Z/NZ using the crt to
         // combine generators of G_p in Z/PZ and G_q in Z/QZ
-        bc_generator(RNG, gp, p, m->P, HFLEN_2048);
-        bc_generator(RNG, gq, q, m->Q, HFLEN_2048);
+        bc_generator(RNG, gp, m->P, HFLEN_2048);
+        bc_generator(RNG, gq, m->Q, HFLEN_2048);
 
-        FF_2048_crt(m->b0, gp, gq, m->P, m->Q, HFLEN_2048);
+        FF_2048_crt(m->b0, gp, gq, m->P, m->invPQ, m->N, HFLEN_2048);
     }
     else
     {
@@ -273,10 +262,10 @@ void COMMITMENTS_BC_setup(csprng *RNG, COMMITMENTS_BC_priv_modulus *m, octet *P,
     FF_2048_dmod(ap, m->alpha, p, HFLEN_2048);
     FF_2048_dmod(aq, m->alpha, q, HFLEN_2048);
 
-    FF_2048_skpow(gp, gp, ap, m->P, HFLEN_2048, HFLEN_2048);
-    FF_2048_skpow(gq, gq, aq, m->Q, HFLEN_2048, HFLEN_2048);
+    FF_2048_ct_pow(gp, gp, ap, m->P, HFLEN_2048, HFLEN_2048);
+    FF_2048_ct_pow(gq, gq, aq, m->Q, HFLEN_2048, HFLEN_2048);
 
-    FF_2048_crt(m->b1, gp, gq, m->P, m->Q, HFLEN_2048);
+    FF_2048_crt(m->b1, gp, gq, m->P, m->invPQ, m->N, HFLEN_2048);
 
     // Clean memory
     FF_2048_zero(p,  HFLEN_2048);
@@ -291,6 +280,7 @@ void COMMITMENTS_BC_kill_priv_modulus(COMMITMENTS_BC_priv_modulus *m)
 {
     FF_2048_zero(m->P, HFLEN_2048);
     FF_2048_zero(m->Q, HFLEN_2048);
+    FF_2048_zero(m->invPQ, HFLEN_2048);
     FF_2048_zero(m->pq, FFLEN_2048);
     FF_2048_zero(m->alpha, FFLEN_2048);
     FF_2048_zero(m->ialpha, FFLEN_2048);

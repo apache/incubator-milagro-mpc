@@ -23,6 +23,35 @@ under the License.
 #include <amcl/ecdh_support.h>
 #include <amcl/mpc.h>
 
+/* Generate ECDSA key pair */
+void MPC_ECDSA_KEY_PAIR_GENERATE(csprng *RNG, octet* S, octet *W)
+{
+    BIG_256_56 s;
+    BIG_256_56 q;
+
+    ECP_SECP256K1 G;
+
+    ECP_SECP256K1_generator(&G);
+    BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
+
+    if (RNG!=NULL)
+    {
+        BIG_256_56_randomnum(s, q, RNG);
+
+        S->len=EGS_SECP256K1;
+        BIG_256_56_toBytes(S->val,s);
+    }
+    else
+    {
+        BIG_256_56_fromBytesLen(s, S->val, S->len);
+    }
+
+    ECP_SECP256K1_mul(&G, s);
+    ECP_SECP256K1_toOctet(W, &G, true);
+
+    BIG_256_56_zero(s);
+}
+
 /* ECDSA Signature, R and S are the signature on M using private key SK */
 int MPC_ECDSA_SIGN(int sha, const octet *K, const octet *SK, octet *M, octet *R, octet *S)
 {
@@ -156,6 +185,20 @@ int MPC_ECDSA_VERIFY(const octet *HM, octet *PK, octet *R,octet *S)
     return 0;
 }
 
+void MPC_K_GENERATE(csprng *RNG, octet *K)
+{
+    BIG_256_56 s;
+    BIG_256_56 q;
+
+    BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
+    BIG_256_56_randomnum(s, q, RNG);
+
+    K->len=EGS_SECP256K1;
+    BIG_256_56_toBytes(K->val, s);
+
+    BIG_256_56_zero(s);
+}
+
 /* Calculate the inverse of kgamma */
 void MPC_INVKGAMMA(const octet *KGAMMA1, const octet *KGAMMA2, octet *INVKGAMMA)
 {
@@ -181,7 +224,6 @@ void MPC_INVKGAMMA(const octet *KGAMMA1, const octet *KGAMMA2, octet *INVKGAMMA)
     INVKGAMMA->len = EGS_SECP256K1;
     BIG_256_56_toBytes(INVKGAMMA->val, kgamma1);
 }
-
 
 /* Calculate the r component of the signature */
 int MPC_R(const octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R, octet *RP)

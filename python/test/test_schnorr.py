@@ -78,12 +78,17 @@ class TestChallenge(unittest.TestCase):
         """ Test using test vectors """
 
         for vector in self.tv:
-            V = bytes.fromhex(vector["V"])
-            C = bytes.fromhex(vector["C"])
+            V  = bytes.fromhex(vector["V"])
+            C  = bytes.fromhex(vector["C"])
+            ID = bytes.fromhex(vector["ID"])
+            AD = bytes.fromhex(vector["AD"])
+
+            if not AD:
+                AD = None
 
             e_golden = bytes.fromhex(vector["E"])
 
-            e = schnorr.challenge(V, C)
+            e = schnorr.challenge(V, C, ID, AD=AD)
 
             self.assertEqual(e, e_golden)
 
@@ -143,7 +148,6 @@ class TestVerify(unittest.TestCase):
         ec = schnorr.verify(V, C, e, p)
 
         self.assertEqual(ec, schnorr.FAIL)
-
 
 if __name__ == '__main__':
     unittest.main()

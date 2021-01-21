@@ -24,6 +24,8 @@ under the License.
 #include "amcl/factoring_zk.h"
 
 #define LINE_LEN 2000
+#define IDLEN 16
+#define ADLEN 16
 
 int main(int argc, char **argv)
 {
@@ -65,11 +67,22 @@ int main(int argc, char **argv)
     octet N = {0, sizeof(n), n};
     const char *Nline = "N = ";
 
+    char id[IDLEN];
+    octet ID = {0, sizeof(id), id};
+    const char *IDline = "ID = ";
+
+    char ad[ADLEN];
+    octet AD = {0, sizeof(ad), ad};
+    octet *AD_ptr = NULL;
+    const char *ADline = "AD = ";
+
     char e[FACTORING_ZK_B];
     octet E = {0, sizeof(e), e};
 
     char y[FS_2048];
     octet Y = {0, sizeof(y), y};
+
+    FACTORING_ZK_modulus m;
 
     // Line terminating a test vector
     const char *last_line = Yline;
@@ -85,6 +98,10 @@ int main(int argc, char **argv)
     {
         scan_int(&testNo, line, TESTline);
 
+        // Read ID and AD
+        scan_OCTET(fp, &ID, line, IDline);
+        scan_OCTET(fp, &AD, line, ADline);
+
         // Read modulus
         scan_OCTET(fp, &P, line, Pline);
         scan_OCTET(fp, &Q, line, Qline);
@@ -97,16 +114,25 @@ int main(int argc, char **argv)
         scan_OCTET(fp, &EGOLDEN, line, Eline);
         scan_OCTET(fp, &YGOLDEN, line, Yline);
 
-        // Read Y and run test
         if (!strncmp(line, last_line, strlen(last_line)))
         {
-            FACTORING_ZK_prove(NULL, &P, &Q, &R, &E, &Y);
+            // Also input AD if it is not empty
+            if (AD.len > 0)
+            {
+                AD_ptr = &AD;
+            }
+
+            FACTORING_ZK_modulus_fromOctets(&m, &P, &Q);
+            FACTORING_ZK_prove(NULL, &m, &ID, AD_ptr, &R, &E, &Y);
 
             compare_OCT(fp, testNo, "FACTORING_ZK_prove E", &E, &EGOLDEN);
             compare_OCT(fp, testNo, "FACTORING_ZK_prove Y", &Y, &YGOLDEN);
 
             // Mark that at least one test vector was executed
             test_run = 1;
+
+            // Restore AD_ptr
+            AD_ptr = NULL;
         }
     }
 

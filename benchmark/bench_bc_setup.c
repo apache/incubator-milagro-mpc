@@ -84,7 +84,7 @@ int main()
     start = clock();
     do
     {
-        bc_generator(&RNG, x, sp, sP, HFLEN_2048);
+        bc_generator(&RNG, x, sP, HFLEN_2048);
         iterations++;
         elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
     }

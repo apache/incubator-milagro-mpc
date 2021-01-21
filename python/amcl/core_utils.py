@@ -49,6 +49,7 @@ typedef struct
 extern void RAND_seed(csprng *R,int n,char *b);
 extern void RAND_clean(csprng *R);
 extern void OCT_clear(octet *O);
+extern void generateRandom(csprng* RNG, octet* randomValue);
 """)
 
 if (platform.system() == 'Windows'):
@@ -177,3 +178,32 @@ def kill_csprng(rng):
     _libamcl_core.RAND_clean(rng)
 
     return 0
+
+def generate_random(rng, length):
+    """Generate a random string
+
+    Generate a random string
+
+    Args::
+
+        rng: Pointer to cryptographically secure pseudo-random number generator instance
+        length: length of random byte array
+
+    Returns::
+
+        random_value: Random value
+
+    Raises:
+
+    """
+    random_value1, random_value1_val = make_octet(length)
+    _ = random_value1_val # Suppress warning
+
+    _libamcl_core.generateRandom(rng, random_value1)
+
+    random_value = to_str(random_value1)
+
+    # clear memory
+    _libamcl_core.OCT_clear(random_value1)
+
+    return random_value

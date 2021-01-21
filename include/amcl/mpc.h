@@ -37,6 +37,17 @@ extern "C" {
 #define MPC_FAIL        71   /**< Failure */
 #define MPC_INVALID_ECP 72   /**< Input is not a valid point on the curve */
 
+/**	@brief Generate an ECC public/private key pair
+ *
+ *  Generat an ECC public/private key pair W = s.G, where
+ *  G is a fixed public generator
+ *
+ *  @param RNG is a pointer to a cryptographically secure random number generator
+ *  @param S the private key, an output internally randomly generated if R!=NULL, otherwise must be provided as an input
+ *  @param W the output public key, which is s.G, where G is a fixed generator
+ */
+void MPC_ECDSA_KEY_PAIR_GENERATE(csprng *RNG, octet* S, octet *W);
+
 /** \brief ECDSA Sign message
  *
  *  Generate the ECDSA signature on message, M, with outputs (R,S)
@@ -69,6 +80,24 @@ int MPC_ECDSA_SIGN(int sha, const octet *K, const octet *SK, octet *M, octet *R,
  *  @return                  Returns 0 or else error code
  */
 int MPC_ECDSA_VERIFY(const octet *HM,octet *PK, octet *R,octet *S);
+
+/** \brief Generate a random K for and ECDSA signature
+ *
+ *  Generate a random K modulo the curve order
+ *
+ *  @param RNG               Pointer to a cryptographically secure PRNG
+ *  @param K                 Destination octet for the randomly generated value
+ */
+void MPC_K_GENERATE(csprng *RNG, octet *K);
+
+/** \brief Generate a random K for and ECDSA signature
+ *
+ *  Generate a random K modulo the curve order
+ *
+ *  @param RNG               Pointer to a cryptographically secure PRNG
+ *  @param K                 Destination octet for the randomly generated value
+ */
+void MPC_K_GENERATE(csprng *RNG, octet *K);
 
 /** \brief Calculate the inverse of the sum of kgamma values
  *
