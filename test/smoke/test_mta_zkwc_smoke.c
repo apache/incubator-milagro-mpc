@@ -18,14 +18,13 @@
 */
 
 #include <string.h>
-#include "amcl/mta.h"
-#include "amcl/commitments.h"
+#include "amcl/mta_zkp.h"
 
 void ff_2048_cleaned(BIG_1024_58 *a, char *name, int n)
 {
     if(!FF_2048_iszilch(a, n))
     {
-        fprintf(stderr, "FAILURE MTA_ZKWC_commitment_rv_kill. %s was not cleaned\n", name);
+        fprintf(stderr, "FAILURE MTA_ZKWC_rv_kill. %s was not cleaned\n", name);
         exit(EXIT_FAILURE);
     }
 }
@@ -55,13 +54,14 @@ int main()
     int rc;
 
     PAILLIER_private_key priv_key;
-    PAILLIER_public_key pub_key;
-    COMMITMENTS_BC_priv_modulus priv_mod;
-    COMMITMENTS_BC_pub_modulus pub_mod;
+    PAILLIER_public_key  pub_key;
+
+    BIT_COMMITMENT_priv priv_mod;
+    BIT_COMMITMENT_pub  pub_mod;
 
     MTA_ZKWC_commitment c;
-    MTA_ZKWC_commitment_rv rv;
-    MTA_ZKWC_proof proof;
+    MTA_ZKWC_rv         rv;
+    MTA_ZKWC_proof      proof;
 
     char c1[2*FS_2048];
     octet C1 = {0, sizeof(c1), c1};
@@ -90,10 +90,20 @@ int main()
     char q[HFS_2048];
     octet Q = {0, sizeof(q), q};
 
+    char id[32];
+    octet ID = {0, sizeof(id), id};
+
+    char ad[32];
+    octet AD = {0, sizeof(ad), ad};
+
     // Deterministic RNG for testing
     char seed[32] = {0};
     csprng RNG;
     RAND_seed(&RNG, 32, seed);
+
+    // Pseudorandom ID and AD
+    OCT_rand(&ID, &RNG, ID.len);
+    OCT_rand(&AD, &RNG, AD.len);
 
     // Load paillier key
     OCT_fromHex(&P, P_hex);
@@ -104,9 +114,9 @@ int main()
     // Generate BC commitment modulus
     OCT_fromHex(&P, PT_hex);
     OCT_fromHex(&Q, QT_hex);
-    COMMITMENTS_BC_setup(&RNG, &priv_mod, &P, &Q, NULL, NULL);
+    BIT_COMMITMENT_setup(&RNG, &priv_mod, &P, &Q, NULL, NULL);
 
-    COMMITMENTS_BC_export_public_modulus(&pub_mod, &priv_mod);
+    BIT_COMMITMENT_priv_to_pub(&pub_mod, &priv_mod);
 
     // Load Paillier encryption values
     OCT_fromHex(&X,  X_hex);
@@ -119,11 +129,73 @@ int main()
     OCT_fromHex(&ECPX, ECPX_hex);
 
     // Run smoke test
-    MTA_ZKWC_commit(&RNG, &pub_key, &pub_mod, &X, &Y, &C1, &c, &rv);
-    MTA_ZKWC_challenge(&pub_key, &pub_mod, &C1, &C2, &ECPX, &c, &E);
-    MTA_ZKWC_prove(&pub_key, &rv, &X, &Y, &R, &E, &proof);
+    MTA_ZKWC_commit(&RNG, &pub_key, &pub_mod, &X, &Y, &C1, &rv, &c);
+    MTA_ZKWC_challenge(&pub_key, &pub_mod, &C1, &C2, &ECPX, &c, &ID, &AD, &E);
+    MTA_ZKWC_prove(&pub_key, &X, &Y, &R, &rv, &E, &proof);
 
-    rc = MTA_ZKWC_verify(&priv_key, &priv_mod, &C1, &C2, &ECPX, &E, &c, &proof);
+    rc = MTA_ZKWC_verify(&priv_key, &priv_mod, &C1, &C2, &ECPX, &c, &E, &proof);
+    if (rc != MTA_OK)
+    {
+        printf("FAILURE MTA_ZKWC smoke test. rc = %d\n", rc);
+        exit(EXIT_FAILURE);
+    }
+
+    // Test error code propagation
+    rc = MTA_ZKWC_verify(&priv_key, &priv_mod, &C1, &C2, &ECPX, &c, &ID, &proof);
+    if (rc != BIT_COMMITMENT_FAIL)
+    {
+        printf("FAILURE MTA_ZKWC error code propagation\n");
+        exit(EXIT_FAILURE);
+    }
+
+    rc = MTA_ZKWC_verify(&priv_key, &priv_mod, &C1, &C2, &ID, &c, &E, &proof);
+    if (rc != MTA_INVALID_ECP)
+    {
+        printf("FAILURE MTA_ZKWC error code propagation\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Check octet functions consistency
+    char oct1[FS_2048];
+    octet OCT1 = {0, sizeof(oct1), oct1};
+
+    char oct2[2 * FS_2048];
+    octet OCT2 = {0, sizeof(oct2), oct2};
+
+    char oct3[2 * FS_2048];
+    octet OCT3 = {0, sizeof(oct3), oct3};
+
+    char oct4[2 * FS_2048];
+    octet OCT4 = {0, sizeof(oct4), oct4};
+
+    char oct5[2 * FS_2048];
+    octet OCT5 = {0, sizeof(oct5), oct5};
+
+    char u[EGS_SECP256K1 + 1];
+    octet U = {0, sizeof(u), u};
+
+    MTA_ZKWC_commitment_toOctets(&U, &OCT1, &OCT2, &OCT3, &OCT4, &OCT5, &c);
+
+    // Load invalid ECP
+    rc = MTA_ZKWC_commitment_fromOctets(&c, &ID, &OCT1, &OCT2, &OCT3, &OCT4, &OCT5);
+    if (rc != MTA_INVALID_ECP)
+    {
+        printf("FAILURE MTA_ZKWC_commitment_fromOctets invalid ECP. rc = %d\n", rc);
+        exit(EXIT_FAILURE);
+    }
+
+    // Continue loading correct ECP
+    rc = MTA_ZKWC_commitment_fromOctets(&c, &U, &OCT1, &OCT2, &OCT3, &OCT4, &OCT5);
+    if (rc != MTA_OK)
+    {
+        printf("FAILURE MTA_ZKWC_commitment_fromOctets. rc = %d\n", rc);
+        exit(EXIT_FAILURE);
+    }
+
+    MTA_ZKWC_proof_toOctets(&OCT1, &OCT2, &OCT3, &OCT4, &OCT5, &proof);
+    MTA_ZKWC_proof_fromOctets(&proof, &OCT1, &OCT2, &OCT3, &OCT4, &OCT5);
+
+    rc = MTA_ZKWC_verify(&priv_key, &priv_mod, &C1, &C2, &ECPX, &c, &E, &proof);
     if (rc != MTA_OK)
     {
         printf("FAILURE MTA_ZKWC smoke test. rc = %d\n", rc);
@@ -131,7 +203,7 @@ int main()
     }
 
     // Clean random values
-    MTA_ZKWC_commitment_rv_kill(&rv);
+    MTA_ZKWC_rv_kill(&rv);
 
     ff_2048_cleaned(rv.alpha, "rv.alpha", FFLEN_2048);
     ff_2048_cleaned(rv.beta,  "rv.beta",  FFLEN_2048);

@@ -60,14 +60,14 @@ if __name__ == "__main__":
     M = b'test message'
 
     # ALPHA1 + BETA2 = K1 * GAMMA2
-    CA11 = amcl.mpc.mpc_mta_client1(rng, paillier_pk1, K1)
-    CB12, BETA2 = amcl.mpc.mpc_mta_server(rng, paillier_pk1, GAMMA2, CA11)
-    ALPHA1 = amcl.mpc.mpc_mta_client2(paillier_sk1, CB12)
+    CA11 = amcl.mpc.mta_client1(rng, paillier_pk1, K1)
+    CB12, BETA2 = amcl.mpc.mta_server(rng, paillier_pk1, GAMMA2, CA11)
+    ALPHA1 = amcl.mpc.mta_client2(paillier_sk1, CB12)
 
     # ALPHA2 + BETA1 = K2 * GAMMA1
-    CA22 = amcl.mpc.mpc_mta_client1(rng, paillier_pk2, K2)
-    CB21, BETA1 = amcl.mpc.mpc_mta_server(rng, paillier_pk2, GAMMA1, CA22)
-    ALPHA2 = amcl.mpc.mpc_mta_client2(paillier_sk2, CB21)
+    CA22 = amcl.mpc.mta_client1(rng, paillier_pk2, K2)
+    CB21, BETA1 = amcl.mpc.mta_server(rng, paillier_pk2, GAMMA1, CA22)
+    ALPHA2 = amcl.mpc.mta_client2(paillier_sk2, CB21)
 
     # sum = K1.GAMMA1 + alpha1  + beta1
     SUM1 = amcl.mpc.mpc_sum_mta(K1, GAMMA1,  ALPHA1,  BETA1)
@@ -82,14 +82,14 @@ if __name__ == "__main__":
     rc, SIG_R, _ = amcl.mpc.mpc_r(INVKGAMMA, GAMMAPT1, GAMMAPT2)
 
     # ALPHA1 + BETA2 = K1 * W2
-    CA11 = amcl.mpc.mpc_mta_client1(rng, paillier_pk1, K1)
-    CB12, BETA2 = amcl.mpc.mpc_mta_server(rng, paillier_pk1, W2, CA11)
-    ALPHA1 = amcl.mpc.mpc_mta_client2(paillier_sk1, CB12)
+    CA11 = amcl.mpc.mta_client1(rng, paillier_pk1, K1)
+    CB12, BETA2 = amcl.mpc.mta_server(rng, paillier_pk1, W2, CA11)
+    ALPHA1 = amcl.mpc.mta_client2(paillier_sk1, CB12)
 
     # ALPHA2 + BETA1 = K2 * W1
-    CA22 = amcl.mpc.mpc_mta_client1(rng, paillier_pk2, K2)
-    CB21, BETA1 = amcl.mpc.mpc_mta_server(rng, paillier_pk2, W1, CA22)
-    ALPHA2 = amcl.mpc.mpc_mta_client2(paillier_sk2, CB21)
+    CA22 = amcl.mpc.mta_client1(rng, paillier_pk2, K2)
+    CB21, BETA1 = amcl.mpc.mta_server(rng, paillier_pk2, W1, CA22)
+    ALPHA2 = amcl.mpc.mta_client2(paillier_sk2, CB21)
 
     # sum = K1.W1 + alpha1  + beta1
     SUM1 = amcl.mpc.mpc_sum_mta(K1, W1,  ALPHA1,  BETA1)
@@ -123,4 +123,3 @@ if __name__ == "__main__":
 
     # Clear memory
     amcl.core_utils.kill_csprng(rng)
-    

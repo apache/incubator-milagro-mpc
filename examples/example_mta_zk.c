@@ -18,8 +18,7 @@
 */
 
 #include <string.h>
-#include "amcl/mta.h"
-#include "amcl/commitments.h"
+#include "amcl/mta_zkp.h"
 
 /* MTA Receiver ZK Proof example */
 
@@ -43,13 +42,14 @@ int main()
     int rc;
 
     PAILLIER_private_key priv_key;
-    PAILLIER_public_key pub_key;
-    COMMITMENTS_BC_priv_modulus priv_mod;
-    COMMITMENTS_BC_pub_modulus pub_mod;
+    PAILLIER_public_key  pub_key;
+
+    BIT_COMMITMENT_priv priv_mod;
+    BIT_COMMITMENT_pub  pub_mod;
 
     MTA_ZK_commitment c;
-    MTA_ZK_commitment_rv rv;
-    MTA_ZK_proof proof;
+    MTA_ZK_rv         rv;
+    MTA_ZK_proof      proof;
 
     char c1[2*FS_2048];
     octet C1 = {0, sizeof(c1), c1};
@@ -105,10 +105,20 @@ int main()
     char t2[FS_2048 + HFS_2048];
     octet T2 = {0, sizeof(t2), t2};
 
+    char id[32];
+    octet ID = {0, sizeof(id), id};
+
+    char ad[32];
+    octet AD = {0, sizeof(ad), ad};
+
     // Deterministic RNG for testing
     char seed[32] = {0};
     csprng RNG;
     RAND_seed(&RNG, 32, seed);
+
+    // Pseudorandom ID and AD
+    OCT_rand(&ID, &RNG, ID.len);
+    OCT_rand(&AD, &RNG, AD.len);
 
     // Load paillier key
     OCT_fromHex(&P, P_hex);
@@ -126,9 +136,9 @@ int main()
     // Generate BC commitment modulus
     OCT_fromHex(&P, PT_hex);
     OCT_fromHex(&Q, QT_hex);
-    COMMITMENTS_BC_setup(&RNG, &priv_mod, &P, &Q, NULL, NULL);
+    BIT_COMMITMENT_setup(&RNG, &priv_mod, &P, &Q, NULL, NULL);
 
-    COMMITMENTS_BC_export_public_modulus(&pub_mod, &priv_mod);
+    BIT_COMMITMENT_priv_to_pub(&pub_mod, &priv_mod);
 
     FF_2048_output(priv_mod.alpha, FFLEN_2048);
     printf("\n");
@@ -161,7 +171,7 @@ int main()
 
     // Prover - commit to values for the proof and output
     // the commitment to octets for transmission
-    MTA_ZK_commit(&RNG, &pub_key, &pub_mod, &X, &Y, &C1, &c, &rv);
+    MTA_ZK_commit(&RNG, &pub_key, &pub_mod, &X, &Y, &C1, &rv, &c);
     MTA_ZK_commitment_toOctets(&Z, &Z1, &T, &V, &W, &c);
 
     printf("\nCommitment Phase\n");
@@ -193,14 +203,14 @@ int main()
     OCT_output(&W);
 
     // Prover - compute deterministic challenge
-    MTA_ZK_challenge(&pub_key, &pub_mod, &C1, &C2, &c, &E);
+    MTA_ZK_challenge(&pub_key, &pub_mod, &C1, &C2, &c, &ID, &AD, &E);
 
     printf("\nCompute deterministic challenge\n");
     printf("\t\tE = ");
     OCT_output(&E);
 
     // Prover - generate proof and otuput it to octets for transmission
-    MTA_ZK_prove(&pub_key, &rv, &X, &Y, &R, &E, &proof);
+    MTA_ZK_prove(&pub_key, &X, &Y, &R, &rv, &E, &proof);
     MTA_ZK_proof_toOctets(&S, &S1, &S2, &T1, &T2, &proof);
 
     printf("\nProof Phase\n");
@@ -216,7 +226,7 @@ int main()
     OCT_output(&T2);
 
     // Prover - clean random values
-    MTA_ZK_commitment_rv_kill(&rv);
+    MTA_ZK_rv_kill(&rv);
 
     // Transmit the proof and commitment to the verifier
 
@@ -225,11 +235,11 @@ int main()
     MTA_ZK_commitment_fromOctets(&c, &Z, &Z1, &T, &V, &W);
 
     // Verifier - compute deterministic challenge
-    MTA_ZK_challenge(&pub_key, &pub_mod, &C1, &C2, &c, &E);
+    MTA_ZK_challenge(&pub_key, &pub_mod, &C1, &C2, &c, &ID, &AD, &E);
 
     printf("\nVerification\n");
 
-    rc = MTA_ZK_verify(&priv_key, &priv_mod, &C1, &C2, &E, &c, &proof);
+    rc = MTA_ZK_verify(&priv_key, &priv_mod, &C1, &C2, &c, &E, &proof);
     if (rc == MTA_OK)
     {
         printf("\t\tSuccess!\n");

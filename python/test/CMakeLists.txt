@@ -62,6 +62,10 @@ file(COPY ${SCHNORR_TV} DESTINATION "${PROJECT_BINARY_DIR}/python/test/factoring
 file(GLOB GCM_TV "${PROJECT_SOURCE_DIR}/testVectors/gcm/*.json")
 file(COPY ${GCM_TV} DESTINATION "${PROJECT_BINARY_DIR}/python/test/gcm/")
 
+# GMR test vectors
+file(GLOB GMR_TV "${PROJECT_SOURCE_DIR}/testVectors/gmr/*.json")
+file(COPY ${GMR_TV} DESTINATION "${PROJECT_BINARY_DIR}/python/test/gmr/")
+
 if(NOT CMAKE_BUILD_TYPE STREQUAL "ASan")
   add_python_test(test_python_aes              test_aes.py)
   add_python_test(test_python_mpc_mta          test_mta.py)
@@ -72,6 +76,8 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "ASan")
   add_python_test(test_python_mpc_nm_commit    test_nm_commit.py)
   add_python_test(test_python_mpc_bc_setup     test_bc_setup.py)
   add_python_test(test_python_mpc_zk_factoring test_zk_factoring.py)
+  add_python_test(test_python_mpc_gmr          test_gmr.py)
+  add_python_test(test_python_gg20_zkp         test_gg20_zkp.py)
 endif(NOT CMAKE_BUILD_TYPE STREQUAL "ASan")
 
 foreach(level ${PYTHON_RSA_LEVELS})

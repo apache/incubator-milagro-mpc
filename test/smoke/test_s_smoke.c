@@ -71,6 +71,10 @@ char* SUM1_hex = "68891b7166cf16ec847db1ce65c472d8978dbdb1fc01089330e151f4face11
 
 char* SUM2_hex = "3231b07d70de00c4e250f7b545bfbfebe19f71f6a7e85ffefc2dc19b8ba4aeee";
 
+char* PK_hex = "03db6d7e1410d519e39dcf2c200ec5e24c1bd5e67252fe920a867600d6c70697c5";
+
+char* RPT_hex = "048adf50a4f51443cac2b4d488092ab49925da09e3feb57a1fc03b5b917ca6de9fdefc78277d8cb4865e3e4b17c2821017316d9b21e648e733a207aee22ec91b3c";
+
 char* SIG_R_hex = "8adf50a4f51443cac2b4d488092ab49925da09e3feb57a1fc03b5b917ca6de9f";
 
 char* M_hex = "74657374206d657373616765";
@@ -196,17 +200,14 @@ int main()
     char sig_r[EGS_SECP256K1];
     octet SIG_R = {0,sizeof(sig_r),sig_r};
 
-    char sig_s1[EGS_SECP256K1];
-    octet SIG_S1 = {0,sizeof(sig_s1),sig_s1};
-
     char sig_s1golden[EGS_SECP256K1];
     octet SIG_S1GOLDEN = {0,sizeof(sig_s1golden),sig_s1golden};
 
-    char sig_s2[EGS_SECP256K1];
-    octet SIG_S2 = {0,sizeof(sig_s2),sig_s2};
-
     char sig_s2golden[EGS_SECP256K1];
     octet SIG_S2GOLDEN = {0,sizeof(sig_s2golden),sig_s2golden};
+
+    char sig_si[2][EFS_SECP256K1 + 1];
+    octet SIG_SI[2] = {{0, sizeof(sig_si[0]), sig_si[0]}, {0, sizeof(sig_si[1]), sig_si[1]}};
 
     char sig_s[EGS_SECP256K1];
     octet SIG_S = {0,sizeof(sig_s),sig_s};
@@ -214,11 +215,22 @@ int main()
     char sig_sgolden[EGS_SECP256K1];
     octet SIG_SGOLDEN = {0,sizeof(sig_sgolden),sig_sgolden};
 
+    char rp[2 * EFS_SECP256K1 + 1];
+    octet RP = {0, sizeof(rp), rp};
+
+    char pk[2 * EFS_SECP256K1 + 1];
+    octet PK = {0, sizeof(pk), pk};
+
+    char si[2][EFS_SECP256K1 + 1];
+    octet SI[2] = {{0, sizeof(si[0]), si[0]}, {0, sizeof(si[1]), si[1]}};
+
     char m[2000];
     octet M = {0,sizeof(m),m};
 
     char hm[32];
     octet HM = {0,sizeof(hm),hm};
+
+    BIG_256_56 accumulator;
 
     // Load values
     OCT_fromHex(&P1,P1_hex);
@@ -333,6 +345,14 @@ int main()
     printf("SIG_R: ");
     OCT_output(&SIG_R);
 
+    OCT_fromHex(&RP, RPT_hex);
+    printf("RP: ");
+    OCT_output(&RP);
+
+    OCT_fromHex(&PK, PK_hex);
+    printf("PK: ");
+    OCT_output(&PK);
+
     OCT_fromHex(&M,M_hex);
     printf("M: ");
     OCT_output(&M);
@@ -342,7 +362,7 @@ int main()
     PAILLIER_KEY_PAIR(NULL, &P2, &Q2, &PUB2, &PRIV2);
 
     // ALPHA1 + BETA2 = K1 * W2
-    MPC_MTA_CLIENT1(NULL, &PUB1, &K1, &CA11, &R11);
+    MTA_CLIENT1(NULL, &PUB1, &K1, &CA11, &R11);
 
     printf("CA11: ");
     OCT_output(&CA11);
@@ -355,7 +375,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    MPC_MTA_SERVER(NULL,  &PUB1, &W2, &CA11, &Z12, &R12, &CB12, &BETA2);
+    MTA_SERVER(NULL,  &PUB1, &W2, &CA11, &Z12, &R12, &CB12, &BETA2);
 
     printf("CB12: ");
     OCT_output(&CB12);
@@ -379,7 +399,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    MPC_MTA_CLIENT2(&PRIV1, &CB12, &ALPHA1);
+    MTA_CLIENT2(&PRIV1, &CB12, &ALPHA1);
 
     printf("ALPHA1: ");
     OCT_output(&ALPHA1);
@@ -393,7 +413,7 @@ int main()
     }
 
     // ALPHA2 + BETA1 = K2 * W1
-    MPC_MTA_CLIENT1(NULL, &PUB2, &K2, &CA22, &R22);
+    MTA_CLIENT1(NULL, &PUB2, &K2, &CA22, &R22);
 
     printf("CA22: ");
     OCT_output(&CA22);
@@ -406,7 +426,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    MPC_MTA_SERVER(NULL, &PUB2, &W1, &CA22, &Z21, &R21, &CB21, &BETA1);
+    MTA_SERVER(NULL, &PUB2, &W1, &CA22, &Z21, &R21, &CB21, &BETA1);
 
     printf("CB21: ");
     OCT_output(&CB21);
@@ -430,7 +450,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    MPC_MTA_CLIENT2(&PRIV2, &CB21, &ALPHA2);
+    MTA_CLIENT2(&PRIV2, &CB21, &ALPHA2);
 
     printf("ALPHA2: ");
     OCT_output(&ALPHA2);
@@ -444,7 +464,12 @@ int main()
     }
 
     // sum = K1.W1 + alpha1  + beta1
-    MPC_SUM_MTA(&K1, &W1, &ALPHA1, &BETA1, &SUM1);
+    MTA_ACCUMULATOR_SET(accumulator, &K1, &W1);
+    MTA_ACCUMULATOR_ADD(accumulator, &ALPHA1);
+    MTA_ACCUMULATOR_ADD(accumulator, &BETA1);
+
+    BIG_256_56_toBytes(SUM1.val, accumulator);
+    SUM1.len = EGS_SECP256K1;
 
     printf("SUM1: ");
     OCT_output(&SUM1);
@@ -458,7 +483,12 @@ int main()
     }
 
     // sum = K2.W2 + alpha2  + beta2
-    MPC_SUM_MTA(&K2, &W2, &ALPHA2, &BETA2, &SUM2);
+    MTA_ACCUMULATOR_SET(accumulator, &K2, &W2);
+    MTA_ACCUMULATOR_ADD(accumulator, &ALPHA2);
+    MTA_ACCUMULATOR_ADD(accumulator, &BETA2);
+
+    BIG_256_56_toBytes(SUM2.val, accumulator);
+    SUM2.len = EGS_SECP256K1;
 
     printf("SUM2: ");
     OCT_output(&SUM2);
@@ -475,7 +505,7 @@ int main()
     MPC_HASH(HASH_TYPE_SECP256K1, &M, &HM);
 
     // Calculate the S1 signature component
-    rc = MPC_S(&HM, &SIG_R, &K1, &SUM1, &SIG_S1);
+    rc = MPC_S(&HM, &SIG_R, &K1, &SUM1, &SIG_SI[0]);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_S rc: %d\n", rc);
@@ -483,10 +513,10 @@ int main()
     }
 
     printf("SIG_S1: ");
-    OCT_output(&SIG_S1);
+    OCT_output(&SIG_SI[0]);
     printf("\n");
 
-    rc = OCT_comp(&SIG_S1,&SIG_S1GOLDEN);
+    rc = OCT_comp(&SIG_SI[0],&SIG_S1GOLDEN);
     if(!rc)
     {
         fprintf(stderr, "FAILURE SIG_S1 != SIG_S1GOLDEN rc: %d\n", rc);
@@ -494,7 +524,7 @@ int main()
     }
 
     // Calculate the S2 signature component
-    rc = MPC_S(&HM, &SIG_R, &K2, &SUM2, &SIG_S2);
+    rc = MPC_S(&HM, &SIG_R, &K2, &SUM2, &SIG_SI[1]);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_S rc: %d\n", rc);
@@ -502,10 +532,10 @@ int main()
     }
 
     printf("SIG_S2: ");
-    OCT_output(&SIG_S2);
+    OCT_output(&SIG_SI[1]);
     printf("\n");
 
-    rc = OCT_comp(&SIG_S2,&SIG_S2GOLDEN);
+    rc = OCT_comp(&SIG_SI[1],&SIG_S2GOLDEN);
     if(!rc)
     {
         fprintf(stderr, "FAILURE SIG_S2 != SIG_S2GOLDEN rc: %d\n", rc);
@@ -513,7 +543,7 @@ int main()
     }
 
     // Sum S signature component
-    MPC_SUM_S(&SIG_S1, &SIG_S2, &SIG_S);
+    MPC_SUM_BIGS(&SIG_S, SIG_SI, 2);
 
     printf("SIG_S: ");
     OCT_output(&SIG_S);
@@ -523,6 +553,29 @@ int main()
     if(!rc)
     {
         fprintf(stderr, "FAILURE SIG_S != SIG_SGOLDEN rc: %d\n", rc);
+        exit(EXIT_FAILURE);
+    }
+
+    // Verify that R was generated correctly
+    rc = MPC_ECP_GENERATE_CHECK(&RP, &SUM1, &SI[0]);
+    if (rc != MPC_OK)
+    {
+        fprintf(stderr, "FAILURE MPC_ECP_GENERATE_CHECK SUM1. rc: %d\n", rc);
+        exit(EXIT_FAILURE);
+    }
+
+    rc = MPC_ECP_GENERATE_CHECK(&RP, &SUM2, &SI[1]);
+    if (rc != MPC_OK)
+    {
+        fprintf(stderr, "FAILURE MPC_ECP_GENERATE_CHECK k2. rc: %d\n", rc);
+        exit(EXIT_FAILURE);
+    }
+
+    // For R to be generated correctly k1.R + k2.R = PK
+    rc = MPC_ECP_VERIFY(SI, &PK, 2);
+    if (rc != MPC_OK)
+    {
+        fprintf(stderr, "FAILURE MPC_ECP_VERIFY rc: %d\n", rc);
         exit(EXIT_FAILURE);
     }
 

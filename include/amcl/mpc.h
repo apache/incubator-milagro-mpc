@@ -46,7 +46,7 @@ extern "C" {
  *  @param S the private key, an output internally randomly generated if R!=NULL, otherwise must be provided as an input
  *  @param W the output public key, which is s.G, where G is a fixed generator
  */
-void MPC_ECDSA_KEY_PAIR_GENERATE(csprng *RNG, octet* S, octet *W);
+extern void MPC_ECDSA_KEY_PAIR_GENERATE(csprng *RNG, octet* S, octet *W);
 
 /** \brief ECDSA Sign message
  *
@@ -67,7 +67,7 @@ void MPC_ECDSA_KEY_PAIR_GENERATE(csprng *RNG, octet* S, octet *W);
  *  @param R component of the signature
  *  @param S component of the signature
  */
-int MPC_ECDSA_SIGN(int sha, const octet *K, const octet *SK, octet *M, octet *R, octet *S);
+extern int MPC_ECDSA_SIGN(int sha, const octet *K, const octet *SK, octet *M, octet *R, octet *S);
 
 /** \brief ECDSA Verify signature
  *
@@ -79,7 +79,7 @@ int MPC_ECDSA_SIGN(int sha, const octet *K, const octet *SK, octet *M, octet *R,
  *  @param  S                S component of signature
  *  @return                  Returns 0 or else error code
  */
-int MPC_ECDSA_VERIFY(const octet *HM,octet *PK, octet *R,octet *S);
+extern int MPC_ECDSA_VERIFY(const octet *HM,octet *PK, octet *R,octet *S);
 
 /** \brief Generate a random K for and ECDSA signature
  *
@@ -88,30 +88,21 @@ int MPC_ECDSA_VERIFY(const octet *HM,octet *PK, octet *R,octet *S);
  *  @param RNG               Pointer to a cryptographically secure PRNG
  *  @param K                 Destination octet for the randomly generated value
  */
-void MPC_K_GENERATE(csprng *RNG, octet *K);
-
-/** \brief Generate a random K for and ECDSA signature
- *
- *  Generate a random K modulo the curve order
- *
- *  @param RNG               Pointer to a cryptographically secure PRNG
- *  @param K                 Destination octet for the randomly generated value
- */
-void MPC_K_GENERATE(csprng *RNG, octet *K);
+extern void MPC_K_GENERATE(csprng *RNG, octet *K);
 
 /** \brief Calculate the inverse of the sum of kgamma values
  *
  *  Calculate the inverse of the sum of kgamma values
  *
  *  <ol>
- *  <li> \f$ invkgamma = (kgamma1 + kgamma2)^{-1} \text{ }\mathrm{mod}\text{ }q \f$
+ *  <li> \f$ invkgamma = (kgamma_1 + ... + kgamma_n)^{-1} \text{ }\mathrm{mod}\text{ }q \f$
  *  </ol>
  *
- *  @param KGAMMA1            Actor 1 additive share
- *  @param KGAMMA2            Actor 2 additive share
+ *  @param KGAMMA             Actors additive shares
  *  @param INVKGAMMA          Inverse of the sum of the additive shares
+ *  @param n                  Number of actors
  */
-void MPC_INVKGAMMA(const octet *KGAMMA1, const octet *KGAMMA2, octet *INVKGAMMA);
+extern void MPC_INVKGAMMA(const octet *KGAMMA, octet *INVKGAMMA, int n);
 
 /** \brief R component
  *
@@ -124,13 +115,13 @@ void MPC_INVKGAMMA(const octet *KGAMMA1, const octet *KGAMMA2, octet *INVKGAMMA)
  *  </ol>
  *
  *  @param  INVKGAMMA         Inverse of k times gamma
- *  @param  GAMMAPT1          Actor 1 gamma point
- *  @param  GAMMAPT2          Actor 2 gamma point
+ *  @param  GAMMAPT           Actors gamma points
  *  @param  R                 R component of the signature
  *  @param  RP                ECP associated to the R component of the signature. Optional
+ *  @param  n                 Number of actors
  *  @return                   Returns 0 or else error code
  */
-int MPC_R(const octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R, octet *RP);
+extern int MPC_R(const octet *INVKGAMMA, octet *GAMMAPT, octet *R, octet *RP, int n);
 
 /** \brief Hash the message value
  *
@@ -141,7 +132,7 @@ int MPC_R(const octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R, oc
  *  @param  HM                Hash value
  *  @return                   Returns 0 or else error code
  */
-void MPC_HASH(int sha, octet *M, octet *HM);
+extern void MPC_HASH(int sha, octet *M, octet *HM);
 
 /** \brief S component
  *
@@ -160,103 +151,79 @@ void MPC_HASH(int sha, octet *M, octet *HM);
  *  @param  S                 S component output
  *  @return                   Returns 0 or else error code
  */
-int MPC_S(const octet *HM, const octet *R, const octet *K, const octet *SIGMA, octet *S);
+extern int MPC_S(const octet *HM, const octet *R, const octet *K, const octet *SIGMA, octet *S);
 
-/** \brief Sum of ECDSA s components
+/** \brief Combine BIGs in the EC group
  *
- *  Calculate the sum of the s components of the ECDSA signature
+ *  Calculate the sum of the given BIGs mod the curve order
  *
  *  <ol>
- *  <li> \f$ s = s1 + s2 \text{ }\mathrm{mod}\text{ }q \f$
+ *  <li> \f$ out = s_1 + ... + s_n \text{ }\mathrm{mod}\text{ }q \f$
  *  </ol>
  *
- *  @param  S1                Actor 1 ECDSA s component
- *  @param  S2                Actor 2 ECDSA s component
- *  @param  S                 S component sum
+ *  @param  OUT               Output BIG, sum od the shares
+ *  @param  SHARES            Actors shares to combine
+ *  @param  n                 Number of actors
  */
-void MPC_SUM_S(const octet *S1, const octet *S2, octet *S);
+extern void MPC_SUM_BIGS(octet *OUT, const octet *SHARES, int n);
 
-/** \brief Sum of ECDSA public key shares
+/** \brief Combine ECPs
  *
- *  Calculate the sum of the ECDSA public key shares
+ *  Calculate the sum of the given ECPs
  *
  *  <ol>
- *  <li> \f$ pk = pk1 + pk2 \text{ }\mathrm{mod}\text{ }q \f$
+ *  <li> \f$ ecp = ecp_1 + ... + ecp_n \f$
  *  </ol>
  *
- *  @param  PK1               Actor 1 ECDSA public key share
- *  @param  PK2               Actor 2 ECDSA public key share
- *  @param  PK                ECDSA public key
+ *  @param  OUT               Output ECP, sum of the shares
+ *  @param  SHARES            Actor 1 ECDSA public key share
+ *  @param  n                 Number of actors
  *  @return                   Returns 0 or else error code
  */
-int MPC_SUM_PK(octet *PK1, octet *PK2, octet *PK);
+extern int MPC_SUM_ECPS(octet *OUT, octet *SHARES, int n);
 
-/* MPC Phase 5 API */
+/* MPC Phase 3 API */
 
-/** \brief Generate Commitment for the MPC Phase 5
- *
- *  Calculate player Commitment (A, V) for MPC Phase 5
+/** \brief Compute commitment to sigma, l for Phase 3
  *
  *  <ol>
- *  <li> \f$ \phi \in_R [0, \ldots, q] \f$
- *  <li> \f$ \rho \in_R [0, \ldots, q] \f$
- *  <li> \f$ V = \phi.G + s.R \f$
- *  <li> \f$ A = \rho.G \f$
+ *  <li> \f$ T = sigma.G + l.H \f$
  *  </ol>
  *
- *  @param RNG                csprng for random values generation
- *  @param R                  Reconciled R for the signature
- *  @param S                  Player signature share
- *  @param PHI                Random value for the commitment. If RNG is null this is read
- *  @param RHO                Random value for the commitment. If RNG is null this is read
- *  @param V                  First component of the player commitment. An ECP in compressed form
- *  @param A                  Second component of the player commitment. An ECP in compressed form
- *  @return                   Returns MPC_OK or an error code
+ *  @param RNG               Pointer to a cryptographically secure PRNG
+ *  @param SIGMA             Value to commit
+ *  @param L                 Random value for the commitment. If RNG is NULL this is read.
+ *  @param T                 Output commitment
  */
-extern int MPC_PHASE5_commit(csprng *RNG, octet *R, const octet *S, octet *PHI, octet *RHO, octet *V, octet *A);
+extern void MPC_PHASE3_T(csprng *RNG, octet *SIGMA, octet *L, octet *T);
 
-/** \brief Generate Proof for the MPC Phase 5
- *
- *  Calculate player Proof (U, T) for MPC Phase 5
+/* MPC Phase 5-6 API */
+
+/** \brief Compute check for R, x
  *
  *  <ol>
- *  <li> \f$ m = H(M) \f$
- *  <li> \f$ A = A1 + A2 \f$
- *  <li> \f$ V = V1 + V2 \f$
- *  <li> \f$ U = \rho.(V - m.G - r.PK) \f$
- *  <li> \f$ T = \phi.A \f$
+ *  <li> \f$ RT = x.R \f$
  *  </ol>
  *
- *  @param PHI                Random value used in the commitment
- *  @param RHO                Random value used in the commitment
- *  @param V                  Array with the commitments V from both players. ECPs in compressed form
- *  @param A                  Array with the commitments A from both players. ECPs in compressed form
- *  @param PK                 Shared public key for MPC
- *  @param HM                 Hash of the message being signed
- *  @param RX                 x component of the reconciled R for the signature
- *  @param U                  First component of the player proof. An ECP in compressed form
- *  @param T                  Second component of the player proof. An ECP in compressed form
- *  @return                   Returns MPC_OK or an error code
+ *  @param R                 Base of the DLOG for the check
+ *  @param X                 Exponent for the DLGG
+ *  @param RT                Check for R, X
+ *  @return                  MPC_OK or an error code
  */
-extern int MPC_PHASE5_prove(const octet *PHI, const octet *RHO, octet *V[2], octet *A[2], octet *PK, const octet *HM, const octet *RX, octet *U, octet *T);
+extern int MPC_ECP_GENERATE_CHECK(octet *R, octet *X, octet *RT);
 
-/** \brief Verify Proof for the MPC Phase 5
- *
- *  Combine player Proofs and verify the consistency of the signature shares
- *  This does NOT prove that the signature is valid. It only verifies that
- *  all players know the secret quantities used to generate their shares.
+/** \brief Verify checks in RT using ground truth R
  *
  *  <ol>
- *  <li> \f$ U = U1 + U2 \f$
- *  <li> \f$ T = T1 + T2 \f$
- *  <li> \f$ U \stackrel{?}{=} T \f$
+ *  <li> \f$ G =? RT_1 + ... + RT_n \f$
  *  </ol>
  *
- *  @param U                  Array with the proofs U from both players. ECPs in compressed form
- *  @param T                  Array with the proofs T from both players. ECPs in compressed form
- *  @return                   Returns MPC_OK or an error code
+ *  @param RT                Checks for R
+ *  @param G                 Ground truth for the checks. If NULL the curve generator is used
+ *  @param n                 Number of players
+ *  @return                  MPC_OK or an error code
  */
-extern int MPC_PHASE5_verify(octet *U[2], octet *T[2]);
+extern int MPC_ECP_VERIFY(octet *RT, octet *G, int n);
 
 /*! \brief Write Paillier keys to octets
  *
@@ -264,7 +231,7 @@ extern int MPC_PHASE5_verify(octet *U[2], octet *T[2]);
  *  @param   P                Secret prime number
  *  @param   Q                Secret prime number
  */
-void MPC_DUMP_PAILLIER_SK(PAILLIER_private_key *PRIV, octet *P, octet *Q);
+extern void MPC_DUMP_PAILLIER_SK(PAILLIER_private_key *PRIV, octet *P, octet *Q);
 
 
 #ifdef __cplusplus

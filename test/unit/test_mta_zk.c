@@ -19,17 +19,19 @@
 
 #include <string.h>
 #include "test.h"
-#include "amcl/mta.h"
+#include "amcl/mta_zkp.h"
 
-/* MTA Receiver ZK Proof challenge unit tests */
+/* MTA Receiver ZK Proof unit tests */
 
 #define LINE_LEN 2048
+#define IDLEN 16
+#define ADLEN 16
 
 int main(int argc, char **argv)
 {
     if (argc != 2)
     {
-        printf("usage: ./test_mta_zk_challenge [path to test vector file]\n");
+        printf("usage: ./test_mta_zk [path to test vector file]\n");
         exit(EXIT_FAILURE);
     }
 
@@ -48,7 +50,7 @@ int main(int argc, char **argv)
     const char *Vline  = "V = ";
     const char *Wline  = "W = ";
 
-    COMMITMENTS_BC_pub_modulus mod;
+    BIT_COMMITMENT_pub mod;
     const char *NTline = "NT = ";
     const char *H1line = "H1 = ";
     const char *H2line = "H2 = ";
@@ -71,6 +73,15 @@ int main(int argc, char **argv)
     char e[MODBYTES_512_60];
     octet E = {0, sizeof(e), e};
 
+    char id[IDLEN];
+    octet ID = {0, sizeof(id), id};
+    const char *IDline = "ID = ";
+
+    char ad[ADLEN];
+    octet AD = {0, sizeof(ad), ad};
+    octet *AD_ptr = NULL;
+    const char *ADline = "AD = ";
+
     // Line terminating a test vector
     const char *last_line = Eline;
 
@@ -85,6 +96,10 @@ int main(int argc, char **argv)
     while (fgets(line, LINE_LEN, fp) != NULL)
     {
         scan_int(&testNo, line, TESTline);
+
+        // Read ID and AD
+        scan_OCTET(fp, &ID, line, IDline);
+        scan_OCTET(fp, &AD, line, ADline);
 
         // Read inputs
         scan_OCTET(fp, &C1, line, C1line);
@@ -107,7 +122,14 @@ int main(int argc, char **argv)
 
         if (!strncmp(line, last_line, strlen(last_line)))
         {
-            MTA_ZK_challenge(&key, &mod, &C1, &C2, &c, &E);
+            // Also input AD if it is not empty
+            AD_ptr = NULL;
+            if (AD.len > 0)
+            {
+                AD_ptr = &AD;
+            }
+
+            MTA_ZK_challenge(&key, &mod, &C1, &C2, &c, &ID, AD_ptr, &E);
 
             compare_OCT(fp, testNo, "MTA_ZK_challenge. E", &E, &E_GOLDEN);
 

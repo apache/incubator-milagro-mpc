@@ -138,7 +138,7 @@ int main()
     // Generating Paillier key pair
     PAILLIER_KEY_PAIR(NULL, &P, &Q, &PUB, &PRIV);
 
-    MPC_MTA_CLIENT1(NULL, &PUB, &A, &CA, &R);
+    MTA_CLIENT1(NULL, &PUB, &A, &CA, &R);
 
     printf("CA: ");
     OCT_output(&CA);
@@ -151,7 +151,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    MPC_MTA_SERVER(NULL, &PUB, &B, &CA, &Z, &R, &CB, &BETA);
+    MTA_SERVER(NULL, &PUB, &B, &CA, &Z, &R, &CB, &BETA);
 
     printf("CB: ");
     OCT_output(&CB);
@@ -183,7 +183,7 @@ int main()
     OCT_output(&ALPHAGOLDEN);
     printf("\n");
 
-    MPC_MTA_CLIENT2(&PRIV, &CB, &ALPHA);
+    MTA_CLIENT2(&PRIV, &CB, &ALPHA);
 
     printf("ALPHA: ");
     OCT_output(&ALPHA);

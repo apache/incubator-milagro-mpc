@@ -19,17 +19,19 @@
 
 #include <string.h>
 #include "test.h"
-#include "amcl/mta.h"
+#include "amcl/mta_zkp.h"
 
-/* MTA Range Proof commitment unit tests */
+/* MTA Range Proof unit tests */
 
 #define LINE_LEN 2048
+#define IDLEN 16
+#define ADLEN 16
 
 int main(int argc, char **argv)
 {
     if (argc != 2)
     {
-        printf("usage: ./test_mta_rp_commit [path to test vector file]\n");
+        printf("usage: ./test_mta_rp [path to test vector file]\n");
         exit(EXIT_FAILURE);
     }
 
@@ -42,41 +44,40 @@ int main(int argc, char **argv)
     int testNo = 0;
 
     MTA_RP_commitment co;
-    MTA_RP_commitment co_golden;
     const char *Zline = "Z = ";
     const char *Uline = "U = ";
     const char *Wline = "W = ";
 
-    MTA_RP_commitment_rv rv;
-    const char *ALPHAline = "ALPHA = ";
-    const char *BETAline  = "BETA = ";
-    const char *GAMMAline = "GAMMA = ";
-    const char *RHOline   = "RHO = ";
-
-    COMMITMENTS_BC_pub_modulus mod;
+    BIT_COMMITMENT_pub mod;
     const char *NTline = "NT = ";
     const char *H1line = "H1 = ";
     const char *H2line = "H2 = ";
 
-    char m[MODBYTES_256_56];
-    octet M = {0, sizeof(m), m};
-    const char *Mline = "M = ";
-
-
-    char p[HFS_2048];
-    octet P = {0, sizeof(p), p};
-    const char *Pline = "P = ";
-
-    char q[HFS_2048];
-    octet Q = {0, sizeof(q), q};
-    const char *Qline = "Q = ";
-
-    PAILLIER_private_key priv;
     PAILLIER_public_key pub;
+    const char *Nline = "N = ";
 
+    char c[2*FS_2048];
+    octet C = {0, sizeof(c), c};
+    const char *Cline = "C = ";
+
+    char e_golden[MODBYTES_512_60];
+    octet E_GOLDEN = {0, sizeof(e_golden), e_golden};
+    const char *Eline = "E = ";
+
+    char e[MODBYTES_512_60];
+    octet E = {0, sizeof(e), e};
+
+    char id[IDLEN];
+    octet ID = {0, sizeof(id), id};
+    const char *IDline = "ID = ";
+
+    char ad[ADLEN];
+    octet AD = {0, sizeof(ad), ad};
+    octet *AD_ptr = NULL;
+    const char *ADline = "AD = ";
 
     // Line terminating a test vector
-    const char *last_line = Wline;
+    const char *last_line = Eline;
 
     /* Test happy path using test vectors */
     fp = fopen(argv[1], "r");
@@ -90,34 +91,38 @@ int main(int argc, char **argv)
     {
         scan_int(&testNo, line, TESTline);
 
+        // Read ID and AD
+        scan_OCTET(fp, &ID, line, IDline);
+        scan_OCTET(fp, &AD, line, ADline);
+
         // Read inputs
-        scan_OCTET(fp, &M, line, Mline);
-        scan_OCTET(fp, &P, line, Pline);
-        scan_OCTET(fp, &Q, line, Qline);
+        scan_OCTET(fp, &C, line, Cline);
 
         scan_FF_2048(fp, mod.b0, line, H1line, FFLEN_2048);
         scan_FF_2048(fp, mod.b1, line, H2line, FFLEN_2048);
         scan_FF_2048(fp, mod.N, line, NTline, FFLEN_2048);
 
-        scan_FF_2048(fp, rv.alpha, line, ALPHAline, HFLEN_2048);
-        scan_FF_2048(fp, rv.beta,  line, BETAline,  FFLEN_2048);
-        scan_FF_2048(fp, rv.gamma, line, GAMMAline, FFLEN_2048 + HFLEN_2048);
-        scan_FF_2048(fp, rv.rho,   line, RHOline,   FFLEN_2048 + HFLEN_2048);
+        scan_FF_2048(fp, co.z, line, Zline, FFLEN_2048);
+        scan_FF_4096(fp, co.u, line, Uline, FFLEN_4096);
+        scan_FF_2048(fp, co.w, line, Wline, FFLEN_2048);
+
+        scan_FF_4096(fp, pub.n, line, Nline, HFLEN_4096);
 
         // Read ground truth
-        scan_FF_2048(fp, co_golden.z, line, Zline, FFLEN_2048);
-        scan_FF_4096(fp, co_golden.u, line, Uline, FFLEN_4096);
-        scan_FF_2048(fp, co_golden.w, line, Wline, FFLEN_2048);
+        scan_OCTET(fp, &E_GOLDEN, line, Eline);
 
         if (!strncmp(line, last_line, strlen(last_line)))
         {
-            PAILLIER_KEY_PAIR(NULL, &P, &Q, &pub, &priv);
+            // Also input AD if it is not empty
+            AD_ptr = NULL;
+            if (AD.len > 0)
+            {
+                AD_ptr = &AD;
+            }
 
-            MTA_RP_commit(NULL, &priv, &mod, &M, &co, &rv);
+            MTA_RP_challenge(&pub, &mod, &C, &co, &ID, AD_ptr, &E);
 
-            compare_FF_2048(fp, testNo, "MTA_RP_commit co.z", co.z, co_golden.z, FFLEN_2048);
-            compare_FF_4096(fp, testNo, "MTA_RP_commit co.u", co.u, co_golden.u, FFLEN_4096);
-            compare_FF_2048(fp, testNo, "MTA_RP_commit co.w", co.w, co_golden.w, FFLEN_2048);
+            compare_OCT(fp, testNo, "MTA_RP_challenge. E", &E, &E_GOLDEN);
 
             // Mark that at least one test vector was executed
             test_run = 1;

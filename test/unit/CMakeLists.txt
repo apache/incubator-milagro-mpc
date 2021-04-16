@@ -43,16 +43,10 @@ endfunction()
 amcl_test(test_mta           test_mta.c           amcl_mpc "SUCCESS" "mpc/MTA.txt")
 amcl_test(test_r             test_r.c             amcl_mpc "SUCCESS" "mpc/R.txt")
 amcl_test(test_s             test_s.c             amcl_mpc "SUCCESS" "mpc/S.txt")
-amcl_test(test_phase5_commit test_phase5_commit.c amcl_mpc "SUCCESS" "mpc/phase5_commit.txt")
-amcl_test(test_phase5_prove  test_phase5_prove.c  amcl_mpc "SUCCESS" "mpc/phase5_prove.txt")
-amcl_test(test_phase5_verify test_phase5_verify.c amcl_mpc "SUCCESS" "mpc/phase5_verify.txt")
 
 # NM Commitment tests
 amcl_test(test_nm_commit test_nm_commit.c amcl_mpc "SUCCESS" "nm_commitment/commit.txt")
 
-# ZKP of knowledge of factoring
-amcl_test(test_factoring_zk_prove  test_factoring_zk_prove.c  amcl_mpc "SUCCESS" "factoring_zk/prove.txt")
-amcl_test(test_factoring_zk_verify test_factoring_zk_verify.c amcl_mpc "SUCCESS" "factoring_zk/verify.txt")
 # GMR ZKP of Square Freeness
 amcl_test(test_gmr_prove  test_gmr_prove.c  amcl_mpc "SUCCESS" "gmr/prove.txt")
 amcl_test(test_gmr_verify test_gmr_verify.c amcl_mpc "SUCCESS" "gmr/verify.txt")
@@ -71,26 +65,6 @@ amcl_test(test_d_schnorr_prove     test_d_schnorr_prove.c     amcl_mpc "SUCCESS"
 amcl_test(test_d_schnorr_verify    test_d_schnorr_verify.c    amcl_mpc "SUCCESS" "schnorr/dverify.txt")
 
 # BC Commitment tests
-# MTA Range Proof tests
-amcl_test(test_mta_rp_commit    test_mta_rp_commit.c    amcl_mpc "SUCCESS" "mta/rp_commit.txt")
-amcl_test(test_mta_rp_challenge test_mta_rp_challenge.c amcl_mpc "SUCCESS" "mta/rp_challenge.txt")
-amcl_test(test_mta_rp_prove     test_mta_rp_prove.c     amcl_mpc "SUCCESS" "mta/rp_prove.txt")
-amcl_test(test_mta_rp_verify    test_mta_rp_verify.c    amcl_mpc "SUCCESS" "mta/rp_verify.txt")
-amcl_test(test_mta_rp_octets    test_mta_rp_octets.c    amcl_mpc "SUCCESS" "mta/rp_verify.txt")
-
-# MTA Receiver ZK Proof
-amcl_test(test_mta_zk_commit    test_mta_zk_commit.c    amcl_mpc "SUCCESS" "mta/mta_commit.txt")
-amcl_test(test_mta_zk_challenge test_mta_zk_challenge.c amcl_mpc "SUCCESS" "mta/mta_challenge.txt")
-amcl_test(test_mta_zk_prove     test_mta_zk_prove.c     amcl_mpc "SUCCESS" "mta/mta_prove.txt")
-amcl_test(test_mta_zk_verify    test_mta_zk_verify.c    amcl_mpc "SUCCESS" "mta/mta_verify.txt")
-amcl_test(test_mta_zk_octets    test_mta_zk_octets.c    amcl_mpc "SUCCESS" "mta/mta_verify.txt")
-
-# MTAWC Receiver ZK Proof
-amcl_test(test_mta_zkwc_commit    test_mta_zkwc_commit.c    amcl_mpc "SUCCESS" "mta/mtawc_commit.txt")
-amcl_test(test_mta_zkwc_challenge test_mta_zkwc_challenge.c amcl_mpc "SUCCESS" "mta/mtawc_challenge.txt")
-amcl_test(test_mta_zkwc_prove     test_mta_zkwc_prove.c     amcl_mpc "SUCCESS" "mta/mtawc_prove.txt")
-amcl_test(test_mta_zkwc_verify    test_mta_zkwc_verify.c    amcl_mpc "SUCCESS" "mta/mtawc_verify.txt")
-amcl_test(test_mta_zkwc_octets    test_mta_zkwc_octets.c    amcl_mpc "SUCCESS" "mta/mtawc_verify.txt")
 amcl_test(test_bit_commitment_setup           test_bit_commitment_setup.c           amcl_mpc "SUCCESS" "bit_commitment/setup.txt")
 amcl_test(test_bit_commitment_setup_internals test_bit_commitment_setup_internals.c amcl_mpc "SUCCESS")
 
@@ -112,6 +86,11 @@ amcl_test(test_hidden_dlog_commit    test_hidden_dlog_commit.c    amcl_mpc "SUCC
 amcl_test(test_hidden_dlog_challenge test_hidden_dlog_challenge.c amcl_mpc "SUCCESS" "hidden_dlog/challenge.txt")
 amcl_test(test_hidden_dlog_prove     test_hidden_dlog_prove.c     amcl_mpc "SUCCESS" "hidden_dlog/prove.txt")
 amcl_test(test_hidden_dlog_verify    test_hidden_dlog_verify.c    amcl_mpc "SUCCESS" "hidden_dlog/verify.txt")
+
+# MTA ZKPs tests
+amcl_test(test_mta_rp   test_mta_rp.c   amcl_mpc "SUCCESS" "mta_zkp/rp_challenge.txt")
+amcl_test(test_mta_zk   test_mta_zk.c   amcl_mpc "SUCCESS" "mta_zkp/mta_challenge.txt")
+amcl_test(test_mta_zkwc test_mta_zkwc.c amcl_mpc "SUCCESS" "mta_zkp/mtawc_challenge.txt")
 
 # GGN tests
 amcl_test(test_ggn test_ggn.c amcl_mpc "SUCCESS" "ggn/challenge.txt")

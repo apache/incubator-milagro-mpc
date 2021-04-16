@@ -101,34 +101,34 @@ if __name__ == "__main__":
     paillier_pk2, paillier_sk2 = amcl.mpc.paillier_key_pair(None, P2, Q2)
 
     # ALPHA1 + BETA2 = K1 * W2
-    CA11 = amcl.mpc.mpc_mta_client1(rng, paillier_pk1, K1, R11)
+    CA11 = amcl.mpc.mta_client1(rng, paillier_pk1, K1, R11)
     CA11_hex = CA11.hex()
     assert CA11GOLDEN_hex == CA11_hex, f"expected {CA11GOLDEN_hex} got {CA11_hex}"
 
-    CB12, BETA2 = amcl.mpc.mpc_mta_server(rng, paillier_pk1, W2, CA11, Z12, R12)
+    CB12, BETA2 = amcl.mpc.mta_server(rng, paillier_pk1, W2, CA11, Z12, R12)
     CB12_hex = CB12.hex()
     assert CB12GOLDEN_hex == CB12_hex, f"expected {CB12GOLDEN_hex} got {CB12_hex}"
 
     BETA2_hex = BETA2.hex()
     assert BETA2GOLDEN_hex == BETA2_hex, f"expected {BETA2GOLDEN_hex} got {BETA2_hex}"
 
-    ALPHA1 = amcl.mpc.mpc_mta_client2(paillier_sk1, CB12)
+    ALPHA1 = amcl.mpc.mta_client2(paillier_sk1, CB12)
     ALPHA1_hex = ALPHA1.hex()
     assert ALPHA1GOLDEN_hex == ALPHA1_hex, f"expected {ALPHA1GOLDEN_hex} got {ALPHA1_hex}"
 
     # ALPHA2 + BETA1 = K2 * W1
-    CA22 = amcl.mpc.mpc_mta_client1(rng, paillier_pk2, K2, R22)
+    CA22 = amcl.mpc.mta_client1(rng, paillier_pk2, K2, R22)
     CA22_hex = CA22.hex()
     assert CA22GOLDEN_hex == CA22_hex, f"expected {CA22GOLDEN_hex} got {CA22_hex}"
 
-    CB21, BETA1 = amcl.mpc.mpc_mta_server(rng, paillier_pk2, W1, CA22, Z21, R21)
+    CB21, BETA1 = amcl.mpc.mta_server(rng, paillier_pk2, W1, CA22, Z21, R21)
     CB21_hex = CB21.hex()
     assert CB21GOLDEN_hex == CB21_hex, f"expected {CB21GOLDEN_hex} got {CB21_hex}"
 
     BETA1_hex = BETA1.hex()
     assert BETA1GOLDEN_hex == BETA1_hex, f"expected {BETA1GOLDEN_hex} got {BETA1_hex}"
 
-    ALPHA2 = amcl.mpc.mpc_mta_client2(paillier_sk2, CB21)
+    ALPHA2 = amcl.mpc.mta_client2(paillier_sk2, CB21)
     ALPHA2_hex = ALPHA2.hex()
     assert ALPHA2GOLDEN_hex == ALPHA2_hex, f"expected {ALPHA2GOLDEN_hex} got {ALPHA2_hex}"
 

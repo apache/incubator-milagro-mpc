@@ -13,8 +13,8 @@ function delete()
 {
   echo "remove build files"
   rm -rf target
-  rm -rf build  
-  rm -rf coverage  
+  rm -rf build
+  rm -rf coverage
 }
 
 delete

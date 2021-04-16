@@ -21,6 +21,7 @@ under the License.
 
 #include <amcl/ecdh_SECP256K1.h>
 #include <amcl/ecdh_support.h>
+#include <amcl/gg20_zkp.h>
 #include <amcl/mpc.h>
 
 /* Generate ECDSA key pair */
@@ -200,78 +201,87 @@ void MPC_K_GENERATE(csprng *RNG, octet *K)
 }
 
 /* Calculate the inverse of kgamma */
-void MPC_INVKGAMMA(const octet *KGAMMA1, const octet *KGAMMA2, octet *INVKGAMMA)
+void MPC_INVKGAMMA(const octet *KGAMMA, octet *INVKGAMMA, int n)
 {
-    BIG_256_56 kgamma1;
-    BIG_256_56 kgamma2;
+    int i;
+
+    BIG_256_56 accum;
+    BIG_256_56 kgamma;
     BIG_256_56 q;
 
     // Curve order
     BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
 
-    // Load values
-    BIG_256_56_fromBytesLen(kgamma1, KGAMMA1->val, KGAMMA1->len);
-    BIG_256_56_fromBytesLen(kgamma2, KGAMMA2->val, KGAMMA2->len);
+    // accum = kgamma1 + ... + kgamman mod q
+    BIG_256_56_fromBytesLen(accum, KGAMMA[0].val, KGAMMA[0].len);
 
-    // kgamma = kgamma1 + kgamma2 mod q
-    BIG_256_56_add(kgamma1, kgamma1, kgamma2);
-    BIG_256_56_mod(kgamma1, q);
+    for (i = 1; i < n; i++)
+    {
+        BIG_256_56_fromBytesLen(kgamma, KGAMMA[i].val, KGAMMA[i].len);
 
-    // invkgamma = kgamma^{-1}
-    BIG_256_56_invmodp(kgamma1, kgamma1, q);
+        BIG_256_56_add(accum, accum, kgamma);
+        BIG_256_56_mod(accum, q);
+    }
+
+    // invkgamma = accum^{-1}
+    BIG_256_56_invmodp(accum, accum, q);
 
     // Output result
     INVKGAMMA->len = EGS_SECP256K1;
-    BIG_256_56_toBytes(INVKGAMMA->val, kgamma1);
+    BIG_256_56_toBytes(INVKGAMMA->val, accum);
 }
 
 /* Calculate the r component of the signature */
-int MPC_R(const octet *INVKGAMMA, octet *GAMMAPT1, octet *GAMMAPT2, octet *R, octet *RP)
+int MPC_R(const octet *INVKGAMMA, octet *GAMMAPT, octet *R, octet *RP, int n)
 {
-    BIG_256_56 invkgamma;
-    BIG_256_56 q;
-    BIG_256_56 rx;
+    int i;
 
-    ECP_SECP256K1 gammapt1;
-    ECP_SECP256K1 gammapt2;
+    BIG_256_56 w;
+    BIG_256_56 q;
+
+    ECP_SECP256K1 accum;
+    ECP_SECP256K1 gammapt;
 
     // Curve order
     BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
 
-    // Load values
-    BIG_256_56_fromBytesLen(invkgamma, INVKGAMMA->val, INVKGAMMA->len);
-
-    if (!ECP_SECP256K1_fromOctet(&gammapt1, GAMMAPT1))
+    // accum = gammapt1 + ... + gammaptn
+    if (!ECP_SECP256K1_fromOctet(&accum, GAMMAPT))
     {
         return MPC_INVALID_ECP;
     }
 
-    if (!ECP_SECP256K1_fromOctet(&gammapt2, GAMMAPT2))
+    for (i = 1; i < n; i++)
     {
-        return MPC_INVALID_ECP;
+        if (!ECP_SECP256K1_fromOctet(&gammapt, GAMMAPT+i))
+        {
+            return MPC_INVALID_ECP;
+        }
+
+        ECP_SECP256K1_add(&accum, &gammapt);
     }
 
-    // gammapt1 + gammapt2
-    ECP_SECP256K1_add(&gammapt1, &gammapt2);
+    // Load invkgamma
+    BIG_256_56_fromBytesLen(w, INVKGAMMA->val, INVKGAMMA->len);
 
     // rx, ry = k^{-1}.G
-    ECP_SECP256K1_mul(&gammapt1, invkgamma);
-    ECP_SECP256K1_get(rx, rx, &gammapt1);
+    ECP_SECP256K1_mul(&accum, w);
+    ECP_SECP256K1_get(w, w, &accum);
 
     // r = rx mod q
-    BIG_256_56_mod(rx, q);
-    if (BIG_256_56_iszilch(rx))
+    BIG_256_56_mod(w, q);
+    if (BIG_256_56_iszilch(w))
     {
         return MPC_FAIL;
     }
 
     // Output result
     R->len = EGS_SECP256K1;
-    BIG_256_56_toBytes(R->val, rx);
+    BIG_256_56_toBytes(R->val, w);
 
     if (RP != NULL)
     {
-        ECP_SECP256K1_toOctet(RP, &gammapt1, true);
+        ECP_SECP256K1_toOctet(RP, &accum, true);
     }
 
     return MPC_OK;
@@ -325,207 +335,154 @@ int MPC_S(const octet *HM, const octet *R, const octet *K, const octet *SIGMA, o
     return MPC_OK;
 }
 
-/* Calculate sum of s components of signature  */
-void MPC_SUM_S(const octet *S1, const octet *S2, octet *S)
+// Calculate sum of BIGs in the EC gorup
+void MPC_SUM_BIGS(octet *OUT, const octet *SHARES, int n)
 {
-    BIG_256_56 s1;
-    BIG_256_56 s2;
+    int i;
+
+    BIG_256_56 accum;
     BIG_256_56 s;
     BIG_256_56 q;
 
     // Curve order
     BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
 
-    // Load values
-    BIG_256_56_fromBytes(s1, S1->val);
-    BIG_256_56_fromBytes(s2, S2->val);
+    // accum = s1 + ... + sn mod q
+    BIG_256_56_fromBytesLen(accum, SHARES->val, SHARES->len);
 
-    // s = s1 + s2 mod q
-    BIG_256_56_add(s, s1, s2);
-    BIG_256_56_mod(s, q);
+    for (i = 1; i < n; i++)
+    {
+        BIG_256_56_fromBytesLen(s, (SHARES+i)->val, (SHARES+i)->len);
+
+        BIG_256_56_add(accum, accum, s);
+        BIG_256_56_mod(accum, q);
+    }
 
     // Output result
-    S->len = EGS_SECP256K1;
-    BIG_256_56_toBytes(S->val, s);
+    OUT->len = EGS_SECP256K1;
+    BIG_256_56_toBytes(OUT->val, accum);
 }
 
-// Add the ECDSA public keys shares
-int MPC_SUM_PK(octet *PK1, octet *PK2, octet *PK)
+// Calculate sum of ECPs
+int MPC_SUM_ECPS(octet *OUT, octet *SHARES, int n)
 {
-    ECP_SECP256K1 pk1;
-    ECP_SECP256K1 pk2;
+    int i;
 
-    // Load values
-    if (!ECP_SECP256K1_fromOctet(&pk1, PK1))
+    ECP_SECP256K1 accum;
+    ECP_SECP256K1 s;
+
+    // accum = s1 + ... + sn
+    if (!ECP_SECP256K1_fromOctet(&accum, SHARES))
     {
         return MPC_INVALID_ECP;
     }
 
-    if (!ECP_SECP256K1_fromOctet(&pk2, PK2))
+    for (i = 1; i < n; i++)
     {
-        return MPC_INVALID_ECP;
-    }
+        if (!ECP_SECP256K1_fromOctet(&s, SHARES+i))
+        {
+            return MPC_INVALID_ECP;
+        }
 
-    // pk1 + pk2
-    ECP_SECP256K1_add(&pk1, &pk2);
+        ECP_SECP256K1_add(&accum, &s);
+    }
 
     // Output result
-    ECP_SECP256K1_toOctet(PK, &pk1, true);
+    ECP_SECP256K1_toOctet(OUT, &accum, true);
 
     return MPC_OK;
 }
 
-int MPC_PHASE5_commit(csprng *RNG, octet *R, const octet *S, octet *PHI, octet *RHO, octet *V, octet *A)
+// Compute Phase3 T
+void MPC_PHASE3_T(csprng *RNG, octet *SIGMA, octet *L, octet *T)
 {
-    BIG_256_56 ws;
-    BIG_256_56 phi;
-    BIG_256_56 rho;
+    BIG_256_56 q;
+    BIG_256_56 l;
+    BIG_256_56 sigma;
 
-    ECP_SECP256K1 P1;
-    ECP_SECP256K1 P2;
+    ECP_SECP256K1 G;
+    ECP_SECP256K1 H;
 
-    if (!ECP_SECP256K1_fromOctet(&P1, R))
-    {
-        return MPC_INVALID_ECP;
-    }
+    ECP_SECP256K1_generator(&G);
+    GG20_ZKP_generator_2(&H);
+
+    BIG_256_56_fromBytesLen(sigma, SIGMA->val, SIGMA->len);
 
     if (RNG != NULL)
     {
-        BIG_256_56_rcopy(ws, CURVE_Order_SECP256K1);
-        BIG_256_56_randomnum(phi, ws, RNG);
-        BIG_256_56_randomnum(rho, ws, RNG);
+        BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
+        BIG_256_56_randomnum(l, q, RNG);
 
-        BIG_256_56_toBytes(PHI->val, phi);
-        BIG_256_56_toBytes(RHO->val, rho);
-        PHI->len = EGS_SECP256K1;
-        RHO->len = EGS_SECP256K1;
+        BIG_256_56_toBytes(L->val, l);
+        L->len = EGS_SECP256K1;
     }
     else
     {
-        BIG_256_56_fromBytesLen(phi, PHI->val, PHI->len);
-        BIG_256_56_fromBytesLen(rho, RHO->val, RHO->len);
+        BIG_256_56_fromBytesLen(l, L->val, L->len);
     }
 
-    // Compute V = phi.G + s.R
-    BIG_256_56_fromBytesLen(ws, S->val, S->len);
-    ECP_SECP256K1_generator(&P2);
+    // T = sigma.G + l.H
+    ECP_SECP256K1_mul2(&G, &H, sigma, l);
 
-    ECP_SECP256K1_mul2(&P1, &P2, ws, phi);
-
-    // Compute A = rho.G
-    ECP_SECP256K1_mul(&P2, rho);
-
-    // Output ECPs
-    ECP_SECP256K1_toOctet(V, &P1, 1);
-    ECP_SECP256K1_toOctet(A, &P2, 1);
+    ECP_SECP256K1_toOctet(T, &G, true);
 
     // Clean memory
-    BIG_256_56_zero(phi);
-    BIG_256_56_zero(rho);
-    BIG_256_56_zero(ws);
+    BIG_256_56_zero(sigma);
+    BIG_256_56_zero(l);
+}
+
+// Compute Rt = x.R
+extern int MPC_ECP_GENERATE_CHECK(octet *R, octet *X, octet *RT)
+{
+    BIG_256_56 x;
+    ECP_SECP256K1 ECPR;
+
+    BIG_256_56_fromBytesLen(x, X->val, X->len);
+    if (!ECP_SECP256K1_fromOctet(&ECPR, R))
+    {
+        return MPC_INVALID_ECP;
+    }
+
+    ECP_SECP256K1_mul(&ECPR, x);
+    ECP_SECP256K1_toOctet(RT, &ECPR, true);
+
+    BIG_256_56_zero(x);
 
     return MPC_OK;
 }
 
-int MPC_PHASE5_prove(const octet *PHI, const octet *RHO, octet *V[2], octet *A[2], octet *PK, const octet *HM, const octet *RX, octet *U, octet *T)
+int MPC_ECP_VERIFY(octet *RT, octet *G, int n)
 {
-    BIG_256_56 m;
-    BIG_256_56 r;
-    BIG_256_56 ws;
+    int i;
 
-    ECP_SECP256K1 V1;
-    ECP_SECP256K1 V2;
-    ECP_SECP256K1 A1;
-    ECP_SECP256K1 A2;
-    ECP_SECP256K1 K;
+    ECP_SECP256K1 ECP;
+    ECP_SECP256K1 ECPG;
 
-    if (!ECP_SECP256K1_fromOctet(&A1, A[0]))
+    ECP_SECP256K1_inf(&ECP);
+
+    // Combine RTs
+    for(i = 0; i < n; i++)
     {
-        return MPC_INVALID_ECP;
+        if(!ECP_SECP256K1_fromOctet(&ECPG, RT+i))
+        {
+            return MPC_INVALID_ECP;
+        }
+
+        ECP_SECP256K1_add(&ECP, &ECPG);
     }
 
-    if (!ECP_SECP256K1_fromOctet(&A2, A[1]))
+    // Compare to ground truth
+    if (G == NULL)
+        ECP_SECP256K1_generator(&ECPG);
+    else
     {
-        return MPC_INVALID_ECP;
+        if (!ECP_SECP256K1_fromOctet(&ECPG, G))
+        {
+            return MPC_INVALID_ECP;
+        }
     }
 
-    if (!ECP_SECP256K1_fromOctet(&V1, V[0]))
-    {
-        return MPC_INVALID_ECP;
-    }
-
-    if (!ECP_SECP256K1_fromOctet(&V2, V[1]))
-    {
-        return MPC_INVALID_ECP;
-    }
-
-    if (!ECP_SECP256K1_fromOctet(&K, PK))
-    {
-        return MPC_INVALID_ECP;
-    }
-
-    // Compute A = phi.(A1 + A2)
-    BIG_256_56_fromBytesLen(ws, PHI->val, PHI->len);
-    ECP_SECP256K1_add(&A1, &A2);
-    ECP_SECP256K1_mul(&A1, ws);
-
-    ECP_SECP256K1_toOctet(T, &A1, 1);
-
-    // Compute V = rho.(V1 + V2 - m.G - r.PK)
-    BIG_256_56_fromBytesLen(m,  HM->val,  HM->len);
-    BIG_256_56_fromBytesLen(r,  RX->val,  RX->len);
-    BIG_256_56_fromBytesLen(ws, RHO->val, RHO->len);
-
-    // K = - m.G - r.PK
-    ECP_SECP256K1_generator(&A1);
-    ECP_SECP256K1_neg(&A1);
-    ECP_SECP256K1_neg(&K);
-    ECP_SECP256K1_mul2(&K, &A1, r, m);
-
-    // V = rho.(V1 + V2 + K)
-    ECP_SECP256K1_add(&V1, &V2);
-    ECP_SECP256K1_add(&V1, &K);
-    ECP_SECP256K1_mul(&V1, ws);
-
-    ECP_SECP256K1_toOctet(U, &V1, 1);
-
-    // Clean memory
-    BIG_256_56_zero(ws);
-
-    return MPC_OK;
-}
-
-int MPC_PHASE5_verify(octet *U[2], octet *T[2])
-{
-    ECP_SECP256K1 U1;
-    ECP_SECP256K1 U2;
-    ECP_SECP256K1 T1;
-    ECP_SECP256K1 T2;
-
-    if (!ECP_SECP256K1_fromOctet(&U1, U[0]))
-    {
-        return MPC_INVALID_ECP;
-    }
-
-    if (!ECP_SECP256K1_fromOctet(&U2, U[1]))
-    {
-        return MPC_INVALID_ECP;
-    }
-
-    if (!ECP_SECP256K1_fromOctet(&T1, T[0]))
-    {
-        return MPC_INVALID_ECP;
-    }
-
-    if (!ECP_SECP256K1_fromOctet(&T2, T[1]))
-    {
-        return MPC_INVALID_ECP;
-    }
-
-    ECP_SECP256K1_add(&U1, &U2);
-    ECP_SECP256K1_add(&T1, &T2);
-
-    if (!ECP_SECP256K1_equals(&U1, &T1))
+    if (!ECP_SECP256K1_equals(&ECP, &ECPG))
     {
         return MPC_FAIL;
     }
@@ -539,4 +496,3 @@ void MPC_DUMP_PAILLIER_SK(PAILLIER_private_key *PRIV, octet *P, octet *Q)
     FF_2048_toOctet(P, PRIV->p, HFLEN_2048);
     FF_2048_toOctet(Q, PRIV->q, HFLEN_2048);
 }
-
