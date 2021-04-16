@@ -30,8 +30,8 @@ from . import core_utils
 
 _ffi = core_utils._ffi
 _ffi.cdef("""
-extern void COMMITMENTS_NM_commit(csprng *RNG, const octet *X, octet *R, octet *C);
-extern int COMMITMENTS_NM_decommit(const octet* X, const octet* R, octet* C);
+extern void NM_COMMITMENT_commit(csprng *RNG, const octet *X, octet *R, octet *C);
+extern int NM_COMMITMENT_decommit(const octet* X, const octet* R, octet* C);
 """)
 
 if (platform.system() == 'Windows'):
@@ -44,10 +44,13 @@ else:
 # Constants
 SHA256 = 32
 
-OK   = 0
-FAIL = 81
+OK             = 0
+FAIL           = 81
+INVALID_PROOF  = 82
+INVALID_FORMAT = 83
 
-def nm_commit(rng, x, r=None):
+
+def commit(rng, x, r=None):
     """ Commit to the value x
 
     Generate a commitment c to the value x, using the value r.
@@ -63,7 +66,6 @@ def nm_commit(rng, x, r=None):
     Returns::
 
     Raises::
-
     """
 
     if r is None:
@@ -78,7 +80,7 @@ def nm_commit(rng, x, r=None):
     c_oct, c_val = core_utils.make_octet(SHA256)
     _ = x_val, c_val # Suppress warning
 
-    _libamcl_mpc.COMMITMENTS_NM_commit(rng, x_oct, r_oct, c_oct)
+    _libamcl_mpc.NM_COMMITMENT_commit(rng, x_oct, r_oct, c_oct)
 
     r = core_utils.to_str(r_oct)
 
@@ -88,7 +90,8 @@ def nm_commit(rng, x, r=None):
 
     return r, core_utils.to_str(c_oct)
 
-def nm_decommit(x, r, c):
+
+def decommit(x, r, c):
     """ Decommit commitment c
 
     Decommit a commitment c to the value x, using the value r.
@@ -101,8 +104,9 @@ def nm_decommit(x, r, c):
 
     Returns::
 
-    Raises::
+        ec: OK or an error code
 
+    Raises::
     """
 
     x_oct, x_val = core_utils.make_octet(None, x)
@@ -110,6 +114,6 @@ def nm_decommit(x, r, c):
     c_oct, c_val = core_utils.make_octet(None, c)
     _ = x_val, r_val, c_val # Suppress warning
 
-    ec = _libamcl_mpc.COMMITMENTS_NM_decommit(x_oct, r_oct, c_oct)
+    ec = _libamcl_mpc.NM_COMMITMENT_decommit(x_oct, r_oct, c_oct)
 
     return ec

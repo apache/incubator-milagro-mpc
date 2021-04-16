@@ -82,6 +82,22 @@ void read_ECP_SECP256K1(FILE *fp, ECP_SECP256K1 *P, char *string)
     }
 }
 
+void read_HDLOG_iv(FILE *fp, HDLOG_iter_values V, char *string)
+{
+    char oct[HDLOG_VALUES_SIZE];
+    octet OCT = {0, sizeof(oct), oct};
+
+    read_OCTET(fp, &OCT, string);
+
+    if (HDLOG_iter_values_fromOctet(V, &OCT) != HDLOG_OK)
+    {
+        fclose(fp);
+
+        printf("ERROR invalid test vector HDLOG %s\n", string);
+        exit(EXIT_FAILURE);
+    }
+}
+
 void scan_int(int *v, char *line, const char *prefix)
 {
     if (!strncmp(line, prefix, strlen(prefix)))
@@ -146,6 +162,24 @@ void scan_ECP_SECP256K1(FILE *fp, ECP_SECP256K1 *P, char *line, const char *pref
 #ifdef DEBUG
         printf("%s", prefix);
         ECP_SECP256K1_output(P);
+#endif
+    }
+}
+
+void scan_HDLOG_iv(FILE *fp, HDLOG_iter_values V, char *line, const char *prefix)
+{
+    if (!strncmp(line, prefix, strlen(prefix)))
+    {
+        line+=strlen(prefix);
+        read_HDLOG_iv(fp, V, line);
+
+#ifdef DEBUG
+        char oct[HDLOG_VALUES_SIZE];
+        octet OCT = {0, sizeof(oct), oct};
+        HDLOG_iter_values_toOctet(&OCT, V);
+
+        printf("%s", prefix);
+        OCT_output(&OCT);
 #endif
     }
 }
@@ -246,6 +280,34 @@ void compare_ECP_SECP256K1(FILE *fp, int testNo, char *name, ECP_SECP256K1 *P, E
 #endif
 
         exit(EXIT_FAILURE);
+    }
+}
+
+void compare_HDLOG_iv(FILE *fp, int testNo, char* name, HDLOG_iter_values V, HDLOG_iter_values R)
+{
+    int i;
+
+    for (i = 0; i < HDLOG_PROOF_ITERS; i++)
+    {
+        if (FF_2048_comp(V[i], R[i], FFLEN_2048))
+        {
+            if (fp != NULL)
+            {
+                fclose(fp);
+            }
+
+            fprintf(stderr, "FAILURE %s. Test %d\n", name, testNo);
+
+#ifdef DEBUG
+            printf("V[%d] = ", i);
+            FF_2048_output(V[i],FFLEN_2048);
+            printf("\nR[%d] = ", i);
+            FF_2048_output(R[i],FFLEN_2048);
+            printf("\n");
+#endif
+
+            exit(EXIT_FAILURE);
+        }
     }
 }
 

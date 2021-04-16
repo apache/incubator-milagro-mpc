@@ -18,11 +18,11 @@ under the License.
 */
 
 /*
-   Benchmark ZKP of knowledge of factoring.
+   Benchmark MTA receiver ZKP with check .
  */
 
 #include "bench.h"
-#include "amcl/mta.h"
+#include "amcl/mta_zkp.h"
 
 #define MIN_TIME 5.0
 #define MIN_ITERS 10
@@ -65,13 +65,14 @@ int main()
     double elapsed;
 
     PAILLIER_private_key priv_key;
-    PAILLIER_public_key pub_key;
-    COMMITMENTS_BC_priv_modulus priv_mod;
-    COMMITMENTS_BC_pub_modulus pub_mod;
+    PAILLIER_public_key  pub_key;
+
+    BIT_COMMITMENT_priv priv_mod;
+    BIT_COMMITMENT_pub  pub_mod;
 
     MTA_ZKWC_commitment c;
-    MTA_ZKWC_commitment_rv rv;
-    MTA_ZKWC_proof proof;
+    MTA_ZKWC_rv         rv;
+    MTA_ZKWC_proof      proof;
 
     char c1[2*FS_2048];
     octet C1 = {0, sizeof(c1), c1};
@@ -109,6 +110,13 @@ int main()
     char oct[FS_2048 + HFS_2048];
     octet OCT = {0, sizeof(oct), oct};
 
+    // Leave these blank (but not empty!)
+    char id[32] = {0};
+    octet ID = {sizeof(id), sizeof(id), id};
+
+    char ad[32] = {0};
+    octet AD = {sizeof(ad), sizeof(ad), ad};
+
     // Load paillier key
     OCT_fromHex(&P, P_hex);
     OCT_fromHex(&Q, Q_hex);
@@ -122,8 +130,8 @@ int main()
     OCT_fromHex(&Q,     QT_hex);
     OCT_fromHex(&ALPHA, ALPHA_hex);
     OCT_fromHex(&B0,    B0_hex);
-    COMMITMENTS_BC_setup(NULL, &priv_mod, &P, &Q, &ALPHA, &B0);
-    COMMITMENTS_BC_export_public_modulus(&pub_mod, &priv_mod);
+    BIT_COMMITMENT_setup(NULL, &priv_mod, &P, &Q, &ALPHA, &B0);
+    BIT_COMMITMENT_priv_to_pub(&pub_mod, &priv_mod);
 
     // Load Paillier encryption values
     OCT_fromHex(&X,  X_hex);
@@ -164,7 +172,7 @@ int main()
     start = clock();
     do
     {
-        MTA_ZKWC_commit(NULL, &pub_key, &pub_mod, &X, &Y, &C1, &c, &rv);
+        MTA_ZKWC_commit(NULL, &pub_key, &pub_mod, &X, &Y, &C1, &rv, &c);
         iterations++;
         elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
     }
@@ -178,7 +186,7 @@ int main()
     start = clock();
     do
     {
-        MTA_ZKWC_challenge(&pub_key, &pub_mod, &C1, &C2, &ECPX, &c, &E);
+        MTA_ZKWC_challenge(&pub_key, &pub_mod, &C1, &C2, &ECPX, &c, &ID, &AD, &E);
         iterations++;
         elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
     }
@@ -192,7 +200,7 @@ int main()
     start = clock();
     do
     {
-        MTA_ZKWC_prove(&pub_key, &rv, &X, &Y, &R, &E, &proof);
+        MTA_ZKWC_prove(&pub_key, &X, &Y, &R, &rv, &E, &proof);
         iterations++;
         elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
     }
@@ -206,7 +214,7 @@ int main()
     start = clock();
     do
     {
-        rc = MTA_ZKWC_verify(&priv_key, &priv_mod, &C1, &C2, &ECPX, &E, &c, &proof);
+        rc = MTA_ZKWC_verify(&priv_key, &priv_mod, &C1, &C2, &ECPX, &c, &E, &proof);
         iterations++;
         elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
     }

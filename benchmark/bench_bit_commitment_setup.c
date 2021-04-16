@@ -22,7 +22,7 @@ under the License.
  */
 
 #include "bench.h"
-#include "commitments.c"
+#include "bit_commitment_setup.c"
 
 #define MIN_TIME 5.0
 #define MIN_ITERS 10
@@ -36,6 +36,8 @@ int main()
     clock_t start;
     double elapsed;
 
+    int rc;
+
     char p[HFS_2048];
     octet P = {0, sizeof(p), p};
 
@@ -46,7 +48,18 @@ int main()
     BIG_1024_58 sp[HFLEN_2048];
     BIG_1024_58 x[FFLEN_2048];
 
-    COMMITMENTS_BC_priv_modulus m;
+    BIT_COMMITMENT_priv m;
+
+    // Material for proof
+    BIT_COMMITMENT_pub pub;
+
+    BIT_COMMITMENT_setup_proof proof;
+
+    char id[32];
+    octet ID = {0, sizeof(id), id};
+
+    char ad[32];
+    octet AD = {0, sizeof(ad), ad};
 
     // Load values
     OCT_fromHex(&P, Phex);
@@ -77,7 +90,7 @@ int main()
     while (elapsed < MIN_TIME || iterations < MIN_ITERS);
 
     elapsed = MILLISECOND * elapsed / iterations;
-    printf("\tis_safe_prime\t\t\t\t%8d iterations\t", iterations);
+    printf("\tis_safe_prime\t\t\t%8d iterations\t", iterations);
     printf("%8.2lf ms per iteration\n", elapsed);
 
     iterations = 0;
@@ -90,36 +103,85 @@ int main()
     }
     while (elapsed < MIN_TIME || iterations < MIN_ITERS);
 
-    elapsed = MILLISECOND * elapsed / iterations;
-    printf("\tbc_generator\t\t\t\t%8d iterations\t", iterations);
-    printf("%8.2lf ms per iteration\n", elapsed);
+    elapsed = MICROSECOND * elapsed / iterations;
+    printf("\tbc_generator\t\t\t%8d iterations\t", iterations);
+    printf("%8.2lf us per iteration\n", elapsed);
 
     iterations = 0;
     start = clock();
     do
     {
-        COMMITMENTS_BC_setup(&RNG, &m, &P, &Q, NULL, NULL);
+        BIT_COMMITMENT_setup(&RNG, &m, &P, &Q, NULL, NULL);
         iterations++;
         elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
     }
     while (elapsed < MIN_TIME || iterations < MIN_ITERS);
 
     elapsed = MILLISECOND * elapsed / iterations;
-    printf("\tCOMMITMENTS_BC_setup\t\t\t%8d iterations\t", iterations);
+    printf("\tBIT_COMMITMENT_setup\t\t%8d iterations\t", iterations);
     printf("%8.2lf ms per iteration\n", elapsed);
 
     iterations = 0;
     start = clock();
     do
     {
-        COMMITMENTS_BC_kill_priv_modulus(&m);
+        BIT_COMMITMENT_setup_prove(&RNG, &m, &proof, &ID, &AD);
+        iterations++;
+        elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
+    }
+    while (elapsed < MIN_TIME || iterations < MIN_ITERS);
+
+    elapsed = MILLISECOND * elapsed / iterations;
+    printf("\tBIT_COMMITMENT_setup_prove\t%8d iterations\t", iterations);
+    printf("%8.2lf ms per iteration\n", elapsed);
+
+    iterations = 0;
+    start = clock();
+    do
+    {
+        BIT_COMMITMENT_priv_to_pub(&pub, &m);
         iterations++;
         elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
     }
     while (elapsed < MIN_TIME || iterations < MIN_ITERS);
 
     elapsed = MICROSECOND * elapsed / iterations;
-    printf("\tCOMMITMENTS_BC_kill_priv_modulus\t%8d iterations\t", iterations);
+    printf("\tBIT_COMMITMENT_priv_to_pub\t%8d iterations\t", iterations);
+    printf("%8.2lf us per iteration\n", elapsed);
+
+    iterations = 0;
+    start = clock();
+    do
+    {
+        rc = BIT_COMMITMENT_setup_verify(&pub, &proof, &ID, &AD);
+        iterations++;
+        elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
+    }
+    while (elapsed < MIN_TIME || iterations < MIN_ITERS);
+
+    if (rc != BIT_COMMITMENT_OK)
+    {
+        printf("FAILURE BIT_COMMITMENT_setup_verify");
+        exit(EXIT_FAILURE);
+    }
+
+    elapsed = MILLISECOND * elapsed / iterations;
+    printf("\tBIT_COMMITMENT_setup_verify\t%8d iterations\t", iterations);
+    printf("%8.2lf ms per iteration\n", elapsed);
+
+
+    iterations = 0;
+    start = clock();
+    do
+    {
+        BIT_COMMITMENT_priv_kill(&m);
+        iterations++;
+        elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
+    }
+    while (elapsed < MIN_TIME || iterations < MIN_ITERS);
+
+    elapsed = MICROSECOND * elapsed / iterations;
+    printf("\tBIT_COMMITMENT_priv_kill\t%8d iterations\t", iterations);
     printf("%8.2lf us per iteration\n", elapsed);
 
     exit(EXIT_SUCCESS);

@@ -19,7 +19,7 @@
 
 #include <string.h>
 #include "test.h"
-#include "amcl/commitments.h"
+#include "amcl/bit_commitment.h"
 
 /* BC Commitment setup unit tests */
 
@@ -57,12 +57,12 @@ int main(int argc, char **argv)
     octet B0 = {0, sizeof(b0), b0};
     const char *B0line = "B0 = ";
 
-    COMMITMENTS_BC_priv_modulus m;
+    BIT_COMMITMENT_priv m;
     const char *Nline =  "N = ";
     const char *PQline = "PQ = ";
     const char *IPQline = "IPQ = ";
 
-    COMMITMENTS_BC_priv_modulus m_golden;
+    BIT_COMMITMENT_priv m_golden;
     const char *IALPHAline = "IALPHA = ";
     const char *B1line = "B1 = ";
 
@@ -87,30 +87,30 @@ int main(int argc, char **argv)
         scan_OCTET(fp, &B0, line, B0line);
 
         // Ground truth
-        scan_FF_2048(fp, m_golden.P, line, Pline, HFLEN_2048);
-        scan_FF_2048(fp, m_golden.Q, line, Qline, HFLEN_2048);
-        scan_FF_2048(fp, m_golden.invPQ, line, IPQline, HFLEN_2048);
-        scan_FF_2048(fp, m_golden.pq, line, PQline, FFLEN_2048);
-        scan_FF_2048(fp, m_golden.N, line, Nline, FFLEN_2048);
-        scan_FF_2048(fp, m_golden.alpha, line, ALPHAline, FFLEN_2048);
-        scan_FF_2048(fp, m_golden.ialpha, line, IALPHAline, FFLEN_2048);
-        scan_FF_2048(fp, m_golden.b0, line, B0line, FFLEN_2048);
-        scan_FF_2048(fp, m_golden.b1, line, B1line, FFLEN_2048);
+        scan_FF_2048(fp, m_golden.mod.p,     line, Pline,      HFLEN_2048);
+        scan_FF_2048(fp, m_golden.mod.q,     line, Qline,      HFLEN_2048);
+        scan_FF_2048(fp, m_golden.mod.invpq, line, IPQline,    HFLEN_2048);
+        scan_FF_2048(fp, m_golden.pq,        line, PQline,     FFLEN_2048);
+        scan_FF_2048(fp, m_golden.mod.n,     line, Nline,      FFLEN_2048);
+        scan_FF_2048(fp, m_golden.alpha,     line, ALPHAline,  FFLEN_2048);
+        scan_FF_2048(fp, m_golden.ialpha,    line, IALPHAline, FFLEN_2048);
+        scan_FF_2048(fp, m_golden.b0,        line, B0line,     FFLEN_2048);
+        scan_FF_2048(fp, m_golden.b1,        line, B1line,     FFLEN_2048);
 
         // Run test when the whole test vector has been read
         if (!strncmp(line, last_line, strlen(last_line)))
         {
-            COMMITMENTS_BC_setup(NULL, &m, &P, &Q, &B0, &ALPHA);
+            BIT_COMMITMENT_setup(NULL, &m, &P, &Q, &B0, &ALPHA);
 
-            compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup P",      m.P,      m_golden.P,      HFLEN_2048);
-            compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup Q",      m.Q,      m_golden.Q,      HFLEN_2048);
-            compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup invPQ",  m.invPQ,  m_golden.invPQ,  HFLEN_2048);
-            compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup N",      m.N,      m_golden.N,      FFLEN_2048);
-            compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup pq",     m.pq,     m_golden.pq,     FFLEN_2048);
-            compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup alpha",  m.alpha,  m_golden.alpha,  FFLEN_2048);
-            compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup ialpha", m.ialpha, m_golden.ialpha, FFLEN_2048);
-            compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup b0",     m.b0,     m_golden.b0,     FFLEN_2048);
-            compare_FF_2048(fp, testNo, "COMMITMENTS_BC_setup b1",     m.b1,     m_golden.b1,     FFLEN_2048);
+            compare_FF_2048(fp, testNo, "BIT_COMMITMENT_setup P",      m.mod.p,     m_golden.mod.p,     HFLEN_2048);
+            compare_FF_2048(fp, testNo, "BIT_COMMITMENT_setup Q",      m.mod.q,     m_golden.mod.q,     HFLEN_2048);
+            compare_FF_2048(fp, testNo, "BIT_COMMITMENT_setup invPQ",  m.mod.invpq, m_golden.mod.invpq, HFLEN_2048);
+            compare_FF_2048(fp, testNo, "BIT_COMMITMENT_setup N",      m.mod.n,     m_golden.mod.n,     FFLEN_2048);
+            compare_FF_2048(fp, testNo, "BIT_COMMITMENT_setup pq",     m.pq,        m_golden.pq,        FFLEN_2048);
+            compare_FF_2048(fp, testNo, "BIT_COMMITMENT_setup alpha",  m.alpha,     m_golden.alpha,     FFLEN_2048);
+            compare_FF_2048(fp, testNo, "BIT_COMMITMENT_setup ialpha", m.ialpha,    m_golden.ialpha,    FFLEN_2048);
+            compare_FF_2048(fp, testNo, "BIT_COMMITMENT_setup b0",     m.b0,        m_golden.b0,        FFLEN_2048);
+            compare_FF_2048(fp, testNo, "BIT_COMMITMENT_setup b1",     m.b1,        m_golden.b1,        FFLEN_2048);
 
             // Mark that at least one test vector has been executed
             test_run = 1;

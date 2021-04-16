@@ -22,7 +22,7 @@ under the License.
  */
 
 #include "bench.h"
-#include "amcl/commitments.h"
+#include "amcl/nm_commitment.h"
 
 #define MIN_TIME    5.0
 #define MIN_ITERS   10
@@ -60,34 +60,34 @@ int main()
     start=clock();
     do
     {
-        COMMITMENTS_NM_commit(NULL, &X, &R, &C);
+        NM_COMMITMENT_commit(NULL, &X, &R, &C);
         iterations++;
         elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
     }
     while (elapsed<MIN_TIME || iterations<MIN_ITERS);
 
     elapsed= MICROSECOND * elapsed / iterations;
-    printf("\tCOMMITMENTS_NM_commit\t%8d iterations\t",iterations);
+    printf("\tNM_COMMITMENT_commit\t%8d iterations\t",iterations);
     printf("%8.2lf us per iteration\n",elapsed);
 
     iterations = 0;
     start = clock();
     do
     {
-        rc = COMMITMENTS_NM_decommit(&X, &R, &C);
+        rc = NM_COMMITMENT_decommit(&X, &R, &C);
         iterations++;
         elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
     }
     while (elapsed < MIN_TIME || iterations < MIN_ITERS);
 
-    if (rc != COMMITMENTS_OK)
+    if (rc != NM_COMMITMENT_OK)
     {
-        printf("FAILURE COMMITMENTS_NM_decommit: %d\n", rc);
+        printf("FAILURE NM_COMMITMENT_decommit: %d\n", rc);
         exit(EXIT_FAILURE);
     }
 
     elapsed = MICROSECOND * elapsed / iterations;
-    printf("\tCOMMITMENTS_NM_decommit\t%8d iterations\t", iterations);
+    printf("\tNM_COMMITMENT_decommit\t%8d iterations\t", iterations);
     printf("%8.2lf us per iteration\n", elapsed);
 
     exit(EXIT_SUCCESS);

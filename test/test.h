@@ -25,9 +25,11 @@ under the License.
 #define TEST_H
 
 #include "amcl/amcl.h"
+#include "amcl/big_256_56.h"
 #include "amcl/ff_2048.h"
 #include "amcl/ff_4096.h"
 #include "amcl/ecp_SECP256K1.h"
+#include "amcl/hidden_dlog.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -67,6 +69,14 @@ extern void read_FF_4096(FILE *fp, BIG_512_60 *x, char *string, int n);
  *  @param  string  Input string
  */
 extern void read_ECP_SECP256K1(FILE *fp, ECP_SECP256K1 *P, char *string);
+
+/*! \brief Read string into an HDLOG_iter_values
+ *
+ *  @param  fp      TV file pointer to close in case of error
+ *  @param  V       Output values
+ *  @param  string  Input string
+ */
+extern void read_HDLOG_iv(FILE *fp, HDLOG_iter_values V, char *string);
 
 /*! \brief Read integer if the line has the correct prefix
  *
@@ -113,6 +123,15 @@ extern void scan_FF_4096(FILE *fp, BIG_512_60 *x, char *line, const char *prefix
  *  @param  prefix  Line prefix for the element to read
  */
 extern void scan_ECP_SECP256K1(FILE *fp, ECP_SECP256K1 *P, char *line, const char *prefix);
+
+/*! \brief Read string into an HDLOG_iter_values
+ *
+ *  @param  fp      TV file pointer to close in case of error
+ *  @param  V       Output values
+ *  @param  line    TV line
+ *  @param  prefix  Line prefix for the element to read
+ */
+extern void scan_HDLOG_iv(FILE *fp, HDLOG_iter_values V, char *line, const char *prefix);
 
 /* Assertion utilities */
 
@@ -165,6 +184,16 @@ extern void compare_FF_4096(FILE *fp, int testNo, char* name, BIG_512_60 *x, BIG
  *  @param  Q       Second element to compare
  */
 extern void compare_ECP_SECP256K1(FILE *fp, int testNo, char* name, ECP_SECP256K1 *P, ECP_SECP256K1 *Q);
+
+/*! \brief Compare two HDLOG_iter_values
+ *
+ *  @param  fp      TV file pointer to close in case of error
+ *  @param  testNo  Test Vector identifier
+ *  @param  name    Descriptor for the elements compared
+ *  @param  V       First element to compare
+ *  @param  R       Second element to compare
+ */
+extern void compare_HDLOG_iv(FILE *fp, int testNo, char* name, HDLOG_iter_values V, HDLOG_iter_values R);
 
 /*! \brief Assert boolean statement
  *

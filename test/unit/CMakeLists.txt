@@ -48,7 +48,7 @@ amcl_test(test_phase5_prove  test_phase5_prove.c  amcl_mpc "SUCCESS" "mpc/phase5
 amcl_test(test_phase5_verify test_phase5_verify.c amcl_mpc "SUCCESS" "mpc/phase5_verify.txt")
 
 # NM Commitment tests
-amcl_test(test_nm_commit test_nm_commit.c amcl_mpc "SUCCESS" "commitments/nm_commit.txt")
+amcl_test(test_nm_commit test_nm_commit.c amcl_mpc "SUCCESS" "nm_commitment/commit.txt")
 
 # ZKP of knowledge of factoring
 amcl_test(test_factoring_zk_prove  test_factoring_zk_prove.c  amcl_mpc "SUCCESS" "factoring_zk/prove.txt")
@@ -67,9 +67,6 @@ amcl_test(test_d_schnorr_prove     test_d_schnorr_prove.c     amcl_mpc "SUCCESS"
 amcl_test(test_d_schnorr_verify    test_d_schnorr_verify.c    amcl_mpc "SUCCESS" "schnorr/dverify.txt")
 
 # BC Commitment tests
-amcl_test(test_bc_setup     test_bc_setup.c     amcl_mpc "SUCCESS" "commitments/bc_setup.txt")
-amcl_test(test_bc_internals test_bc_internals.c amcl_mpc "SUCCESS")
-
 # MTA Range Proof tests
 amcl_test(test_mta_rp_commit    test_mta_rp_commit.c    amcl_mpc "SUCCESS" "mta/rp_commit.txt")
 amcl_test(test_mta_rp_challenge test_mta_rp_challenge.c amcl_mpc "SUCCESS" "mta/rp_challenge.txt")
@@ -90,3 +87,25 @@ amcl_test(test_mta_zkwc_challenge test_mta_zkwc_challenge.c amcl_mpc "SUCCESS" "
 amcl_test(test_mta_zkwc_prove     test_mta_zkwc_prove.c     amcl_mpc "SUCCESS" "mta/mtawc_prove.txt")
 amcl_test(test_mta_zkwc_verify    test_mta_zkwc_verify.c    amcl_mpc "SUCCESS" "mta/mtawc_verify.txt")
 amcl_test(test_mta_zkwc_octets    test_mta_zkwc_octets.c    amcl_mpc "SUCCESS" "mta/mtawc_verify.txt")
+amcl_test(test_bit_commitment_setup           test_bit_commitment_setup.c           amcl_mpc "SUCCESS" "bit_commitment/setup.txt")
+amcl_test(test_bit_commitment_setup_internals test_bit_commitment_setup_internals.c amcl_mpc "SUCCESS")
+
+amcl_test(test_bit_commitment_ecp_commit test_bit_commitment_ecp_commit.c amcl_mpc "SUCCESS" "bit_commitment/ecp_commit.txt")
+amcl_test(test_bit_commitment_ecp_verify test_bit_commitment_ecp_verify.c amcl_mpc "SUCCESS" "bit_commitment/ecp_verify.txt")
+
+amcl_test(test_bit_commitment_commit test_bit_commitment_commit.c amcl_mpc "SUCCESS" "bit_commitment/plain_commit.txt")
+amcl_test(test_bit_commitment_prove  test_bit_commitment_prove.c  amcl_mpc "SUCCESS" "bit_commitment/plain_prove.txt")
+amcl_test(test_bit_commitment_verify test_bit_commitment_verify.c amcl_mpc "SUCCESS" "bit_commitment/plain_verify.txt")
+amcl_test(test_bit_commitment_octets test_bit_commitment_octets.c amcl_mpc "SUCCESS" "bit_commitment/plain_octets.txt")
+
+amcl_test(test_bit_commitment_muladd_commit test_bit_commitment_muladd_commit.c amcl_mpc "SUCCESS" "bit_commitment/muladd_commit.txt")
+amcl_test(test_bit_commitment_muladd_prove  test_bit_commitment_muladd_prove.c  amcl_mpc "SUCCESS" "bit_commitment/muladd_prove.txt")
+amcl_test(test_bit_commitment_muladd_verify test_bit_commitment_muladd_verify.c amcl_mpc "SUCCESS" "bit_commitment/muladd_verify.txt")
+amcl_test(test_bit_commitment_muladd_octets test_bit_commitment_muladd_octets.c amcl_mpc "SUCCESS" "bit_commitment/muladd_octets.txt")
+
+# Hidden DLOG tests
+amcl_test(test_hidden_dlog_commit    test_hidden_dlog_commit.c    amcl_mpc "SUCCESS" "hidden_dlog/commit.txt")
+amcl_test(test_hidden_dlog_challenge test_hidden_dlog_challenge.c amcl_mpc "SUCCESS" "hidden_dlog/challenge.txt")
+amcl_test(test_hidden_dlog_prove     test_hidden_dlog_prove.c     amcl_mpc "SUCCESS" "hidden_dlog/prove.txt")
+amcl_test(test_hidden_dlog_verify    test_hidden_dlog_verify.c    amcl_mpc "SUCCESS" "hidden_dlog/verify.txt")
+
