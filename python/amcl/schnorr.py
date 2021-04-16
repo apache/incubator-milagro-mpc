@@ -37,13 +37,10 @@ extern int SCHNORR_verify(octet *V, octet *C, const octet *E, const octet *P);
 
 if (platform.system() == 'Windows'):
     _libamcl_mpc = _ffi.dlopen("libamcl_mpc.dll")
-    _libamcl_curve_secp256k1 = _ffi.dlopen("libamcl_curve_SECP256K1.dll")
 elif (platform.system() == 'Darwin'):
     _libamcl_mpc = _ffi.dlopen("libamcl_mpc.dylib")
-    _libamcl_curve_secp256k1 = _ffi.dlopen("libamcl_curve_SECP256K1.dylib")
 else:
     _libamcl_mpc = _ffi.dlopen("libamcl_mpc.so")
-    _libamcl_curve_secp256k1 = _ffi.dlopen("libamcl_curve_SECP256K1.so")
 
 # Constants
 EGS = 32      # Size of a Z/qZ element in bytes
