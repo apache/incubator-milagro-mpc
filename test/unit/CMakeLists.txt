@@ -53,6 +53,10 @@ amcl_test(test_nm_commit test_nm_commit.c amcl_mpc "SUCCESS" "nm_commitment/comm
 # ZKP of knowledge of factoring
 amcl_test(test_factoring_zk_prove  test_factoring_zk_prove.c  amcl_mpc "SUCCESS" "factoring_zk/prove.txt")
 amcl_test(test_factoring_zk_verify test_factoring_zk_verify.c amcl_mpc "SUCCESS" "factoring_zk/verify.txt")
+# GMR ZKP of Square Freeness
+amcl_test(test_gmr_prove  test_gmr_prove.c  amcl_mpc "SUCCESS" "gmr/prove.txt")
+amcl_test(test_gmr_verify test_gmr_verify.c amcl_mpc "SUCCESS" "gmr/verify.txt")
+amcl_test(test_gmr_octets test_gmr_octets.c amcl_mpc "SUCCESS" "gmr/verify.txt")
 
 # Classic Schnorr tests
 amcl_test(test_schnorr_commit    test_schnorr_commit.c    amcl_mpc "SUCCESS" "schnorr/commit.txt")
@@ -108,4 +112,7 @@ amcl_test(test_hidden_dlog_commit    test_hidden_dlog_commit.c    amcl_mpc "SUCC
 amcl_test(test_hidden_dlog_challenge test_hidden_dlog_challenge.c amcl_mpc "SUCCESS" "hidden_dlog/challenge.txt")
 amcl_test(test_hidden_dlog_prove     test_hidden_dlog_prove.c     amcl_mpc "SUCCESS" "hidden_dlog/prove.txt")
 amcl_test(test_hidden_dlog_verify    test_hidden_dlog_verify.c    amcl_mpc "SUCCESS" "hidden_dlog/verify.txt")
+
+# GGN tests
+amcl_test(test_ggn test_ggn.c amcl_mpc "SUCCESS" "ggn/challenge.txt")
 
