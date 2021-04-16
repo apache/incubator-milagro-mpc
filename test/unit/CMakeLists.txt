@@ -116,3 +116,22 @@ amcl_test(test_hidden_dlog_verify    test_hidden_dlog_verify.c    amcl_mpc "SUCC
 # GGN tests
 amcl_test(test_ggn test_ggn.c amcl_mpc "SUCCESS" "ggn/challenge.txt")
 
+# GG20 ZKPs tests
+amcl_test(test_gg20_zkp_generator test_gg20_zkp_generator.c amcl_mpc "SUCCESS")
+
+amcl_test(test_gg20_zkp_octets test_gg20_zkp_octets.c amcl_mpc "SUCCESS" "gg20_zkp/octets.txt")
+
+amcl_test(test_gg20_zkp_phase3_commit    test_gg20_zkp_phase3_commit.c    amcl_mpc "SUCCESS" "gg20_zkp/phase3_commit.txt")
+amcl_test(test_gg20_zkp_phase3_challenge test_gg20_zkp_phase3_challenge.c amcl_mpc "SUCCESS" "gg20_zkp/phase3_challenge.txt")
+amcl_test(test_gg20_zkp_phase3_prove     test_gg20_zkp_phase3_prove.c     amcl_mpc "SUCCESS" "gg20_zkp/phase3_prove.txt")
+amcl_test(test_gg20_zkp_phase3_verify    test_gg20_zkp_phase3_verify.c    amcl_mpc "SUCCESS" "gg20_zkp/phase3_verify.txt")
+
+amcl_test(test_gg20_zkp_phase6_commit    test_gg20_zkp_phase6_commit.c    amcl_mpc "SUCCESS" "gg20_zkp/phase6_commit.txt")
+amcl_test(test_gg20_zkp_phase6_challenge test_gg20_zkp_phase6_challenge.c amcl_mpc "SUCCESS" "gg20_zkp/phase6_challenge.txt")
+amcl_test(test_gg20_zkp_phase6_prove     test_gg20_zkp_phase6_prove.c     amcl_mpc "SUCCESS" "gg20_zkp/phase6_prove.txt")
+amcl_test(test_gg20_zkp_phase6_verify    test_gg20_zkp_phase6_verify.c    amcl_mpc "SUCCESS" "gg20_zkp/phase6_verify.txt")
+
+# Shamir Secret Sharing
+amcl_test(test_shamir             test_shamir.c             amcl_mpc "SUCCESS" "shamir/SSS.txt")
+amcl_test(test_shamir_to_additive test_shamir_to_additive.c amcl_mpc "SUCCESS" "shamir/STA.txt")
+amcl_test(test_vss                test_vss.c                amcl_mpc "SUCCESS" "shamir/VSS.txt")
