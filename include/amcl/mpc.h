@@ -81,7 +81,7 @@ int MPC_ECDSA_SIGN(int sha, const octet *K, const octet *SK, octet *M, octet *R,
  */
 int MPC_ECDSA_VERIFY(const octet *HM,octet *PK, octet *R,octet *S);
 
-/** \brief Generate a random K for and ECDSA signature
+/** \brief Generate a random K for an ECDSA signature
  *
  *  Generate a random K modulo the curve order
  *
@@ -90,14 +90,13 @@ int MPC_ECDSA_VERIFY(const octet *HM,octet *PK, octet *R,octet *S);
  */
 void MPC_K_GENERATE(csprng *RNG, octet *K);
 
-/** \brief Generate a random K for and ECDSA signature
+/** \brief Generate a deterministic K value for a DSA / ECDSA signature scheme
  *
- *  Generate a random K modulo the curve order
- *
- *  @param RNG               Pointer to a cryptographically secure PRNG
- *  @param K                 Destination octet for the randomly generated value
+ * @param SK                Private key
+ * @param M                 Message
+ * @param K                 Destination octet for the K value
  */
-void MPC_K_GENERATE(csprng *RNG, octet *K);
+ void MPC_DETERMINISTIC_K_RFC_6979(octet *PK, octet *M, octet *K);
 
 /** \brief Calculate the inverse of the sum of kgamma values
  *

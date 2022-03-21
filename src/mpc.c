@@ -23,6 +23,52 @@ under the License.
 #include <amcl/ecdh_support.h>
 #include <amcl/mpc.h>
 
+static void bits2int(BIG_256_56 q, octet *IN, BIG_256_56 OUT)
+{
+    int q_bits = BIG_256_56_nbits(q);
+    int q_bytes = (q_bits + 7) / 8;
+
+    int x_bytes = q_bytes < IN->len ? q_bytes : IN->len;
+    int x_bits = x_bytes * 8;
+
+    BIG_256_56_fromBytesLen(OUT, IN->val, x_bytes);
+
+    int shift_count = x_bits - q_bits;
+    if (shift_count > 0) {
+        BIG_256_56_shr(OUT, shift_count);
+    }
+}
+
+static void int2octets(BIG_256_56 q, BIG_256_56 z, octet *OUT)
+{
+    int q_bits = BIG_256_56_nbits(q);
+    int q_bytes = (q_bits + 7) / 8;
+
+    OCT_empty(OUT);
+    OUT->len = 32;
+    BIG_256_56_toBytes(OUT->val, z);
+
+    int shift_count = 32 - q_bytes;
+    if (shift_count > 0) {
+        OCT_shl(OUT, shift_count);
+    }
+}
+
+static void bits2octets(BIG_256_56 q, octet *IN, octet *OUT)
+{
+    // See https://datatracker.ietf.org/doc/html/rfc6979#section-2.3.4
+
+    // Step 1
+    BIG_256_56 z;
+    bits2int(q, IN, z);
+
+    // Step 2
+    BIG_256_56_mod(z, q);
+
+    // Step 3
+    int2octets(q, z, OUT);
+}
+
 /* Generate ECDSA key pair */
 void MPC_ECDSA_KEY_PAIR_GENERATE(csprng *RNG, octet* S, octet *W)
 {
@@ -197,6 +243,95 @@ void MPC_K_GENERATE(csprng *RNG, octet *K)
     BIG_256_56_toBytes(K->val, s);
 
     BIG_256_56_zero(s);
+}
+
+void MPC_DETERMINISTIC_K_RFC_6979_INTERNAL(octet *SK, octet *M, octet *K, int sha, BIG_256_56 q)
+{
+    // See https://datatracker.ietf.org/doc/html/rfc6979#section-3.2
+
+    // Step a
+    char h1[sha];
+    octet H1 = {0,sizeof(h1),h1};
+    ehashit(sha, M, -1, NULL, &H1, sha);
+
+    // Calculate bits2octets(h1) for use in steps d and f
+    char bits_2_octets_h1[32];
+    octet BITS_2_OCTETS_H1 = {0,sizeof(bits_2_octets_h1),bits_2_octets_h1};
+    bits2octets(q, &H1, &BITS_2_OCTETS_H1);
+
+    // Step b
+    char v[H1.len];
+    octet V = {0,sizeof(v),v};
+    OCT_jbyte(&V, 1, H1.len);
+
+    // Step c
+    char k_internal[H1.len];
+    octet K_INTERNAL = {0,sizeof(k_internal),k_internal};
+    OCT_jbyte(&K_INTERNAL, 0, H1.len);
+
+    // Step d
+    char hmac_input[V.len + 1 + SK->len + BITS_2_OCTETS_H1.len];
+    octet HMAC_INPUT = {0,sizeof(hmac_input),hmac_input};
+    OCT_joctet(&HMAC_INPUT, &V);
+    OCT_jbyte(&HMAC_INPUT, 0, 1);
+    OCT_joctet(&HMAC_INPUT, SK);
+    OCT_joctet(&HMAC_INPUT, &BITS_2_OCTETS_H1);
+    HMAC(sha, &HMAC_INPUT, &K_INTERNAL, H1.len, &K_INTERNAL);
+
+    // Step e
+    HMAC(sha, &V, &K_INTERNAL, H1.len, &V);
+
+    // Step f
+    OCT_empty(&HMAC_INPUT);
+    OCT_joctet(&HMAC_INPUT, &V);
+    OCT_jbyte(&HMAC_INPUT, 1, 1);
+    OCT_joctet(&HMAC_INPUT, SK);
+    OCT_joctet(&HMAC_INPUT, &BITS_2_OCTETS_H1);
+    HMAC(sha, &HMAC_INPUT, &K_INTERNAL, H1.len, &K_INTERNAL);
+
+    // Step g
+    HMAC(sha, &V, &K_INTERNAL, H1.len, &V);
+
+    // Step h
+    int q_bits = BIG_256_56_nbits(q);
+    int q_bytes = (q_bits + 7) / 8;
+    char t[q_bytes];
+    octet T = {0,sizeof(t),t};
+
+    for (;;) {
+        // Step h1
+        OCT_empty(&T);
+
+        // Step h2
+        while (T.len < q_bytes) {
+            HMAC(sha, &V, &K_INTERNAL, H1.len, &V);
+            OCT_joctet(&T, &V);
+        }
+
+        // Step h3
+        BIG_256_56 k;
+        bits2int(q, &T, k);
+
+        if (BIG_256_56_comp(k, q) < 0 && !BIG_256_56_iszilch(k)) {
+            int2octets(q, k, K);
+            return;
+        }
+
+        OCT_empty(&HMAC_INPUT);
+        OCT_joctet(&HMAC_INPUT, &V);
+        OCT_jbyte(&HMAC_INPUT, 0, 1);
+        HMAC(sha, &HMAC_INPUT, &K_INTERNAL, H1.len, &K_INTERNAL);
+        HMAC(sha, &V, &K_INTERNAL, H1.len, &V);
+    }
+}
+
+// Implementation only for SECP256K1 (which implies SHA-256)
+void MPC_DETERMINISTIC_K_RFC_6979(octet *SK, octet *M, octet *K)
+{
+    int sha = HASH_TYPE_SECP256K1;
+    BIG_256_56 q;
+    BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
+    MPC_DETERMINISTIC_K_RFC_6979_INTERNAL(SK, M, K, sha, q);
 }
 
 /* Calculate the inverse of kgamma */
