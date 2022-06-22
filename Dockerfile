@@ -9,7 +9,7 @@
 # NOTES:
 #
 # Create the image:
-#     docker build --no-cache -t libmpc .
+#     docker build -t libmpc .
 #
 # Run tests:
 #     docker run --cap-add SYS_PTRACE --rm libmpc
@@ -24,8 +24,10 @@
 #     docker run -it --rm libmpc bash
 #
 # To extract the documentation
-#     docker run --rm libmpc /usr/bin/tar c /root/target/Release/doxygen > doxygen.tar
+#     docker run --rm libmpc /usr/bin/tar c -C /root/target/Release doxygen > doxygen.tar
 # ------------------------------------------------------------------------------
+
+ARG build_type=Release
 
 FROM ubuntu:bionic
 
@@ -63,10 +65,13 @@ RUN git clone https://github.com/apache/incubator-milagro-crypto-c.git && \
 
 ADD . /root
 
-RUN ./scripts/build.sh
+RUN mkdir -p target/Release
+RUN cd target/Release &&\
+    cmake -D CMAKE_BUILD_TYPE=${build_type} ../.. &&\
+    make install/fast
 
 RUN cd ./target/Release && \
-    make install
+    make install/fast
 
 RUN cd ./target/Release && \
     make doc
