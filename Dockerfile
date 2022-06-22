@@ -13,7 +13,7 @@
 #
 # Run tests:
 #     docker run --cap-add SYS_PTRACE --rm libmpc
-#
+# 
 # Generate coverage figures:
 #     CONTAINER_ID=$(docker run --cap-add SYS_PTRACE -d libmpc ./scripts/coverage.sh)
 #     docker logs $CONTAINER_ID
