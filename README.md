@@ -44,7 +44,7 @@ This library implements Multi-Party Computation (MPC) using the milargo crypto l
 
 The preferred way to get libmpc built and tested is through the use of docker. To do so, you should install docker and ensure it runs fine:
 ```
-docker run <helloworld> (FIXME)
+docker run hello-world
 ```
 in case you run in permission errors, on some Linux platforms you might need to add your user to the docker group:
 ```
