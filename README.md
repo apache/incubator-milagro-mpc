@@ -51,7 +51,10 @@ in case you run in permission errors, on some Linux platforms you might need to 
 sudo gpasswd -a <youruser> docker
 ```
 
-Once your docker installation is correctly set-up, simply run
+Once your docker installation is correctly set-up, simply run:
+```
+git clone https://github.com/apache/incubator-milagro-MPC.git && cd incubator-milagro-MPC
+```
 ```
 docker build -t libmpc .
 ```
