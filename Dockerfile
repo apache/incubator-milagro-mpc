@@ -22,9 +22,6 @@
 #
 # To login to container:
 #     docker run -it --rm libmpc bash
-#
-# To extract the documentation
-#     docker run --rm libmpc /usr/bin/tar c /root/target/Release/doxygen > doxygen.tar
 # ------------------------------------------------------------------------------
 
 FROM ubuntu:bionic
@@ -58,9 +55,6 @@ RUN ./scripts/build.sh
 
 RUN cd ./target/Release && \
     make install
-
-RUN cd ./target/Release && \
-    make doc
 
 CMD ./scripts/test.sh
 
