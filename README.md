@@ -52,11 +52,12 @@ sudo gpasswd -a <youruser> docker
 ```
 
 Once your docker installation is correctly set-up, simply run
-```sh
+```
 docker build -t libmpc .
 ```
+
 to run tests and ensure all routines perform as expected, run:
-```sh
+```
 docker run --cap-add SYS_PTRACE --rm libmpc
 ```
 
