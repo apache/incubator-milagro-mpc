@@ -59,14 +59,17 @@ git clone https://github.com/apache/incubator-milagro-MPC.git && cd incubator-mi
 docker build -t libmpc .
 ```
 
-to run tests and ensure all routines perform as expected, run:
+If you want to run tests and ensure all routines perform as expected, run:
 ```
 docker run --cap-add SYS_PTRACE --rm libmpc
 ```
 
-Note that all of the above commands will by default generate an image native to your platform. In case you wish to build and run code for a different platform, use the `--platform linux/amd64` or `--platform linux/arm64` switches (paying a performance hit).
+Note that all of the above commands will by default generate an image native to your platform. In case you wish to build and run code for a different platform, use the `--platform linux/amd64` or `--platform linux/arm64` switches (paying a performance hit). For example:
+```
+docker build --platform linux/amd64 -t libmpc_x86 .
+```
 
-Once this works, you can use this Dockerfile as a basis to build your own recipes. We will eventually publish an official OCI image on a registry, if there is sufficient demand (open an issue please).
+Once this works, you can use this Dockerfile as a base to build your own recipes. We will eventually publish an official OCI image on a registry, if there is sufficient demand (open an issue please).
 
 This procedure has been tested on all major platforms (Linux, Mac OS, Windows) on arm64 and x86_64 platforms. If your build or execution fails, please open a bug.
 
