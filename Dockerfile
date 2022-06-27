@@ -88,8 +88,6 @@ RUN ${build_doc} && \
     cd build && \
     make -j${concurrency} doc
 
-RUN echo ${build_type}
-
 WORKDIR /root/build
 
 # Run tests by default
