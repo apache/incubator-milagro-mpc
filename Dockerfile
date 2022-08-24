@@ -12,7 +12,7 @@ FROM ubuntu:latest as build
 # Create the image:
 #     docker build -t libmpc .
 #
-#     (or, alternatively...)
+#     (or, alternatively, for non-release builds...)
 #     docker build --build-arg build_type=Debug -t libmpc-debug .
 #     docker build --build-arg build_type=Coverage -t libmpc-coverage .
 #
@@ -20,6 +20,7 @@ FROM ubuntu:latest as build
 #     docker run --cap-add SYS_PTRACE --rm libmpc
 # 
 # Generate coverage figures:
+#     docker build --build-arg build_type=Coverage -t libmpc-coverage .
 #     CONTAINER_ID=$(docker run --cap-add SYS_PTRACE -d libmpc-coverage ./scripts/coverage.sh)
 #     docker logs $CONTAINER_ID
 #     docker cp ${CONTAINER_ID}:"/root/build/coverage" ./
@@ -28,7 +29,7 @@ FROM ubuntu:latest as build
 # To login to container:
 #     docker run -it --rm libmpc bash
 #
-# To extract the documentation
+# To build and extract the documentation
 #     docker build -t libmpc_doc --build-arg build_doc=true .
 #     docker run --rm libmpc_doc /usr/bin/tar c -C /root/build doxygen > doxygen.tar
 # ------------------------------------------------------------------------------
