@@ -36,7 +36,7 @@
 
 ## Description
 
-AMCL-MPC - Apache Milagro Crypto Multi-Party Computation Library
+libmpc - Apache Milagro Crypto Multi-Party Computation Library
 
 This library implements Multi-Party Computation (MPC) using the Apache Milagro crypto library (AMCL).
 
