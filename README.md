@@ -142,7 +142,7 @@ via the file
 ./build/doxygen/html/index.html
 ```
 
-## Docker
+## Testing and generating coverage figures with Docker
 
 Build and run tests using docker
 
@@ -168,7 +168,7 @@ docker rm -f ${CONTAINER_ID} || true
 
 ## Python
 
-There is a Python wrapper in ./python.
+There is a Python wrapper in `./python`.
 You can to specify the RSA levels to build in the wrappers using
 the cmake flag `PYTHON_RSA_LEVELS`. Supported levels are 2048 and 4096.
 E.g.
@@ -185,7 +185,3 @@ build as follows.
 ```
 cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D AMCL_CHUNK=64 -D AMCL_CURVE="BLS381,SECP256K1" -D AMCL_RSA="2048,4096" -D BUILD_PAILLIER=ON -D BUILD_PYTHON=ON -D BUILD_BLS=ON -D BUILD_WCC=OFF -D BUILD_MPIN=ON -D BUILD_X509=OFF -D CMAKE_INSTALL_PREFIX=/usr/local ..
 ```
-
-## Virtual machine
-
-In "./vagrant" there are configuration files to run the software on a VM
