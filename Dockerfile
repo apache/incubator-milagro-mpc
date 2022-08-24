@@ -27,7 +27,7 @@
 #     docker run --rm libmpc /usr/bin/tar c /root/target/Release/doxygen > doxygen.tar
 # ------------------------------------------------------------------------------
 
-FROM ubuntu:bionic
+FROM ubuntu:latest
 
 LABEL maintainer="kealanmccusker@gmail.com"
 
@@ -49,15 +49,18 @@ RUN git clone https://github.com/apache/incubator-milagro-crypto-c.git && \
     cd build && \
     cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D AMCL_CHUNK=64 -D AMCL_CURVE="BLS381,SECP256K1" -D AMCL_RSA="" -D BUILD_PAILLIER=ON -D BUILD_PYTHON=OFF -D BUILD_BLS=ON -D BUILD_WCC=OFF -D BUILD_MPIN=OFF -D BUILD_X509=OFF -D CMAKE_INSTALL_PREFIX=/usr/local .. && \
     make && \
-    make test  ARGS=-j8 && \
-    make install
+    make test ARGS=-j8 && \
+    make install/fast
 
 ADD . /root
 
 RUN ./scripts/build.sh
 
 RUN cd ./target/Release && \
-    make install
+    make -j8 install
+
+RUN cd ./target/Release && \
+    make doc
 
 RUN cd ./target/Release && \
     make doc
