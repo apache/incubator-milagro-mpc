@@ -85,30 +85,6 @@ To build and extract the documentation:
   docker run --rm libmpc_doc /usr/bin/tar c -C /root/build doxygen > doxygen.tar
 ```
 
-## Testing and generating coverage figures with Docker
-
-Build and run tests using docker
-
-```sh
-docker build --build-arg build_type=Coverage -t libmpc-coverage .
-```
-
-Generate coverage figures
-
-
-```sh
-docker run --cap-add SYS_PTRACE -d libmpc-coverage /root/scripts/coverage.sh
-```
-
-or copy to host
-
-```sh
-CONTAINER_ID=$(docker run --cap-add SYS_PTRACE -d libmpc-coverage /root/scripts/coverage.sh)
-docker logs $CONTAINER_ID
-docker cp ${CONTAINER_ID}:"/root/build/coverage" ./
-docker rm -f ${CONTAINER_ID} || true
-```
-
 ## Python
 
 There is a Python wrapper in `./python`.
