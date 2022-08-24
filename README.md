@@ -42,7 +42,30 @@ This library implements Multi-Party Computation (MPC) using the Apache Milagro c
 
 # Building and running libmpc with Docker (preferred)
 
-The preferred way to get libmpc built and tested is through the use of docker. To do so, you should install docker and ensure it runs fine:
+
+The preferred way to get libmpc built and tested is through the use of docker.
+
+Once your docker installation is correctly set-up, simply run:
+```
+ git clone https://github.com/apache/incubator-milagro-MPC.git && cd incubator-milagro-MPC
+```
+```
+ docker build -t libmpc .
+```
+
+If you want to run tests and ensure all routines perform as expected, run:
+```
+docker run --cap-add SYS_PTRACE --rm libmpc
+```
+
+This procedure has been tested on all major platforms (Linux, Mac OS, Windows) on arm64 and x86_64 platforms. If your build or execution fails, please open a bug.
+
+Note that all of the above commands will by default generate an image native to your platform. In case you wish to build and run code for a different platform, use the `--platform linux/amd64` or `--platform linux/arm64` switches (paying a performance hit). For example:
+```
+docker build --platform linux/amd64 -t libmpc_x86 .
+```
+
+In case you run into problems, make sure your docker installation runs fine:
 ```
 docker run hello-world
 ```
@@ -51,27 +74,8 @@ in case you run in permission errors, on some Linux platforms you might need to 
 sudo gpasswd -a <youruser> docker
 ```
 
-Once your docker installation is correctly set-up, simply run:
-```
-git clone https://github.com/apache/incubator-milagro-MPC.git && cd incubator-milagro-MPC
-```
-```
-docker build -t libmpc .
-```
+Once this works, you can use this Dockerfile as a base to build your own recipes. We will eventually publish an official OCI image on a registry, if there is sufficient demand (please open an issue).
 
-If you want to run tests and ensure all routines perform as expected, run:
-```
-docker run --cap-add SYS_PTRACE --rm libmpc
-```
-
-Note that all of the above commands will by default generate an image native to your platform. In case you wish to build and run code for a different platform, use the `--platform linux/amd64` or `--platform linux/arm64` switches (paying a performance hit). For example:
-```
-docker build --platform linux/amd64 -t libmpc_x86 .
-```
-
-Once this works, you can use this Dockerfile as a base to build your own recipes. We will eventually publish an official OCI image on a registry, if there is sufficient demand (open an issue please).
-
-This procedure has been tested on all major platforms (Linux, Mac OS, Windows) on arm64 and x86_64 platforms. If your build or execution fails, please open a bug.
 
 ## Documentation
 
