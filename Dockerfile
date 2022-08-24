@@ -4,7 +4,7 @@
 #
 # @author  Kealan McCusker <kealanmccusker@gmail.com>
 # ------------------------------------------------------------------------------
-FROM ubuntu:latest
+FROM ubuntu:latest as build
 
 # ------------------------------------------------------------------------------
 # NOTES:
@@ -29,7 +29,8 @@ FROM ubuntu:latest
 #     docker run -it --rm libmpc bash
 #
 # To extract the documentation
-#     docker run --rm libmpc /usr/bin/tar c -C /root/target/Release doxygen > doxygen.tar
+#     docker build -t libmpc_doc --build-arg build_doc=true .
+#     docker run --rm libmpc_doc /usr/bin/tar c -C /root/build doxygen > doxygen.tar
 # ------------------------------------------------------------------------------
 
 
@@ -56,8 +57,8 @@ RUN apt-get update && \
 RUN pip3 install cffi
 
 # build and install Milagro AMCL
-RUN git clone https://github.com/apache/incubator-milagro-crypto-c.git && \
-    cd incubator-milagro-crypto-c && \
+RUN git clone https://github.com/apache/incubator-milagro-crypto-c.git
+RUN cd incubator-milagro-crypto-c && \
     mkdir build && \
     cd build && \
     cmake -D CMAKE_BUILD_TYPE=${build_type} \
@@ -66,11 +67,12 @@ RUN git clone https://github.com/apache/incubator-milagro-crypto-c.git && \
           -D AMCL_CURVE="BLS381,SECP256K1" \
           -D AMCL_RSA="" \
           -D BUILD_PAILLIER=ON\
-          -D BUILD_PYTHON=OFF \
+          -D BUILD_PYTHON=ON \
           -D BUILD_BLS=ON \
           -D BUILD_WCC=OFF \
           -D BUILD_MPIN=OFF \
           -D BUILD_X509=OFF \
+          -D CMAKE_INSTALL_PREFIX=/usr \
           .. && \
     make -j${concurrency} install
 
@@ -83,10 +85,13 @@ RUN cd build &&\
     cmake -D CMAKE_BUILD_TYPE=$build_type .. &&\
     make -j${concurrency} install
 
+FROM build as documentation
+
 # Build documentation, if requested
-RUN ${build_doc} && \
+RUN if [ ${build_doc} ]; then \
     cd build && \
-    make -j${concurrency} doc
+    make -j${concurrency} doc; \
+    fi
 
 WORKDIR /root/build
 
