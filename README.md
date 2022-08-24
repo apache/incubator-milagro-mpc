@@ -17,7 +17,7 @@
     under the License.
 -->
 
-# *Apache Milagro Multi-Party Computation Library*
+# Apache Milagro Multi-Party Computation Library
 
 [![Master Branch](https://img.shields.io/badge/-master:-gray.svg)](https://github.com/apache/incubator-milagro-MPC/tree/master)
 [![Master Build Status](https://travis-ci.org/apache/incubator-milagro-MPC.svg?branch=master)](https://travis-ci.org/apache/incubator-milagro-MPC)
@@ -90,22 +90,22 @@ To build and extract the documentation:
 Build and run tests using docker
 
 ```sh
-docker build --no-cache -t libmpc .
-docker run --cap-add SYS_PTRACE --rm libmpc
+docker build --build-arg build_type=Coverage -t libmpc-coverage .
 ```
 
 Generate coverage figures
 
+
 ```sh
-docker run --rm libmpc ./scripts/coverage.sh
+docker run --cap-add SYS_PTRACE -d libmpc-coverage /root/scripts/coverage.sh
 ```
 
 or copy to host
 
 ```sh
-CONTAINER_ID=$(docker run --cap-add SYS_PTRACE -d libmpc ./scripts/coverage.sh)
+CONTAINER_ID=$(docker run --cap-add SYS_PTRACE -d libmpc-coverage /root/scripts/coverage.sh)
 docker logs $CONTAINER_ID
-docker cp ${CONTAINER_ID}:"/root/target/Coverage/coverage" ./
+docker cp ${CONTAINER_ID}:"/root/build/coverage" ./
 docker rm -f ${CONTAINER_ID} || true
 ```
 
@@ -126,7 +126,11 @@ install the dynamic libraries for RSA 2048 and 4069, modify the AMCL cmake
 build as follows.
 
 ```
-cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D AMCL_CHUNK=64 -D AMCL_CURVE="BLS381,SECP256K1" -D AMCL_RSA="2048,4096" -D BUILD_PAILLIER=ON -D BUILD_PYTHON=ON -D BUILD_BLS=ON -D BUILD_WCC=OFF -D BUILD_MPIN=ON -D BUILD_X509=OFF -D CMAKE_INSTALL_PREFIX=/usr/local ..
+cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D AMCL_CHUNK=64 \
+      -D AMCL_CURVE="BLS381,SECP256K1" -D AMCL_RSA="2048,4096" \
+      -D BUILD_PAILLIER=ON -D BUILD_PYTHON=ON -D BUILD_BLS=ON -D BUILD_WCC=OFF \
+      -D BUILD_MPIN=ON -D BUILD_X509=OFF -D CMAKE_INSTALL_PREFIX=/usr/local \
+      ..
 ```
 
 
@@ -140,14 +144,13 @@ In order to build this library, the following packages are required:
 
 * [CMake](https://cmake.org/) is required to build the source code.
 * [CFFI](https://cffi.readthedocs.org/en/release-0.8/), the C Foreign Function Interface for the Python wrapper
-* [Doxygen](http://doxygen.org) is required to build the source code documentation.
 * [Python](https://www.python.org/) language is required to build the Python language wrapper.
 
-On Ubuntu 18.04 these packages are installed with the following commands;
+On the latest Ubuntu LTS these packages are installed with the following commands;
 
 ```
 sudo apt-get update
-sudo apt-get install -y build-essential cmake doxygen lcov python3-dev python3-pip wget git
+sudo apt-get install -y build-essential cmake lcov python3-dev python3-pip wget git
 pip3 install cffi
 ```
 
