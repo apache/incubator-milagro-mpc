@@ -36,9 +36,9 @@
 
 ## Description
 
-*AMCL - Apache Milagro Crypto Multi-Party Computation*
+AMCL-MPC - Apache Milagro Crypto Multi-Party Computation Library
 
-This library implements Multi-Party Computation (MPC) using the milargo crypto library.
+This library implements Multi-Party Computation (MPC) using the Apache Milagro crypto library (AMCL).
 
 # Building and running libmpc with Docker (preferred)
 
@@ -72,6 +72,58 @@ docker build --platform linux/amd64 -t libmpc_x86 .
 Once this works, you can use this Dockerfile as a base to build your own recipes. We will eventually publish an official OCI image on a registry, if there is sufficient demand (open an issue please).
 
 This procedure has been tested on all major platforms (Linux, Mac OS, Windows) on arm64 and x86_64 platforms. If your build or execution fails, please open a bug.
+
+## Documentation
+
+To build and extract the documentation:
+```sh
+  docker build -t libmpc_doc --build-arg build_doc=true .
+  docker run --rm libmpc_doc /usr/bin/tar c -C /root/build doxygen > doxygen.tar
+```
+
+## Testing and generating coverage figures with Docker
+
+Build and run tests using docker
+
+```sh
+docker build --no-cache -t libmpc .
+docker run --cap-add SYS_PTRACE --rm libmpc
+```
+
+Generate coverage figures
+
+```sh
+docker run --rm libmpc ./scripts/coverage.sh
+```
+
+or copy to host
+
+```sh
+CONTAINER_ID=$(docker run --cap-add SYS_PTRACE -d libmpc ./scripts/coverage.sh)
+docker logs $CONTAINER_ID
+docker cp ${CONTAINER_ID}:"/root/target/Coverage/coverage" ./
+docker rm -f ${CONTAINER_ID} || true
+```
+
+## Python
+
+There is a Python wrapper in `./python`.
+You can to specify the RSA levels to build in the wrappers using
+the cmake flag `PYTHON_RSA_LEVELS`. Supported levels are 2048 and 4096.
+E.g.
+
+```
+cmake -DPYTHON_RSA_LEVELS="2048,4096" ..
+```
+
+In order for the RSA wrappers to work, the appropriate dynamic
+libraries need to be generated and installed for AMCL. For instance, to
+install the dynamic libraries for RSA 2048 and 4069, modify the AMCL cmake
+build as follows.
+
+```
+cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D AMCL_CHUNK=64 -D AMCL_CURVE="BLS381,SECP256K1" -D AMCL_RSA="2048,4096" -D BUILD_PAILLIER=ON -D BUILD_PYTHON=ON -D BUILD_BLS=ON -D BUILD_WCC=OFF -D BUILD_MPIN=ON -D BUILD_X509=OFF -D CMAKE_INSTALL_PREFIX=/usr/local ..
+```
 
 
 # Building natively
@@ -132,57 +184,4 @@ or build and run test on all builds
 ```sh
 ./scripts/build.sh
 ./scripts/test.sh
-```
-
-## Documentation
-
-The documentation is generated using doxygen and can accessed (post build)
-via the file
-
-```
-./build/doxygen/html/index.html
-```
-
-## Testing and generating coverage figures with Docker
-
-Build and run tests using docker
-
-```sh
-docker build --no-cache -t libmpc .
-docker run --cap-add SYS_PTRACE --rm libmpc
-```
-
-Generate coverage figures
-
-```sh
-docker run --rm libmpc ./scripts/coverage.sh
-```
-
-or copy to host
-
-```sh
-CONTAINER_ID=$(docker run --cap-add SYS_PTRACE -d libmpc ./scripts/coverage.sh)
-docker logs $CONTAINER_ID
-docker cp ${CONTAINER_ID}:"/root/target/Coverage/coverage" ./
-docker rm -f ${CONTAINER_ID} || true
-```
-
-## Python
-
-There is a Python wrapper in `./python`.
-You can to specify the RSA levels to build in the wrappers using
-the cmake flag `PYTHON_RSA_LEVELS`. Supported levels are 2048 and 4096.
-E.g.
-
-```
-cmake -DPYTHON_RSA_LEVELS="2048,4096" ..
-```
-
-In order for the RSA wrappers to work, the appropriate dynamic
-libraries need to be generated and installed for AMCL. For instance, to
-install the dynamic libraries for RSA 2048 and 4069, modify the AMCL cmake
-build as follows.
-
-```
-cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D AMCL_CHUNK=64 -D AMCL_CURVE="BLS381,SECP256K1" -D AMCL_RSA="2048,4096" -D BUILD_PAILLIER=ON -D BUILD_PYTHON=ON -D BUILD_BLS=ON -D BUILD_WCC=OFF -D BUILD_MPIN=ON -D BUILD_X509=OFF -D CMAKE_INSTALL_PREFIX=/usr/local ..
 ```
