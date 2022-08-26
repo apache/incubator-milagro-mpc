@@ -79,10 +79,34 @@ Once this works, you can use this Dockerfile as a base to build your own recipes
 
 ## Documentation
 
-To build and extract the documentation:
+To build the Doxygen documentation, make sure you ask for it at build time, with the build_doc parameter:
 ```sh
   docker build -t libmpc_doc --build-arg build_doc=true .
+```
+
+If the documentation is built, you can extract it with this command:
+```sh
   docker run --rm libmpc_doc /usr/bin/tar c -C /root/build doxygen > doxygen.tar
+```
+
+## Generate coverage figures:
+
+You can ask docker to build a test image with coverage statistics using the `Coverage` build type:
+```sh
+docker build --build-arg build_type=Coverage -t libmpc-coverage .
+```
+This command will run automated tests and generate coverage figures which you can extract using cat.
+```sh
+docker run --rm libmpc-coverage cat coverage/libmpc.info > libmpc.info
+```
+
+If you just want a summary, you can run
+```
+docker run --rm libmpc-coverage genhtml coverage/libmpc.info;
+```
+or to get html files, export the files already generated for you at build time:
+```sh
+docker run --rm libmpc-coverage /usr/bin/tar c -C /root/build coverage > coverage.tar
 ```
 
 ## Python

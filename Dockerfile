@@ -21,6 +21,8 @@ FROM ubuntu:latest as build
 # 
 # Generate coverage figures:
 #     docker build --build-arg build_type=Coverage -t libmpc-coverage .
+#     docker run --rm libmpc-coverage genhtml coverage/libmpc.info;
+#  or...
 #     docker run --rm libmpc-coverage /usr/bin/tar c -C /root/build coverage > coverage.tar
 #
 # To login to container:
