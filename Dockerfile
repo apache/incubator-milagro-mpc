@@ -21,10 +21,7 @@ FROM ubuntu:latest as build
 # 
 # Generate coverage figures:
 #     docker build --build-arg build_type=Coverage -t libmpc-coverage .
-#     CONTAINER_ID=$(docker run --cap-add SYS_PTRACE -d libmpc-coverage ./scripts/coverage.sh)
-#     docker logs $CONTAINER_ID
-#     docker cp ${CONTAINER_ID}:"/root/build/coverage" ./
-#     docker rm -f ${CONTAINER_ID} || true
+#     docker run --rm libmpc-coverage /usr/bin/tar c -C /root/build coverage > coverage.tar
 #
 # To login to container:
 #     docker run -it --rm libmpc bash
@@ -84,6 +81,16 @@ RUN mkdir build
 RUN cd build &&\
     cmake -D CMAKE_BUILD_TYPE=$build_type .. &&\
     make -j${concurrency} install
+
+# Generate coverage figures, if needed
+RUN if [ "${build_type}" = "Coverage" ]; then \
+    cd build; \
+    make -j${concurrency} test && \
+    mkdir coverage && \
+    lcov --capture --initial --directory ./src --output-file coverage/libmpc.info && \
+    lcov --no-checksum --directory ./src --capture --output-file coverage/libmpc.info && \
+    genhtml -o coverage -t "LIBPAILLIER Test Coverage" coverage/libmpc.info; \
+fi
 
 FROM build as documentation
 
