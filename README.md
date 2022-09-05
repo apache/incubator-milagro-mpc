@@ -17,7 +17,7 @@
     under the License.
 -->
 
-# *Apache Milagro Multi-Party Computation Library*
+# Apache Milagro Multi-Party Computation Library
 
 [![Master Branch](https://img.shields.io/badge/-master:-gray.svg)](https://github.com/apache/incubator-milagro-MPC/tree/master)
 [![Master Build Status](https://travis-ci.org/apache/incubator-milagro-MPC.svg?branch=master)](https://travis-ci.org/apache/incubator-milagro-MPC)
@@ -36,13 +36,36 @@
 
 ## Description
 
-*AMCL - Apache Milagro Crypto Multi-Party Computation*
+libmpc - Apache Milagro Crypto Multi-Party Computation Library
 
-This library implements Multi-Party Computation (MPC) using the milargo crypto library.
+This library implements Multi-Party Computation (MPC) using the Apache Milagro crypto library (AMCL).
 
 # Building and running libmpc with Docker (preferred)
 
-The preferred way to get libmpc built and tested is through the use of docker. To do so, you should install docker and ensure it runs fine:
+
+The preferred way to get libmpc built and tested is through the use of docker.
+
+Once your docker installation is correctly set-up, simply run:
+```
+ git clone https://github.com/apache/incubator-milagro-MPC.git && cd incubator-milagro-MPC
+```
+```
+ docker build -t libmpc .
+```
+
+If you want to run tests and ensure all routines perform as expected, run:
+```
+docker run --cap-add SYS_PTRACE --rm libmpc
+```
+
+This procedure has been tested on all major platforms (Linux, Mac OS, Windows) on arm64 and x86_64 platforms. If your build or execution fails, please open a bug.
+
+Note that all of the above commands will by default generate an image native to your platform. In case you wish to build and run code for a different platform, use the `--platform linux/amd64` or `--platform linux/arm64` switches (paying a performance hit). For example:
+```
+docker build --platform linux/amd64 -t libmpc_x86 .
+```
+
+In case you run into problems, make sure your docker installation runs fine:
 ```
 docker run hello-world
 ```
@@ -51,27 +74,65 @@ in case you run in permission errors, on some Linux platforms you might need to 
 sudo gpasswd -a <youruser> docker
 ```
 
-Once your docker installation is correctly set-up, simply run:
-```
-git clone https://github.com/apache/incubator-milagro-MPC.git && cd incubator-milagro-MPC
-```
-```
-docker build -t libmpc .
+Once this works, you can use this Dockerfile as a base to build your own recipes. We will eventually publish an official OCI image on a registry, if there is sufficient demand (please open an issue).
+
+
+## Documentation
+
+To build the Doxygen documentation, make sure you ask for it at build time, with the build_doc parameter:
+```sh
+  docker build -t libmpc_doc --build-arg build_doc=true .
 ```
 
-If you want to run tests and ensure all routines perform as expected, run:
-```
-docker run --cap-add SYS_PTRACE --rm libmpc
-```
-
-Note that all of the above commands will by default generate an image native to your platform. In case you wish to build and run code for a different platform, use the `--platform linux/amd64` or `--platform linux/arm64` switches (paying a performance hit). For example:
-```
-docker build --platform linux/amd64 -t libmpc_x86 .
+If the documentation is built, you can extract it with this command:
+```sh
+  docker run --rm libmpc_doc /usr/bin/tar c -C /root/build doxygen > doxygen.tar
 ```
 
-Once this works, you can use this Dockerfile as a base to build your own recipes. We will eventually publish an official OCI image on a registry, if there is sufficient demand (open an issue please).
+## Generate coverage figures:
 
-This procedure has been tested on all major platforms (Linux, Mac OS, Windows) on arm64 and x86_64 platforms. If your build or execution fails, please open a bug.
+You can ask docker to build a test image with coverage statistics using the `Coverage` build type:
+```sh
+docker build --build-arg build_type=Coverage -t libmpc-coverage .
+```
+This command will run automated tests and generate coverage figures which you can extract using cat.
+```sh
+docker run --rm libmpc-coverage cat coverage/libmpc.info > libmpc.info
+```
+
+If you just want a summary, you can run
+```
+docker run --rm libmpc-coverage genhtml coverage/libmpc.info;
+```
+or to get html files, export the files already generated for you at build time:
+```sh
+docker run --rm libmpc-coverage /usr/bin/tar c -C /root/build coverage > coverage.tar
+```
+
+## Python
+
+There is a Python wrapper in `./python`.
+You can to specify the RSA levels to build in the wrappers using
+the cmake flag `PYTHON_RSA_LEVELS`. Supported levels are 2048 and 4096.
+E.g.
+
+```
+cmake -DPYTHON_RSA_LEVELS="2048,4096" ..
+```
+
+In order for the RSA wrappers to work, the appropriate dynamic
+libraries need to be generated and installed for AMCL. For instance, to
+install the dynamic libraries for RSA 2048 and 4069, modify the AMCL cmake
+build as follows.
+
+```
+cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D AMCL_CHUNK=64 \
+      -D AMCL_CURVE="BLS381,SECP256K1" -D AMCL_RSA="2048,4096" \
+      -D BUILD_PAILLIER=ON -D BUILD_PYTHON=ON -D BUILD_BLS=ON -D BUILD_WCC=OFF \
+      -D BUILD_MPIN=ON -D BUILD_X509=OFF -D CMAKE_INSTALL_PREFIX=/usr/local \
+      ..
+```
+
 
 # Building natively
 
@@ -83,14 +144,13 @@ In order to build this library, the following packages are required:
 
 * [CMake](https://cmake.org/) is required to build the source code.
 * [CFFI](https://cffi.readthedocs.org/en/release-0.8/), the C Foreign Function Interface for the Python wrapper
-* [Doxygen](http://doxygen.org) is required to build the source code documentation.
 * [Python](https://www.python.org/) language is required to build the Python language wrapper.
 
-On Ubuntu 18.04 these packages are installed with the following commands;
+On the latest Ubuntu LTS these packages are installed with the following commands;
 
 ```
 sudo apt-get update
-sudo apt-get install -y build-essential cmake doxygen lcov python3-dev python3-pip wget git
+sudo apt-get install -y build-essential cmake lcov python3-dev python3-pip wget git
 pip3 install cffi
 ```
 
@@ -132,60 +192,3 @@ or build and run test on all builds
 ./scripts/build.sh
 ./scripts/test.sh
 ```
-
-## Documentation
-
-The documentation is generated using doxygen and can accessed (post build)
-via the file
-
-```
-./build/doxygen/html/index.html
-```
-
-## Docker
-
-Build and run tests using docker
-
-```sh
-docker build --no-cache -t libmpc .
-docker run --cap-add SYS_PTRACE --rm libmpc
-```
-
-Generate coverage figures
-
-```sh
-docker run --rm libmpc ./scripts/coverage.sh
-```
-
-or copy to host
-
-```sh
-CONTAINER_ID=$(docker run --cap-add SYS_PTRACE -d libmpc ./scripts/coverage.sh)
-docker logs $CONTAINER_ID
-docker cp ${CONTAINER_ID}:"/root/target/Coverage/coverage" ./
-docker rm -f ${CONTAINER_ID} || true
-```
-
-## Python
-
-There is a Python wrapper in ./python.
-You can to specify the RSA levels to build in the wrappers using
-the cmake flag `PYTHON_RSA_LEVELS`. Supported levels are 2048 and 4096.
-E.g.
-
-```
-cmake -DPYTHON_RSA_LEVELS="2048,4096" ..
-```
-
-In order for the RSA wrappers to work, the appropriate dynamic
-libraries need to be generated and installed for AMCL. For instance, to
-install the dynamic libraries for RSA 2048 and 4069, modify the AMCL cmake
-build as follows.
-
-```
-cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -D AMCL_CHUNK=64 -D AMCL_CURVE="BLS381,SECP256K1" -D AMCL_RSA="2048,4096" -D BUILD_PAILLIER=ON -D BUILD_PYTHON=ON -D BUILD_BLS=ON -D BUILD_WCC=OFF -D BUILD_MPIN=ON -D BUILD_X509=OFF -D CMAKE_INSTALL_PREFIX=/usr/local ..
-```
-
-## Virtual machine
-
-In "./vagrant" there are configuration files to run the software on a VM
