@@ -46,14 +46,10 @@ jobs:
   - stage: coverage
     script:
     - echo "Generate coverage figures"
-    - docker build -t libmpc .
-    - CONTAINER_ID=$(docker run --cap-add SYS_PTRACE -d libmpc ./scripts/coverage.sh)
-    - sleep 100
-    - docker logs $CONTAINER_ID
-    - docker cp ${CONTAINER_ID}:"/root/target/Coverage/coverage" ./
-    - docker rm -f ${CONTAINER_ID} || true
-    - sed -i "s|root|home/travis/build/apache/incubator-milagro-MPC|" ./coverage/libmpc.info
-    - coveralls-lcov /home/travis/build/apache/incubator-milagro-MPC/coverage/libmpc.info
+    - docker build --build-arg build_type=Coverage -t libmpc-coverage .
+    - docker run --rm libmpc-coverage cat coverage/libmpc.info > libmpc.info
+    - sed -i "s|root|home/travis/build/apache/incubator-milagro-MPC|" libmpc.info
+    - coveralls-lcov libmpc.info
 
 
 
