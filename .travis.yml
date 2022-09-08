@@ -1,6 +1,6 @@
 language: c
 compiler: gcc
-dist: trusty
+dist: jammy
 
 services:
   - docker
