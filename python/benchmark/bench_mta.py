@@ -47,9 +47,9 @@ if __name__ == "__main__":
 
     # Generate quantities for benchmark
     paillier_pk, paillier_sk = mpc.paillier_key_pair(None, p, q)
-    ca = mpc.mpc_mta_client1(rng, paillier_pk, a)
-    cb, beta = mpc.mpc_mta_server(rng, paillier_pk, b, ca)
-    alpha = mpc.mpc_mta_client2(paillier_sk, cb)
+    ca = mpc.mta_client1(rng, paillier_pk, a)
+    cb, beta = mpc.mta_server(rng, paillier_pk, b, ca)
+    alpha = mpc.mta_client2(paillier_sk, cb)
 
     # Check consistency of the generated quantities
     ai = int(a_hex, 16)
@@ -63,14 +63,14 @@ if __name__ == "__main__":
     assert got == expected, f"expected {hex(expected)} got {hex(got)}"
 
     # Run benchmark
-    fncall = lambda: mpc.mpc_mta_client1(rng, paillier_pk, a)
-    time_func("mpc_mta_client1", fncall)
+    fncall = lambda: mpc.mta_client1(rng, paillier_pk, a)
+    time_func("mta_client1", fncall)
 
-    fncall = lambda: mpc.mpc_mta_server(rng, paillier_pk, b, ca)
-    time_func("mpc_mta_server ", fncall)
+    fncall = lambda: mpc.mta_server(rng, paillier_pk, b, ca)
+    time_func("mta_server ", fncall)
 
-    fncall = lambda: mpc.mpc_mta_client2(paillier_sk, cb)
-    time_func("mpc_mta_client2", fncall)
+    fncall = lambda: mpc.mta_client2(paillier_sk, cb)
+    time_func("mta_client2", fncall)
 
     # Clear memory
     core_utils.kill_csprng(rng)

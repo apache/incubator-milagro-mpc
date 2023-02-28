@@ -89,13 +89,13 @@ int main()
     start=clock();
     do
     {
-        MPC_MTA_CLIENT1(&RNG, &PUB, &A, &CA, NULL);
+        MTA_CLIENT1(&RNG, &PUB, &A, &CA, NULL);
         iterations++;
         elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
     }
     while (elapsed<MIN_TIME || iterations<MIN_ITERS);
     elapsed=1000.0*elapsed/iterations;
-    printf("MPC_MTA_CLIENT1\t%8d iterations\t",iterations);
+    printf("MTA_CLIENT1\t%8d iterations\t",iterations);
     printf("%8.2lf ms per iteration\n",elapsed);
 
     iterations=0;
@@ -103,26 +103,26 @@ int main()
     do
     {
 
-        MPC_MTA_SERVER(&RNG, &PUB, &B, &CA, NULL, NULL, &CB, &BETA);
+        MTA_SERVER(&RNG, &PUB, &B, &CA, NULL, NULL, &CB, &BETA);
         iterations++;
         elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
     }
     while (elapsed<MIN_TIME || iterations<MIN_ITERS);
     elapsed=1000.0*elapsed/iterations;
-    printf("MPC_MTA_SERVER\t%8d iterations\t",iterations);
+    printf("MTA_SERVER\t%8d iterations\t",iterations);
     printf("%8.2lf ms per iteration\n",elapsed);
 
     iterations=0;
     start=clock();
     do
     {
-        MPC_MTA_CLIENT2(&PRIV, &CB, &ALPHA);
+        MTA_CLIENT2(&PRIV, &CB, &ALPHA);
         iterations++;
         elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
     }
     while (elapsed<MIN_TIME || iterations<MIN_ITERS);
     elapsed=1000.0*elapsed/iterations;
-    printf("MPC_MTA_CLIENT2\t%8d iterations\t",iterations);
+    printf("MTA_CLIENT2\t%8d iterations\t",iterations);
     printf("%8.2lf ms per iteration\n",elapsed);
 
     exit(EXIT_SUCCESS);

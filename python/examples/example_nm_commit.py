@@ -24,7 +24,8 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from amcl import core_utils, commitments
+from amcl import core_utils
+from amcl import nm_commitment as nm
 
 seed_hex = "78d0fb6705ce77dee47d03eb5b9c5d30"
 
@@ -38,17 +39,17 @@ if __name__ == "__main__":
     x = b'BANANA'
 
     # Commitment Phase
-    r, c = commitments.nm_commit(rng, x)
+    r, c = nm.commit(rng, x)
 
     print("\nCommitment")
     print(f"\tr = {r.hex()}")
     print(f"\tc = {c.hex()}")
 
     # Decommitment Phase. After both c, r and x have been revealed
-    rc = commitments.nm_decommit(x, r, c)
+    rc = nm.decommit(x, r, c)
 
     print("\nDecommitment")
-    if rc == commitments.OK:
+    if rc == nm.OK:
         print("\tSuccess")
     else:
         print("\tFailure")

@@ -27,7 +27,7 @@ include_directories (${PROJECT_SOURCE_DIR}/include
 
 add_library(${target} ${LIB_TYPE} ${SOURCES})
 
-target_link_libraries (${target}  amcl_paillier amcl_bls_BLS381 amcl_pairing_BLS381 amcl_curve_BLS381 amcl_curve_SECP256K1 amcl_core)
+target_link_libraries (${target}  amcl_paillier amcl_curve_SECP256K1 amcl_core)
 
 set_target_properties(${target}
   PROPERTIES VERSION

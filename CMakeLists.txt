@@ -129,10 +129,12 @@ if(BUILD_BENCHMARK)
   add_subdirectory(benchmark)
 endif()
 
-if(BUILD_PYTHON)
-  message(STATUS "Build Python wrappers")
-  add_subdirectory(python)
-endif()
+# FIXME! Disabling python wrappers until they are updated
+#
+# if(BUILD_PYTHON)
+#   message(STATUS "Build Python wrappers")
+#   add_subdirectory(python)
+# endif()
 
 # Build Documentation
 if (BUILD_DOXYGEN)

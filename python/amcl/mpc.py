@@ -28,44 +28,25 @@ from . import core_utils
 
 _ffi = core_utils._ffi
 _ffi.cdef("""
-#define EFS_SECP256K1 32
-
-typedef signed int sign32;
-typedef long unsigned int BIG_256_56[5];
-
 typedef struct
 {
-    BIG_256_56 g;
-    sign32 XES;
-} FP_SECP256K1;
-
-typedef struct
-{
-    FP_SECP256K1 x;
-    FP_SECP256K1 y;
-    FP_SECP256K1 z;
-} ECP_SECP256K1;
-
-typedef struct
-{
-    BIG_512_60 n[8];
-    BIG_512_60 g[8];
-    BIG_512_60 n2[8];
+    BIG_512_60 n[HFLEN_4096];
+    BIG_512_60 n2[FFLEN_4096];
 } PAILLIER_public_key;
 
 typedef struct
 {
-    BIG_1024_58 p[1];
-    BIG_1024_58 q[1];
-    BIG_1024_58 lp[1];
-    BIG_1024_58 lq[1];
-    BIG_1024_58 invp[2];
-    BIG_1024_58 invq[2];
-    BIG_1024_58 invpq[1];
-    BIG_1024_58 p2[2];
-    BIG_1024_58 q2[2];
-    BIG_1024_58 mp[1];
-    BIG_1024_58 mq[1];
+    BIG_1024_58 p[HFLEN_2048];
+    BIG_1024_58 q[HFLEN_2048];
+    BIG_1024_58 lp[HFLEN_2048];
+    BIG_1024_58 lq[HFLEN_2048];
+    BIG_1024_58 invp[FFLEN_2048];
+    BIG_1024_58 invq[FFLEN_2048];
+    BIG_1024_58 invpq[HFLEN_2048];
+    BIG_1024_58 p2[FFLEN_2048];
+    BIG_1024_58 q2[FFLEN_2048];
+    BIG_1024_58 mp[HFLEN_2048];
+    BIG_1024_58 mq[HFLEN_2048];
 } PAILLIER_private_key;
 
 extern void PAILLIER_KEY_PAIR(csprng *RNG, octet *P, octet* Q, PAILLIER_public_key *PUB, PAILLIER_private_key *PRIV);
@@ -77,9 +58,9 @@ extern int ECP_SECP256K1_PUBLIC_KEY_VALIDATE(octet *W);
 
 extern void MPC_ECDSA_KEY_PAIR_GENERATE(csprng *RNG, octet *S, octet *W);
 extern int MPC_ECDSA_VERIFY(const octet *HM, octet *PK, octet *R, octet *S);
-extern void MPC_MTA_CLIENT1(csprng *RNG, PAILLIER_public_key* PUB, octet* A, octet* CA, octet* R);
-extern void MPC_MTA_CLIENT2(PAILLIER_private_key *PRIV, octet* CB, octet *ALPHA);
-extern void MPC_MTA_SERVER(csprng *RNG, PAILLIER_public_key *PUB, octet *B, octet *CA, octet *Z, octet *R, octet *CB, octet *BETA);
+extern void MTA_CLIENT1(csprng *RNG, PAILLIER_public_key* PUB, octet* A, octet* CA, octet* R);
+extern void MTA_CLIENT2(PAILLIER_private_key *PRIV, octet* CB, octet *ALPHA);
+extern void MTA_SERVER(csprng *RNG, PAILLIER_public_key *PUB, octet *B, octet *CA, octet *Z, octet *R, octet *CB, octet *BETA);
 extern void MPC_SUM_MTA(octet *A, octet *B, octet *ALPHA, octet *BETA, octet *SUM);
 extern void MPC_K_GENERATE(csprng *RNG, octet *K);
 extern void MPC_INVKGAMMA(const octet *KGAMMA1, const octet *KGAMMA2, octet *INVKGAMMA);
@@ -106,7 +87,7 @@ else:
 
 # Constants
 FS_2048 = 256      # Size of an FF_2048 in bytes
-HFS_2048 = 128     # Half-suze of an FF_2048 in bytes
+HFS_2048 = 128     # Half-size of an FF_2048 in bytes
 FS_4096 = 512      # Size of an FF_4096 in bytes
 EGS_SECP256K1 = 32 # Size of an element of Z/qZ in bytes
 EFS_SECP256K1 = 32 # Size of an Fp element in bytes
@@ -291,7 +272,7 @@ def ecp_secp256k1_public_key_validate(ecdsa_pk):
     return rc
 
 
-def mpc_mta_client1(rng, paillier_pk, a, r=None):
+def mta_client1(rng, paillier_pk, a, r=None):
     """Client MTA first pass
 
     Client MTA first pass
@@ -322,7 +303,7 @@ def mpc_mta_client1(rng, paillier_pk, a, r=None):
     ca1, ca1_val = core_utils.make_octet(FS_4096)
     _ = a1_val, ca1_val
 
-    _libamcl_mpc.MPC_MTA_CLIENT1(rng, paillier_pk, a1, ca1, r1)
+    _libamcl_mpc.MTA_CLIENT1(rng, paillier_pk, a1, ca1, r1)
 
     ca2 = core_utils.to_str(ca1)
 
@@ -335,7 +316,7 @@ def mpc_mta_client1(rng, paillier_pk, a, r=None):
     return ca2
 
 
-def mpc_mta_client2(paillier_sk, cb):
+def mta_client2(paillier_sk, cb):
     """Client MtA second pass
 
     Client MTA first pass
@@ -356,7 +337,7 @@ def mpc_mta_client2(paillier_sk, cb):
     alpha1, alpha1_val = core_utils.make_octet(EGS_SECP256K1)
     _ = cb1_val, alpha1_val # Suppress warnings
 
-    _libamcl_mpc.MPC_MTA_CLIENT2(paillier_sk, cb1, alpha1)
+    _libamcl_mpc.MTA_CLIENT2(paillier_sk, cb1, alpha1)
 
     alpha2 = core_utils.to_str(alpha1)
     core_utils.clear_octet(alpha1)
@@ -364,7 +345,7 @@ def mpc_mta_client2(paillier_sk, cb):
     return alpha2
 
 
-def mpc_mta_server(rng, paillier_pk, b, ca, z=None, r=None):
+def mta_server(rng, paillier_pk, b, ca, z=None, r=None):
     """Server MtA
 
     Server MtA
@@ -401,7 +382,7 @@ def mpc_mta_server(rng, paillier_pk, b, ca, z=None, r=None):
     cb1, cb1_val = core_utils.make_octet(FS_4096)
     _ = b1_val, ca1_val, beta1_val, cb1_val
 
-    _libamcl_mpc.MPC_MTA_SERVER(rng, paillier_pk, b1, ca1, z1, r1, cb1, beta1)
+    _libamcl_mpc.MTA_SERVER(rng, paillier_pk, b1, ca1, z1, r1, cb1, beta1)
 
     beta2 = core_utils.to_str(beta1)
     cb2 = core_utils.to_str(cb1)

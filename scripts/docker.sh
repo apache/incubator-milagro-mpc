@@ -16,12 +16,12 @@ function deploy()
   export VERSION=$(cat VERSION)
   docker build -t libmpc:builder .
   docker tag libmpc:builder 872736314692.dkr.ecr.eu-west-1.amazonaws.com/libmpc:builder
-  docker tag libmpc:builder 872736314692.dkr.ecr.eu-west-1.amazonaws.com/libmpc:latest  
-  docker tag libmpc:builder 872736314692.dkr.ecr.eu-west-1.amazonaws.com/libmpc:$VERSION  
-  echo "Deploy to registry"  
+  docker tag libmpc:builder 872736314692.dkr.ecr.eu-west-1.amazonaws.com/libmpc:latest
+  docker tag libmpc:builder 872736314692.dkr.ecr.eu-west-1.amazonaws.com/libmpc:$VERSION
+  echo "Deploy to registry"
   $(aws ecr get-login --no-include-email --region eu-west-1)
   docker push 872736314692.dkr.ecr.eu-west-1.amazonaws.com/libmpc:builder
-  docker push 872736314692.dkr.ecr.eu-west-1.amazonaws.com/libmpc:latest  
+  docker push 872736314692.dkr.ecr.eu-west-1.amazonaws.com/libmpc:latest
   docker push 872736314692.dkr.ecr.eu-west-1.amazonaws.com/libmpc:$VERSION
 }
 

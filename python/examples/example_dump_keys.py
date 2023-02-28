@@ -70,15 +70,15 @@ if __name__ == "__main__":
 
     paillier_pk3, paillier_sk2 = mpc.paillier_key_pair(None, p, q)
 
-    ca = mpc.mpc_mta_client1(None, paillier_pk2, a, r)
+    ca = mpc.mta_client1(None, paillier_pk2, a, r)
     ca1_hex = ca.hex()
     assert ca_hex == ca1_hex, f"expected {ca_hex} got {ca1_hex}"
 
-    cb, beta = mpc.mpc_mta_server(None, paillier_pk2, b, ca, z, r)
+    cb, beta = mpc.mta_server(None, paillier_pk2, b, ca, z, r)
     cb1_hex = cb.hex()
     assert cb_hex == cb1_hex, f"expected {cb_hex} got {cb1_hex}"
 
-    alpha = mpc.mpc_mta_client2(paillier_sk2, cb)
+    alpha = mpc.mta_client2(paillier_sk2, cb)
 
     print(f"alpha {alpha.hex()}")
     print(f"beta {beta.hex()}")

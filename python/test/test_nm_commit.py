@@ -26,10 +26,11 @@ import unittest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from amcl import commitments, core_utils
+from amcl import core_utils
+from amcl import nm_commitment as nm
 
 # Load and preprocess test vectors
-with open("commitments/nm_commit.json", "r") as f:
+with open("nm_commitment/commit.json", "r") as f:
     vectors = json.load(f)
 
 for vector in vectors:
@@ -58,14 +59,14 @@ class TestNMCommit(unittest.TestCase):
         """ Test using test vectors """
 
         for vector in vectors:
-            r, c = commitments.nm_commit(None, vector['X'], vector['R'])
+            r, c = nm.commit(None, vector['X'], vector['R'])
 
             self.assertEqual(vector['R'], r)
             self.assertEqual(vector['C'], c)
 
     def test_random(self):
         """ Test using rng """
-        r, c = commitments.nm_commit(self.rng, self.msg)
+        r, c = nm.commit(self.rng, self.msg)
 
         self.assertEqual(r, self.r_golden)
         self.assertEqual(c, self.c_golden)
@@ -78,16 +79,16 @@ class TestNMDecommit(unittest.TestCase):
         """ Test using test vectors """
 
         for vector in vectors:
-            rc = commitments.nm_decommit(vector['X'], vector['R'], vector['C'])
+            rc = nm.decommit(vector['X'], vector['R'], vector['C'])
 
-            self.assertEqual(rc, commitments.OK)
+            self.assertEqual(rc, nm.OK)
 
     def test_failure(self):
         """ Test error codes are propagated correctly """
 
-        rc = commitments.nm_decommit(vector['X'], vector['X'], vector['C'])
+        rc = nm.decommit(vector['X'], vector['X'], vector['C'])
 
-        self.assertEqual(rc, commitments.FAIL)
+        self.assertEqual(rc, nm.FAIL)
 
 if __name__ == '__main__':
     # Run tests

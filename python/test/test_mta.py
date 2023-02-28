@@ -48,16 +48,16 @@ class TestMtA(unittest.TestCase):
 
             paillier_pk, paillier_sk = mpc.paillier_key_pair(None, vector['P'], vector['Q'])
 
-            ca = mpc.mpc_mta_client1(None, paillier_pk, vector['A'], vector['R1'])
+            ca = mpc.mta_client1(None, paillier_pk, vector['A'], vector['R1'])
 
             self.assertEqual(vector['CA'], ca)
 
-            cb, beta = mpc.mpc_mta_server(None, paillier_pk, vector['B'], vector['CA'], vector['Z'], vector['R2'])
+            cb, beta = mpc.mta_server(None, paillier_pk, vector['B'], vector['CA'], vector['Z'], vector['R2'])
 
             self.assertEqual(vector['CB'], cb)
             self.assertEqual(vector['BETA'], beta)
 
-            alpha = mpc.mpc_mta_client2(paillier_sk, vector['CB'])
+            alpha = mpc.mta_client2(paillier_sk, vector['CB'])
 
             self.assertEqual(vector['ALPHA'], alpha)
 

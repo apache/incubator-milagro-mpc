@@ -184,7 +184,7 @@ int main()
     // Read secret key from octets
     PAILLIER_KEY_PAIR(NULL, &PP, &QQ, &PUB3, &PRIV2);
 
-    MPC_MTA_CLIENT1(NULL, &PUB2, &A, &CA, &R);
+    MTA_CLIENT1(NULL, &PUB2, &A, &CA, &R);
 
     printf("CA: ");
     OCT_output(&CA);
@@ -197,7 +197,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    MPC_MTA_SERVER(NULL, &PUB2, &B, &CA, &Z, &R, &CB, &BETA);
+    MTA_SERVER(NULL, &PUB2, &B, &CA, &Z, &R, &CB, &BETA);
 
     printf("CB: ");
     OCT_output(&CB);
@@ -229,7 +229,7 @@ int main()
     OCT_output(&ALPHAGOLDEN);
     printf("\n");
 
-    MPC_MTA_CLIENT2(&PRIV2, &CB, &ALPHA);
+    MTA_CLIENT2(&PRIV2, &CB, &ALPHA);
 
     printf("ALPHA: ");
     OCT_output(&ALPHA);

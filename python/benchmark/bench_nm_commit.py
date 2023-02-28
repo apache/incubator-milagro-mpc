@@ -25,7 +25,7 @@ from bench import time_func
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from amcl import commitments
+from amcl import nm_commitment as nm
 
 x_hex = "40576370e36018f6bfaffc4c66780303a361f0c5f4a18a86a74fb179ca0fcf22"
 r_hex = "296f910bde4530efe3533ed3b74475d6022364db2e57773207734b6daf547ac8"
@@ -35,13 +35,13 @@ if __name__ == "__main__":
     r = bytes.fromhex(r_hex)
 
     # Generate quantities for benchmark
-    r, c = commitments.nm_commit(None, x, r)
+    r, c = nm.commit(None, x, r)
 
-    assert commitments.nm_decommit(x, r, c) == commitments.OK
+    assert nm.decommit(x, r, c) == nm.OK
 
     # Run benchmark
-    fncall = lambda: commitments.nm_commit(None, x, r)
+    fncall = lambda: nm.commit(None, x, r)
     time_func("nm_commit  ", fncall, unit="us")
 
-    fncall = lambda: commitments.nm_decommit(x, r, c)
+    fncall = lambda: nm.decommit(x, r, c)
     time_func("nm_decommit", fncall, unit="us")

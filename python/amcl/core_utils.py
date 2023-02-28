@@ -28,8 +28,34 @@ import platform
 
 _ffi = cffi.FFI()
 _ffi.cdef("""
-typedef long unsigned int BIG_512_60[9];
-typedef long unsigned int BIG_1024_58[18];
+// Necessary typedefs for milagro-crypto-c
+typedef signed int sign32;
+
+#define NLEN_256_56 5
+#define NLEN_512_60 9
+#define NLEN_1024_58 18
+
+typedef long unsigned int BIG_256_56[NLEN_256_56];
+typedef long unsigned int BIG_512_60[NLEN_512_60];
+typedef long unsigned int BIG_1024_58[NLEN_1024_58];
+
+#define HFLEN_2048 1
+#define FFLEN_2048 2
+#define HFLEN_4096 4
+#define FFLEN_4096 8
+
+typedef struct
+{
+    BIG_256_56 g;
+    sign32 XES;
+} FP_SECP256K1;
+
+typedef struct
+{
+    FP_SECP256K1 x;
+    FP_SECP256K1 y;
+    FP_SECP256K1 z;
+} ECP_SECP256K1;
 
 typedef struct {
 unsigned int ira[21];  /* random number...   */
@@ -50,6 +76,17 @@ extern void RAND_seed(csprng *R,int n,char *b);
 extern void RAND_clean(csprng *R);
 extern void OCT_clear(octet *O);
 extern void generateRandom(csprng* RNG, octet* randomValue);
+
+typedef struct
+{
+    BIG_1024_58 p[HFLEN_2048];
+    BIG_1024_58 q[HFLEN_2048];
+    BIG_1024_58 invpq[HFLEN_2048];
+    BIG_1024_58 n[FFLEN_2048];
+} MODULUS_priv;
+
+void MODULUS_fromOctets(MODULUS_priv *m, octet *P, octet *Q);
+void MODULUS_kill(MODULUS_priv *m);
 """)
 
 if (platform.system() == 'Windows'):
@@ -107,7 +144,7 @@ def make_octet(length, value=None):
     """
     oct_ptr = _ffi.new("octet*")
     if value:
-        val = _ffi.new("char [%s]" % len(value), value)
+        val = _ffi.new(f"char [{len(value)}]", value)
         oct_ptr.val = val
         oct_ptr.max = len(value)
         oct_ptr.len = len(value)
@@ -115,7 +152,7 @@ def make_octet(length, value=None):
         val = _ffi.new("char []", length)
         oct_ptr.val = val
         oct_ptr.max = length
-        oct_ptr.len = length
+        oct_ptr.len = 0
     return oct_ptr, val
 
 
@@ -133,6 +170,80 @@ def clear_octet(octet):
     Raises::
     """
     _libamcl_core.OCT_clear(octet)
+
+
+def make_empty_octets(n, length):
+    """ Generate an n-array of empty octets of the specified length
+
+    Generate an array of empty octets, or fill them with the values.
+
+    If values is specified it MUST be a list of n strings
+
+    Args::
+        n      : Length of the octets array
+        length : Length of the octets to create
+
+    Returns::
+        oct_ptr : pointer to the octet array
+        vals    : list with the data associated to the octets to prevent garbage collection
+   """
+    oct_ptr = _ffi.new(f"octet [{n}]")
+
+    vals = []
+
+    for i in range(n):
+        val = _ffi.new("char []", length)
+
+        oct_ptr[i].val = val
+        oct_ptr[i].max = length
+        oct_ptr[i].len = 0
+
+        vals.append(val)
+
+    return oct_ptr, vals
+
+
+def make_octets(values):
+    """ Generate an n-array of octets from the given values
+
+    Generate an array of empty octets, or fill them with the values.
+
+    Args::
+        values : Values to fill the octets
+
+    Return::
+        oct_ptr : pointer to the octet array
+        vals    : list with the data associated to the octets to prevent garbage collection
+   """
+    oct_ptr = _ffi.new(f"octet [{len(values)}]")
+
+    vals = []
+
+    for i, v in enumerate(values):
+        length = len(v)
+
+        val = _ffi.new(f"char [{length}]", v)
+
+        oct_ptr[i].val = val
+        oct_ptr[i].max = length
+        oct_ptr[i].len = length
+
+        vals.append(val)
+
+    return oct_ptr, vals
+
+
+def clear_octets(octets, n):
+    """ Clear an octet array
+
+    Empty the octets in the array and zero out the underlying memory
+
+    Args::
+
+        octets : array of octets to clear
+    """
+    for i in range(n):
+        _libamcl_core.OCT_clear(_ffi.addressof(octets, i))
 
 
 def create_csprng(seed):
@@ -198,6 +309,10 @@ def generate_random(rng, length):
     """
     random_value1, random_value1_val = make_octet(length)
     _ = random_value1_val # Suppress warning
+
+    # Set length of random value to tell the generateRandom
+    # how long the random octet needs to be
+    random_value1.len = length
 
     _libamcl_core.generateRandom(rng, random_value1)
 

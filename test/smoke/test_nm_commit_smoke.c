@@ -20,7 +20,7 @@ under the License.
 /* NM commitment smoke test */
 
 #include <stdio.h>
-#include "amcl/commitments.h"
+#include "amcl/nm_commitment.h"
 
 int main()
 {
@@ -42,12 +42,12 @@ int main()
 
     OCT_rand(&X, &RNG, X.max);
 
-    COMMITMENTS_NM_commit(&RNG, &X, &R, &C);
+    NM_COMMITMENT_commit(&RNG, &X, &R, &C);
 
-    rc = COMMITMENTS_NM_decommit(&X, &R, &C);
-    if (rc != COMMITMENTS_OK)
+    rc = NM_COMMITMENT_decommit(&X, &R, &C);
+    if (rc != NM_COMMITMENT_OK)
     {
-        fprintf(stderr, "FAILURE COMMITMENTS_NM_decommit.\n");
+        fprintf(stderr, "FAILURE NM_COMMITMENT_decommit.\n");
         exit(EXIT_FAILURE);
     }
 

@@ -17,20 +17,19 @@
     under the License.
 */
 
+/* MTA Range Proof smoke tests */
+
 #include <string.h>
-#include "amcl/mta.h"
-#include "amcl/commitments.h"
+#include "amcl/mta_zkp.h"
 
 void ff_2048_cleaned(BIG_1024_58 *a, char *name, int n)
 {
     if(!FF_2048_iszilch(a, n))
     {
-        fprintf(stderr, "FAILURE MTA_RP_commitment_rv_kill. %s was not cleaned\n", name);
+        fprintf(stderr, "FAILURE MTA_RP_rv_kill. %s was not cleaned\n", name);
         exit(EXIT_FAILURE);
     }
 }
-
-/* MTA Range Proof smoke tests */
 
 // Primes for Paillier key
 char *P_hex = "94f689d07ba20cf7c7ca7ccbed22ae6b40c426db74eaee4ce0ced2b6f52a5e136663f5f1ef379cdbb0c4fdd6e4074d6cff21082d4803d43d89e42fd8dfa82b135aa31a8844ffea25f255f956cbc1b9d8631d01baf1010d028a190b94ce40f3b72897e8196df19edf1ff62e6556f2701d52cef1442e3301db7608ecbdcca703db";
@@ -52,13 +51,14 @@ int main()
     int rc;
 
     PAILLIER_private_key priv_key;
-    PAILLIER_public_key pub_key;
-    COMMITMENTS_BC_priv_modulus priv_mod;
-    COMMITMENTS_BC_pub_modulus pub_mod;
+    PAILLIER_public_key  pub_key;
+
+    BIT_COMMITMENT_priv priv_mod;
+    BIT_COMMITMENT_pub  pub_mod;
 
     MTA_RP_commitment co;
-    MTA_RP_commitment_rv rv;
-    MTA_RP_proof proof;
+    MTA_RP_rv         rv;
+    MTA_RP_proof      proof;
 
     char c[2*FS_2048];
     octet C = {0, sizeof(c), c};
@@ -78,10 +78,20 @@ int main()
     char q[HFS_2048];
     octet Q = {0, sizeof(q), q};
 
+    char id[32];
+    octet ID = {0, sizeof(id), id};
+
+    char ad[32];
+    octet AD = {0, sizeof(ad), ad};
+
     // Deterministic RNG for testing
     char seed[32] = {0};
     csprng RNG;
     RAND_seed(&RNG, 32, seed);
+
+    // Pseudorandom ID and AD
+    OCT_rand(&ID, &RNG, ID.len);
+    OCT_rand(&AD, &RNG, AD.len);
 
     // Load paillier key
     OCT_fromHex(&P, P_hex);
@@ -92,9 +102,9 @@ int main()
     // Generate BC commitment modulus
     OCT_fromHex(&P, PT_hex);
     OCT_fromHex(&Q, QT_hex);
-    COMMITMENTS_BC_setup(&RNG, &priv_mod, &P, &Q, NULL, NULL);
+    BIT_COMMITMENT_setup(&RNG, &priv_mod, &P, &Q, NULL, NULL);
 
-    COMMITMENTS_BC_export_public_modulus(&pub_mod, &priv_mod);
+    BIT_COMMITMENT_priv_to_pub(&pub_mod, &priv_mod);
 
     // Load Paillier encryption values
     OCT_fromHex(&M, M_hex);
@@ -102,19 +112,50 @@ int main()
     OCT_fromHex(&C, C_hex);
 
     // Run smoke test
-    MTA_RP_commit(&RNG, &priv_key, &pub_mod, &M, &co, &rv);
-    MTA_RP_challenge(&pub_key, &pub_mod, &C, &co, &E);
-    MTA_RP_prove(&priv_key, &rv, &M, &R, &E, &proof);
-    rc = MTA_RP_verify(&pub_key, &priv_mod, &C, &E, &co, &proof);
+    MTA_RP_commit(&RNG, &priv_key, &pub_mod, &M, &rv, &co);
+    MTA_RP_challenge(&pub_key, &pub_mod, &C, &co, &ID, &AD, &E);
+    MTA_RP_prove(&priv_key, &M, &R, &rv, &E, &proof);
+    rc = MTA_RP_verify(&pub_key, &priv_mod, &C, &co, &E, &proof);
 
     if (rc != MTA_OK)
     {
-        printf("FAILURE MTA_RP smoke test\n");
+        printf("FAILURE MTA_RP smoke test. error code %d\n", rc);
+        exit(EXIT_FAILURE);
+    }
+
+    // Check error codes are propagated
+    rc = MTA_RP_verify(&pub_key, &priv_mod, &C, &co, &ID, &proof);
+    if (rc != BIT_COMMITMENT_FAIL)
+    {
+        printf("FAILURE MTA_RP error code propagation\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Check octet functions consistency
+    char oct1[FS_2048];
+    octet OCT1 = {0, sizeof(oct1), oct1};
+
+    char oct2[2 * FS_2048];
+    octet OCT2 = {0, sizeof(oct2), oct2};
+
+    char oct3[2 * FS_2048];
+    octet OCT3 = {0, sizeof(oct3), oct3};
+
+    MTA_RP_commitment_toOctets(&OCT1, &OCT2, &OCT3, &co);
+    MTA_RP_commitment_fromOctets(&co, &OCT1, &OCT2, &OCT3);
+
+    MTA_RP_proof_toOctets(&OCT1, &OCT2, &OCT3, &proof);
+    MTA_RP_proof_fromOctets(&proof, &OCT1, &OCT2, &OCT3);
+
+    rc = MTA_RP_verify(&pub_key, &priv_mod, &C, &co, &E, &proof);
+    if (rc != MTA_OK)
+    {
+        printf("FAILURE MTA_RP octet consistency. error code %d\n", rc);
         exit(EXIT_FAILURE);
     }
 
     // Clean random values
-    MTA_RP_commitment_rv_kill(&rv);
+    MTA_RP_rv_kill(&rv);
 
     ff_2048_cleaned(rv.alpha, "rv.alpha", FFLEN_2048);
     ff_2048_cleaned(rv.beta,  "rv.beta",  FFLEN_2048);

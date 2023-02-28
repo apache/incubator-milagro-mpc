@@ -24,7 +24,8 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from amcl import core_utils, mpc, schnorr, factoring_zk, commitments
+from amcl import core_utils, mpc, schnorr, factoring_zk
+from amcl import nm_commitment as nm
 
 seed_hex = "78d0fb6705ce77dee47d03eb5b9c5d30"
 
@@ -94,7 +95,7 @@ def generate_key_material_zkp(rng, key_material, ID, AD=None):
 
     """
     # Commit to ECDSA PK
-    r, c = commitments.nm_commit(rng, key_material['ecdsa_pk'])
+    r, c = nm.commit(rng, key_material['ecdsa_pk'])
 
     # Generate Schnorr's proof for ECDSA PK
     sr, sc = schnorr.commit(rng)
@@ -133,8 +134,8 @@ def verify_key_material(key_material, r, c, sc, sp, fe, fy, player, ID, AD=None)
 
     """
     # Decommit ECDSA PK
-    rc = commitments.nm_decommit(key_material['ecdsa_pk'], r, c)
-    assert rc == commitments.OK, f"[{player}] Failure decommitting ecdsa_pk. rc {rc}"
+    rc = nm.decommit(key_material['ecdsa_pk'], r, c)
+    assert rc == nm.OK, f"[{player}] Failure decommitting ecdsa_pk. rc {rc}"
 
     # Verify ECDSA PK Schnorr's proof
     e = schnorr.challenge(key_material['ecdsa_pk'], sc, ID, AD=AD)
@@ -228,12 +229,12 @@ if __name__ == "__main__":
 
     ## Commit to GAMMA1, GAMMA2 and exchange nonces for liveliness
     print("[Alice] Commit to GAMMA1")
-    GAMMAR1, GAMMAC1 = commitments.nm_commit(rng, GAMMA1)
+    GAMMAR1, GAMMAC1 = nm.commit(rng, GAMMA1)
 
     bob_ad = core_utils.generate_random(rng, 32)
 
     print("[Bob] Commit to GAMMA2")
-    GAMMAR2, GAMMAC2 = commitments.nm_commit(rng, GAMMA2)
+    GAMMAR2, GAMMAC2 = nm.commit(rng, GAMMA2)
 
     alice_ad = core_utils.generate_random(rng, 32)
 
@@ -242,16 +243,16 @@ if __name__ == "__main__":
     # k1, gamma2
     print("[Alice] Engage in MTA with shares k1, gamma2")
 
-    ca = mpc.mpc_mta_client1(rng, key_material1['paillier_pk'], k1)
-    cb, beta2 = mpc.mpc_mta_server(rng, c_key_material2['paillier_pk'], gamma2, ca)
-    alpha1 = mpc.mpc_mta_client2(key_material1['paillier_sk'], cb)
+    ca = mpc.mta_client1(rng, key_material1['paillier_pk'], k1)
+    cb, beta2 = mpc.mta_server(rng, c_key_material2['paillier_pk'], gamma2, ca)
+    alpha1 = mpc.mta_client2(key_material1['paillier_sk'], cb)
 
     # k2, gamma1
     print("[Bob] Engage in MTA with shares k2, gamma1")
 
-    ca = mpc.mpc_mta_client1(rng, key_material2['paillier_pk'], k2)
-    cb, beta1 = mpc.mpc_mta_server(rng, c_key_material1['paillier_pk'], gamma1, ca)
-    alpha2 = mpc.mpc_mta_client2(key_material2['paillier_sk'], cb)
+    ca = mpc.mta_client1(rng, key_material2['paillier_pk'], k2)
+    cb, beta1 = mpc.mta_server(rng, c_key_material1['paillier_pk'], gamma1, ca)
+    alpha2 = mpc.mta_client2(key_material2['paillier_sk'], cb)
 
     # Partial sums
     print("[Alice] Combine partial sum delta1 for kgamma")
@@ -264,15 +265,15 @@ if __name__ == "__main__":
 
     # k1, sk2
     print("[Alice] Engage in MTA with k1, s2")
-    ca = mpc.mpc_mta_client1(rng, key_material1['paillier_pk'], k1)
-    cb, beta2 = mpc.mpc_mta_server(rng, c_key_material2['paillier_pk'], key_material2['ecdsa_sk'], ca)
-    alpha1 = mpc.mpc_mta_client2(key_material1['paillier_sk'], cb)
+    ca = mpc.mta_client1(rng, key_material1['paillier_pk'], k1)
+    cb, beta2 = mpc.mta_server(rng, c_key_material2['paillier_pk'], key_material2['ecdsa_sk'], ca)
+    alpha1 = mpc.mta_client2(key_material1['paillier_sk'], cb)
 
     # k2, sk1
     print("[Bob] Engage in MTA with k2, s1")
-    ca = mpc.mpc_mta_client1(rng, key_material2['paillier_pk'], k2)
-    cb, beta1 = mpc.mpc_mta_server(rng, c_key_material1['paillier_pk'], key_material1['ecdsa_sk'], ca)
-    alpha2 = mpc.mpc_mta_client2(key_material2['paillier_sk'], cb)
+    ca = mpc.mta_client1(rng, key_material2['paillier_pk'], k2)
+    cb, beta1 = mpc.mta_server(rng, c_key_material1['paillier_pk'], key_material1['ecdsa_sk'], ca)
+    alpha2 = mpc.mta_client2(key_material2['paillier_sk'], cb)
 
     # Partial sums
     print("[Alice] Combine partial sum sigma1 for kw")
@@ -298,15 +299,15 @@ if __name__ == "__main__":
     print("[Bob] Transmit decommitment and Schnorr Proof for GAMMA2")
 
     # Decommit GAMMAi and verify Schnorr Proof
-    rc = commitments.nm_decommit(GAMMA2, GAMMAR2, GAMMAC2)
-    assert rc == commitments.OK, f'[Alice] Error decommitting GAMMA2. rc {rc}'
+    rc = nm.decommit(GAMMA2, GAMMAR2, GAMMAC2)
+    assert rc == nm.OK, f'[Alice] Error decommitting GAMMA2. rc {rc}'
 
     GAMMA_schnorr_e2 = schnorr.challenge(GAMMA2, GAMMA_schnorr_c2, bob_id, AD=bob_ad)
     rc = schnorr.verify(GAMMA2, GAMMA_schnorr_c2, GAMMA_schnorr_e2, GAMMA_schnorr_p2)
     assert rc == schnorr.OK, f'[Alice] Error verifying Schnorr proof for GAMMA2'
 
-    rc = commitments.nm_decommit(GAMMA1, GAMMAR1, GAMMAC1)
-    assert rc == commitments.OK, f'[Bob] Error decommitting GAMMA1. rc {rc}'
+    rc = nm.decommit(GAMMA1, GAMMAR1, GAMMAC1)
+    assert rc == nm.OK, f'[Bob] Error decommitting GAMMA1. rc {rc}'
 
     GAMMA_schnorr_e1 = schnorr.challenge(GAMMA1, GAMMA_schnorr_c1, alice_id, AD=alice_ad)
     rc = schnorr.verify(GAMMA1, GAMMA_schnorr_c1, GAMMA_schnorr_e1, GAMMA_schnorr_p1)
@@ -336,18 +337,18 @@ if __name__ == "__main__":
 
     # Commit to signature shares
     print("[Alice] Transmit commitment signature share s1")
-    SR1, SC1 = commitments.nm_commit(rng, s1)
+    SR1, SC1 = nm.commit(rng, s1)
 
     print("[Bob] Transmit commitment signature share s2")
-    SR2, SC2 = commitments.nm_commit(rng, s2)
+    SR2, SC2 = nm.commit(rng, s2)
 
     # Decommit signature shares and combine
     print("[Alice] Decommit s2")
-    rc = commitments.nm_decommit(s2, SR2, SC2)
+    rc = nm.decommit(s2, SR2, SC2)
     assert rc == 0, f'[Alice] Error decommitting s2. rc {rc}'
 
     print("[Bob] Decommit s1")
-    rc = commitments.nm_decommit(s1, SR1, SC1)
+    rc = nm.decommit(s1, SR1, SC1)
     assert rc == 0, f'[Bob] Error decommitting s1. rc {rc}'
 
     print("[Alice] Recombine S component")
