@@ -18,16 +18,7 @@ under the License.
 */
 
 #include "amcl/schnorr.h"
-
-static void hash_octet(hash256 *sha, const octet *O)
-{
-    int i;
-
-    for (i = 0; i < O->len; i++)
-    {
-        HASH256_process(sha, O->val[i]);
-    }
-}
+#include "amcl/hash_utils.h"
 
 void SCHNORR_random_challenge(csprng *RNG, octet *E)
 {
@@ -93,20 +84,20 @@ void SCHNORR_challenge(const octet *V, const octet *C, const octet *ID, const oc
 
     // e = H(G,C,V,ID,AD) mod q
     HASH256_init(&sha);
-    hash_octet(&sha, &O);
-    hash_octet(&sha, C);
-    hash_octet(&sha, V);
-    hash_octet(&sha, ID);
+    HASH_UTILS_hash_oct(&sha, &O);
+    HASH_UTILS_hash_oct(&sha, C);
+    HASH_UTILS_hash_oct(&sha, V);
+
+    HASH_UTILS_hash_i2osp4(&sha, ID->len);
+    HASH_UTILS_hash_oct(&sha, ID);
 
     if (AD != NULL)
     {
-        hash_octet(&sha, AD);
+        HASH_UTILS_hash_i2osp4(&sha, AD->len);
+        HASH_UTILS_hash_oct(&sha, AD);
     }
 
-    HASH256_hash(&sha, o);
-
-    BIG_256_56_fromBytesLen(e, o, SHA256);
-    BIG_256_56_mod(e, q);
+    HASH_UTILS_rejection_sample_mod_BIG(&sha, q, e);
 
     BIG_256_56_toBytes(E->val, e);
     E->len = SGS_SECP256K1;
@@ -244,21 +235,21 @@ void SCHNORR_D_challenge(const octet *R, const octet *V, const octet *C, const o
 
     // e = H(G,R,C,V,ID,AD) mod q
     HASH256_init(&sha);
-    hash_octet(&sha, &O);
-    hash_octet(&sha, R);
-    hash_octet(&sha, C);
-    hash_octet(&sha, V);
-    hash_octet(&sha, ID);
+    HASH_UTILS_hash_oct(&sha, &O);
+    HASH_UTILS_hash_oct(&sha, R);
+    HASH_UTILS_hash_oct(&sha, C);
+    HASH_UTILS_hash_oct(&sha, V);
+
+    HASH_UTILS_hash_i2osp4(&sha, ID->len);
+    HASH_UTILS_hash_oct(&sha, ID);
 
     if (AD != NULL)
     {
-        hash_octet(&sha, AD);
+        HASH_UTILS_hash_i2osp4(&sha, AD->len);
+        HASH_UTILS_hash_oct(&sha, AD);
     }
 
-    HASH256_hash(&sha, o);
-
-    BIG_256_56_fromBytesLen(e, o, SHA256);
-    BIG_256_56_mod(e, q);
+    HASH_UTILS_rejection_sample_mod_BIG(&sha, q, e);
 
     BIG_256_56_toBytes(E->val, e);
     E->len = MODBYTES_256_56;
@@ -275,24 +266,26 @@ void SCHNORR_D_prove(const octet *A, const octet *B, const octet *E, const octet
     BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
     BIG_256_56_fromBytesLen(e, E->val, E->len);
 
-    // Generate proof t = a + (e * s) mod the curve order
+    // Generate proof t = a - (e * s) mod the curve order
     BIG_256_56_fromBytesLen(x, S->val, S->len);
     BIG_256_56_fromBytesLen(r, A->val, A->len);
 
     BIG_256_56_mul(d, e, x);
     BIG_256_56_dmod(x, d, q);
+    BIG_256_56_modneg(x, x, q);
     BIG_256_56_add(x, x, r);
     BIG_256_56_mod(x, q);
 
     BIG_256_56_toBytes(T->val, x);
     T->len = SGS_SECP256K1;
 
-    // Generate proof u = b + (e * l) mod the curve order
+    // Generate proof u = b - (e * l) mod the curve order
     BIG_256_56_fromBytesLen(x, L->val, L->len);
     BIG_256_56_fromBytesLen(r, B->val, B->len);
 
     BIG_256_56_mul(d, e, x);
     BIG_256_56_dmod(x, d, q);
+    BIG_256_56_modneg(x, x, q);
     BIG_256_56_add(x, x, r);
     BIG_256_56_mod(x, q);
 
@@ -333,16 +326,15 @@ int SCHNORR_D_verify(octet *R, octet *V, octet *C, const octet *E, const octet *
     BIG_256_56_fromBytesLen(t, T->val, T->len);
     BIG_256_56_fromBytesLen(u, U->val, U->len);
 
-    // Compute verification t.R + u.G
+    // Compute verification t.R + u.G + e.V
     ECP_SECP256K1_generator(&G);
     ECP_SECP256K1_mul2(&ECPR, &G, t, u);
 
-    // Compute ground truth C + e.V
     BIG_256_56_fromBytesLen(t, E->val, E->len);
     ECP_SECP256K1_mul(&ECPV, t);
-    ECP_SECP256K1_add(&ECPV, &ECPC);
+    ECP_SECP256K1_add(&ECPR, &ECPV);
 
-    if (!ECP_SECP256K1_equals(&ECPV, &ECPR))
+    if (!ECP_SECP256K1_equals(&ECPC, &ECPR))
     {
         return SCHNORR_FAIL;
     }

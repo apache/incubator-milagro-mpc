@@ -1,3 +1,4 @@
+.DS_Store
 **/*~
 **/*bak
 log.txt
@@ -5,6 +6,5 @@ log.txt
 build
 target
 incubator-milagro-crypto-c
-vagrant/.vagrant
 coverage
 examples/scratch.c

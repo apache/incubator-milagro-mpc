@@ -144,14 +144,11 @@ int main(int argc, char** argv)
     octet SIG_SGOLDEN = {0,sizeof(sig_sgolden),sig_sgolden};
     const char* SIG_Sline = "SIG_S = ";
 
-    char sig_s1[EGS_SECP256K1];
-    octet SIG_S1 = {0,sizeof(sig_s1),sig_s1};
-
-    char sig_s2[EGS_SECP256K1];
-    octet SIG_S2 = {0,sizeof(sig_s2),sig_s2};
+    char sig_si[2][EGS_SECP256K1];
+    octet SIG_SI[2] = {{0,sizeof(sig_si[0]), sig_si[0]}, {0,sizeof(sig_si[1]),sig_si[1]}};
 
     char sig_s[EGS_SECP256K1];
-    octet SIG_S = {0,sizeof(sig_s),sig_s};
+    octet SIG_S = {0, sizeof(sig_s),sig_s};
 
     char m[2000];
     octet M = {0,sizeof(m),m};
@@ -159,6 +156,8 @@ int main(int argc, char** argv)
 
     char hm[32];
     octet HM = {0,sizeof(hm),hm};
+
+    BIG_256_56 accumulator;
 
     // Paillier Keys
     PAILLIER_private_key PRIV1;
@@ -212,40 +211,50 @@ int main(int argc, char** argv)
             PAILLIER_KEY_PAIR(NULL, &P2, &Q2, &PUB2, &PRIV2);
 
             // ALPHA1 + BETA2 = K1 * W2
-            MPC_MTA_CLIENT1(NULL, &PUB1, &K1, &CA11, &R11);
+            MTA_CLIENT1(NULL, &PUB1, &K1, &CA11, &R11);
 
-            MPC_MTA_SERVER(NULL, &PUB1, &W2, &CA11, &Z12, &R12, &CB12, &BETA2);
+            MTA_SERVER(NULL, &PUB1, &W2, &CA11, &Z12, &R12, &CB12, &BETA2);
 
-            MPC_MTA_CLIENT2(&PRIV1, &CB12, &ALPHA1);
+            MTA_CLIENT2(&PRIV1, &CB12, &ALPHA1);
 
             // ALPHA2 + BETA1 = K2 * W1
-            MPC_MTA_CLIENT1(NULL, &PUB2, &K2, &CA22, &R22);
+            MTA_CLIENT1(NULL, &PUB2, &K2, &CA22, &R22);
 
-            MPC_MTA_SERVER(NULL, &PUB2, &W1, &CA22, &Z21, &R21, &CB21, &BETA1);
+            MTA_SERVER(NULL, &PUB2, &W1, &CA22, &Z21, &R21, &CB21, &BETA1);
 
-            MPC_MTA_CLIENT2(&PRIV2, &CB21, &ALPHA2);
+            MTA_CLIENT2(&PRIV2, &CB21, &ALPHA2);
 
             // sum = K1.W1 + alpha1  + beta1
-            MPC_SUM_MTA(&K1, &W1, &ALPHA1, &BETA1, &SUM1);
+            MTA_ACCUMULATOR_SET(accumulator, &K1, &W1);
+            MTA_ACCUMULATOR_ADD(accumulator, &ALPHA1);
+            MTA_ACCUMULATOR_ADD(accumulator, &BETA1);
+
+            BIG_256_56_toBytes(SUM1.val, accumulator);
+            SUM1.len = EGS_SECP256K1;
 
             // sum = K2.W2 + alpha2  + beta2
-            MPC_SUM_MTA(&K2, &W2, &ALPHA2, &BETA2, &SUM2);
+            MTA_ACCUMULATOR_SET(accumulator, &K2, &W2);
+            MTA_ACCUMULATOR_ADD(accumulator, &ALPHA2);
+            MTA_ACCUMULATOR_ADD(accumulator, &BETA2);
+
+            BIG_256_56_toBytes(SUM2.val, accumulator);
+            SUM2.len = EGS_SECP256K1;
 
             // Calculate the message hash
             MPC_HASH(HASH_TYPE_SECP256K1, &M, &HM);
 
             // Calculate the S1 signature component
-            rc = MPC_S(&HM, &SIG_R, &K1, &SUM1, &SIG_S1);
+            rc = MPC_S(&HM, &SIG_R, &K1, &SUM1, &SIG_SI[0]);
             sprintf(err_msg, "MPC_S S1. rc: %d", rc);
             assert_tv(fp, testNo, err_msg, rc == 0);
 
             // Calculate the S2 signature component
-            rc = MPC_S(&HM, &SIG_R, &K2, &SUM2, &SIG_S2);
+            rc = MPC_S(&HM, &SIG_R, &K2, &SUM2, &SIG_SI[1]);
             sprintf(err_msg, "MPC_S S2. rc: %d", rc);
             assert_tv(fp, testNo, err_msg, rc == 0);
 
             // Sum S signature component
-            MPC_SUM_S(&SIG_S1, &SIG_S2, &SIG_S);
+            MPC_SUM_BIGS(&SIG_S, SIG_SI, 2);
 
             compare_OCT(fp, testNo, "SIG_S != SIG_SGOLDEN", &SIG_S, &SIG_SGOLDEN);
 
@@ -262,6 +271,6 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    printf("SUCCESS TEST R GENERATION PASSED\n");
+    printf("SUCCESS TEST S GENERATION PASSED\n");
     exit(EXIT_SUCCESS);
 }

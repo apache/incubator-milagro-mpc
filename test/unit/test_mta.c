@@ -139,14 +139,14 @@ int main(int argc, char** argv)
             //  Paillier key pair
             PAILLIER_KEY_PAIR(NULL, &P, &Q, &PUB, &PRIV);
 
-            MPC_MTA_CLIENT1(NULL, &PUB, &A, &CA, &R1);
+            MTA_CLIENT1(NULL, &PUB, &A, &CA, &R1);
             compare_OCT(fp, testNo, "CA != CAGOLDEN", &CA, &CAGOLDEN);
 
-            MPC_MTA_SERVER(NULL, &PUB, &B, &CA, &Z, &R2, &CB, &BETA);
+            MTA_SERVER(NULL, &PUB, &B, &CA, &Z, &R2, &CB, &BETA);
             compare_OCT(fp, testNo, "CB != CBGOLDEN", &CB, &CBGOLDEN);
             compare_OCT(fp, testNo, "BETA != BETAGOLDEN", &BETA, &BETAGOLDEN);
 
-            MPC_MTA_CLIENT2(&PRIV, &CB, &ALPHA);
+            MTA_CLIENT2(&PRIV, &CB, &ALPHA);
             compare_OCT(fp, testNo, "ALPHA != ALPHAGOLDEN", &ALPHA, &ALPHAGOLDEN);
 
             // Mark that at least one test vector was executed

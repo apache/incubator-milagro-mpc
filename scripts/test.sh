@@ -9,6 +9,8 @@
 
 # NOTES:
 
+set -e
+
 CURRENTDIR=${PWD}
 
 declare -a arr=("Release" "Debug" "Coverage" "ASan")

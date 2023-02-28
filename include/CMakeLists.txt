@@ -20,6 +20,3 @@ file(GLOB headers "amcl/*.h")
 
 install(FILES ${headers}
         DESTINATION ${INSTALL_INCLUDESUBDIR})
-
-
-      

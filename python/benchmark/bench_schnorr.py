@@ -31,7 +31,7 @@ x_hex = "fab4ce512dff74bd9c71c89a14de5b877af45dca0329ee3fcb72611c0784fef3"
 V_hex = "032cf4b348c9d00718f01ed98923e164df53b5e8bc4c2250662ed2df784e1784f4"
 
 ID = b"unique_user_identifier"
-AD_hex = "d7d3155616778fb436a1eb2070892205" 
+AD_hex = "d7d3155616778fb436a1eb2070892205"
 
 if __name__ == "__main__":
     r  = bytes.fromhex(r_hex)

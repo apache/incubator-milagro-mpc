@@ -35,14 +35,14 @@ if __name__ == "__main__":
     key    = bytes.fromhex(key_hex)
     header = bytes.fromhex(header_hex)
     iv     = bytes.fromhex(iv_hex)
-    
+
     plaintext = b'test message'
-    
+
     # Generate quantities for bench run
     ciphertext, tag = aes.gcm_encrypt(key, iv, header, plaintext)
     dec_plaintext, dec_tag = aes.gcm_decrypt(key, iv, header, ciphertext)
     assert tag == dec_tag, 'Inconsistent decryption tag'
-    
+
     # Run benchmark
     fncall = lambda: aes.gcm_encrypt(key, iv, header, plaintext)
     time_func("aes.gcm_encrypt", fncall, unit = 'us')

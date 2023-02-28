@@ -106,12 +106,10 @@ int main(int argc, char** argv)
     octet Z12 = {0,sizeof(z12),z12};
     const char* Z12line = "Z12 = ";
 
-    char gammapt1[EFS_SECP256K1+1];
-    octet GAMMAPT1 = {0,sizeof(gammapt1),gammapt1};
-    const char* GAMMAPT1line = "GAMMAPT1 = ";
 
-    char gammapt2[EFS_SECP256K1+1];
-    octet GAMMAPT2 = {0,sizeof(gammapt2),gammapt2};
+    char gammapti[2][EFS_SECP256K1+1];
+    octet GAMMAPTI[2] = {{0,sizeof(gammapti[0]),gammapti[0]}, {0,sizeof(gammapti[1]),gammapti[1]}};
+    const char* GAMMAPT1line = "GAMMAPT1 = ";
     const char* GAMMAPT2line = "GAMMAPT2 = ";
 
     char sig_rgolden[EGS_SECP256K1];
@@ -130,11 +128,8 @@ int main(int argc, char** argv)
     char beta2[EGS_SECP256K1];
     octet BETA2 = {0,sizeof(beta2),beta2};
 
-    char sum1[EGS_SECP256K1];
-    octet SUM1 = {0,sizeof(sum1),sum1};
-
-    char sum2[EGS_SECP256K1];
-    octet SUM2 = {0,sizeof(sum2),sum2};
+    char kgamma[2][EGS_SECP256K1];
+    octet KGAMMAI[2] = {{0, sizeof(kgamma[0]), kgamma[0]}, {0, sizeof(kgamma[1]), kgamma[1]}};
 
     char invkgamma[EGS_SECP256K1];
     octet INVKGAMMA = {0,sizeof(invkgamma),invkgamma};
@@ -153,6 +148,8 @@ int main(int argc, char** argv)
 
     char cb12[FS_4096];
     octet CB12 = {0,sizeof(cb12),cb12};
+
+    BIG_256_56 accumulator;
 
     // Paillier Keys
     PAILLIER_private_key PRIV1;
@@ -191,8 +188,8 @@ int main(int argc, char** argv)
         scan_OCTET(fp, &R22, line, R22line);
         scan_OCTET(fp, &Z12, line, Z12line);
 
-        scan_OCTET(fp, &GAMMAPT1, line, GAMMAPT1line);
-        scan_OCTET(fp, &GAMMAPT2, line, GAMMAPT2line);
+        scan_OCTET(fp, &GAMMAPTI[0], line, GAMMAPT1line);
+        scan_OCTET(fp, &GAMMAPTI[1], line, GAMMAPT2line);
 
         // Read ground truth
         scan_OCTET(fp, &SIG_RGOLDEN, line, SIG_Rline);
@@ -206,30 +203,40 @@ int main(int argc, char** argv)
             PAILLIER_KEY_PAIR(NULL, &P2, &Q2, &PUB2, &PRIV2);
 
             // ALPHA1 + BETA2 = A1 * B2
-            MPC_MTA_CLIENT1(NULL, &PUB1, &A1, &CA11, &R11);
+            MTA_CLIENT1(NULL, &PUB1, &A1, &CA11, &R11);
 
-            MPC_MTA_SERVER(NULL,  &PUB1, &B2, &CA11, &Z12, &R12, &CB12, &BETA2);
+            MTA_SERVER(NULL,  &PUB1, &B2, &CA11, &Z12, &R12, &CB12, &BETA2);
 
-            MPC_MTA_CLIENT2(&PRIV1, &CB12, &ALPHA1);
+            MTA_CLIENT2(&PRIV1, &CB12, &ALPHA1);
 
             // ALPHA2 + BETA1 = A2 * B1
-            MPC_MTA_CLIENT1(NULL, &PUB2, &A2, &CA22, &R22);
+            MTA_CLIENT1(NULL, &PUB2, &A2, &CA22, &R22);
 
-            MPC_MTA_SERVER(NULL,  &PUB2, &B1, &CA22, &Z21, &R21, &CB21, &BETA1);
+            MTA_SERVER(NULL,  &PUB2, &B1, &CA22, &Z21, &R21, &CB21, &BETA1);
 
-            MPC_MTA_CLIENT2(&PRIV2, &CB21, &ALPHA2);
+            MTA_CLIENT2(&PRIV2, &CB21, &ALPHA2);
 
             // sum = A1.B1 + alpha1 + beta1
-            MPC_SUM_MTA(&A1, &B1, &ALPHA1, &BETA1, &SUM1);
+            MTA_ACCUMULATOR_SET(accumulator, &A1, &B1);
+            MTA_ACCUMULATOR_ADD(accumulator, &ALPHA1);
+            MTA_ACCUMULATOR_ADD(accumulator, &BETA1);
+
+            BIG_256_56_toBytes(KGAMMAI[0].val, accumulator);
+            KGAMMAI[0].len = EGS_SECP256K1;
 
             // sum = A2.B2 + alpha2 + beta2
-            MPC_SUM_MTA(&A2, &B2, &ALPHA2, &BETA2, &SUM2);
+            MTA_ACCUMULATOR_SET(accumulator, &A2, &B2);
+            MTA_ACCUMULATOR_ADD(accumulator, &ALPHA2);
+            MTA_ACCUMULATOR_ADD(accumulator, &BETA2);
+
+            BIG_256_56_toBytes(KGAMMAI[1].val, accumulator);
+            KGAMMAI[1].len = EGS_SECP256K1;
 
             // Calculate the inverse of kgamma
-            MPC_INVKGAMMA(&SUM1, &SUM2, &INVKGAMMA);
+            MPC_INVKGAMMA(KGAMMAI, &INVKGAMMA, 2);
 
             // Calculate the R signature component
-            rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, &SIG_R, NULL);
+            rc = MPC_R(&INVKGAMMA, GAMMAPTI, &SIG_R, NULL, 2);
 
             sprintf(err_msg, "MPC_R rc: %d", rc);
             assert_tv(fp, testNo, err_msg, rc == 0);

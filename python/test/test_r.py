@@ -51,17 +51,17 @@ class TestR(unittest.TestCase):
             PUB2, PRIV2 = mpc.paillier_key_pair(None, vector['P2'], vector['Q2'])
 
             # ALPHA1 + BETA2 = A1 * B2
-            ca11 = mpc.mpc_mta_client1(None, PUB1, vector['A1'], vector['R11'])
-            cb12, beta2 = mpc.mpc_mta_server(None, PUB1, vector['B2'], ca11, vector['Z12'], vector['R12'])
-            alpha1 = mpc.mpc_mta_client2(PRIV1, cb12)
+            ca11 = mpc.mta_client1(None, PUB1, vector['A1'], vector['R11'])
+            cb12, beta2 = mpc.mta_server(None, PUB1, vector['B2'], ca11, vector['Z12'], vector['R12'])
+            alpha1 = mpc.mta_client2(PRIV1, cb12)
 
             self.assertEqual(vector['ALPHA1'], alpha1)
             self.assertEqual(vector['BETA2'], beta2)
 
             # ALPHA2 + BETA1 = A2 * B1
-            ca22 = mpc.mpc_mta_client1(None, PUB2, vector['A2'], vector['R22'])
-            cb21, beta1 = mpc.mpc_mta_server(None, PUB2, vector['B1'], ca22, vector['Z21'], vector['R21'])
-            alpha2 = mpc.mpc_mta_client2(PRIV2, cb21)
+            ca22 = mpc.mta_client1(None, PUB2, vector['A2'], vector['R22'])
+            cb21, beta1 = mpc.mta_server(None, PUB2, vector['B1'], ca22, vector['Z21'], vector['R21'])
+            alpha2 = mpc.mta_client2(PRIV2, cb21)
 
             self.assertEqual(vector['ALPHA2'], alpha2)
             self.assertEqual(vector['BETA1'], beta1)

@@ -81,10 +81,10 @@ class TestChallenge(unittest.TestCase):
             V  = bytes.fromhex(vector["V"])
             C  = bytes.fromhex(vector["C"])
             ID = bytes.fromhex(vector["ID"])
-            AD = bytes.fromhex(vector["AD"])
 
-            if not AD:
-                AD = None
+            AD = None
+            if vector["AD"]:
+                AD = bytes.fromhex(vector["AD"])
 
             e_golden = bytes.fromhex(vector["E"])
 

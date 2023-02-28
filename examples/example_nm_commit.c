@@ -22,7 +22,7 @@ under the License.
  */
 
 #include <stdio.h>
-#include "amcl/commitments.h"
+#include "amcl/nm_commitment.h"
 
 int main()
 {
@@ -47,7 +47,7 @@ int main()
     OCT_output(&X);
 
     printf("\nCompute commitment value C and decommitment value R.\n");
-    COMMITMENTS_NM_commit(&RNG, &X, &R, &C);
+    NM_COMMITMENT_commit(&RNG, &X, &R, &C);
 
     printf("\tR = ");
     OCT_output(&R);
@@ -57,8 +57,8 @@ int main()
     printf("\nTransmit C to commit to the value X.\n");
 
     printf("\nTransmit R, X to decommit the value.\n");
-    rc = COMMITMENTS_NM_decommit(&X, &R, &C);
-    if (rc != COMMITMENTS_OK)
+    rc = NM_COMMITMENT_decommit(&X, &R, &C);
+    if (rc != NM_COMMITMENT_OK)
     {
         printf("\tFailure\n\n");
     }

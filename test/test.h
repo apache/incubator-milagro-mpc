@@ -25,9 +25,11 @@ under the License.
 #define TEST_H
 
 #include "amcl/amcl.h"
+#include "amcl/big_256_56.h"
 #include "amcl/ff_2048.h"
 #include "amcl/ff_4096.h"
 #include "amcl/ecp_SECP256K1.h"
+#include "amcl/hidden_dlog.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -40,7 +42,24 @@ extern "C"
  *  @param  OCT     Output octet
  *  @param  string  Input string
  */
-void read_OCTET(FILE *fp, octet *OCT, char *string);
+extern void read_OCTET(FILE *fp, octet *OCT, char *string);
+
+/*! \brief Read string into an octet array
+ *
+ *  @param  fp        TV file pointer to close in case of error
+ *  @param  OCT_ARRAY Output octet
+ *  @param  string    Input string
+ *  @param  n         Length of the array to read
+ */
+extern void read_OCTET_ARRAY(FILE *fp, octet *OCT_ARRAY, char *string, int n);
+
+/*! \brief Read string into a big_256_56
+ *
+ *  @param  fp      TV file pointer to close in case of error
+ *  @param  x       Output big
+ *  @param  string  Input string
+ */
+extern void read_BIG_256_56(FILE *fp, BIG_256_56 x, char *string);
 
 /*! \brief Read string into an ff_2048
  *
@@ -68,6 +87,14 @@ extern void read_FF_4096(FILE *fp, BIG_512_60 *x, char *string, int n);
  */
 extern void read_ECP_SECP256K1(FILE *fp, ECP_SECP256K1 *P, char *string);
 
+/*! \brief Read string into an HDLOG_iter_values
+ *
+ *  @param  fp      TV file pointer to close in case of error
+ *  @param  V       Output values
+ *  @param  string  Input string
+ */
+extern void read_HDLOG_iv(FILE *fp, HDLOG_iter_values V, char *string);
+
 /*! \brief Read integer if the line has the correct prefix
  *
  *  @param  v       Output integer
@@ -84,6 +111,25 @@ extern void scan_int(int *v, char *line, const char *prefix);
  *  @param  prefix  Line prefix for the octet to read
  */
 extern void scan_OCTET(FILE *fp, octet *OCT, char *line, const char *prefix);
+
+/*! \brief Read octet array if the line has the correct prefix
+ *
+ *  @param  fp        TV file pointer to close in case of error
+ *  @param  OCT_ARRAY Output octet array
+ *  @param  line      TV line
+ *  @param  prefix    Line prefix for the octet to read
+ *  @param  n         Length of the array to read
+ */
+extern void scan_OCTET_ARRAY(FILE *fp, octet *OCT_ARRAY, char *line, const char *prefix, int n);
+
+/*! \brief Read big_256_56 if the line has the correct prefix
+ *
+ *  @param  fp      TV file pointer to close in case of error
+ *  @param  x       Output big
+ *  @param  line    TV line
+ *  @param  prefix  Line prefix for the element to read
+ */
+extern void scan_BIG_256_56(FILE *fp, BIG_256_56 x, char *line, const char *prefix);
 
 /*! \brief Read ff_2048 element if the line has the correct prefix
  *
@@ -114,6 +160,15 @@ extern void scan_FF_4096(FILE *fp, BIG_512_60 *x, char *line, const char *prefix
  */
 extern void scan_ECP_SECP256K1(FILE *fp, ECP_SECP256K1 *P, char *line, const char *prefix);
 
+/*! \brief Read string into an HDLOG_iter_values
+ *
+ *  @param  fp      TV file pointer to close in case of error
+ *  @param  V       Output values
+ *  @param  line    TV line
+ *  @param  prefix  Line prefix for the element to read
+ */
+extern void scan_HDLOG_iv(FILE *fp, HDLOG_iter_values V, char *line, const char *prefix);
+
 /* Assertion utilities */
 
 /*! \brief Compare two octets
@@ -127,6 +182,18 @@ extern void scan_ECP_SECP256K1(FILE *fp, ECP_SECP256K1 *P, char *line, const cha
  *  @param  Y       Second octet to compare
  */
 extern void compare_OCT(FILE *fp, int testNo, char *name, octet *X, octet *Y);
+
+/*! \brief Compare two big_256_56 elements
+ *
+ *  Compare two big_s and fail the test if they are not equal
+ *
+ *  @param  fp      TV file pointer to close in case of failure
+ *  @param  testNo  Test Vector identifier
+ *  @param  name    Descriptor for the elements compared
+ *  @param  x       First element to compare
+ *  @param  y       Second element to compare
+ */
+extern void compare_BIG_256_56(FILE *fp, int testNo, char* name, BIG_256_56 x, BIG_256_56 y);
 
 /*! \brief Compare two ff_2048 elements
  *
@@ -165,6 +232,16 @@ extern void compare_FF_4096(FILE *fp, int testNo, char* name, BIG_512_60 *x, BIG
  *  @param  Q       Second element to compare
  */
 extern void compare_ECP_SECP256K1(FILE *fp, int testNo, char* name, ECP_SECP256K1 *P, ECP_SECP256K1 *Q);
+
+/*! \brief Compare two HDLOG_iter_values
+ *
+ *  @param  fp      TV file pointer to close in case of error
+ *  @param  testNo  Test Vector identifier
+ *  @param  name    Descriptor for the elements compared
+ *  @param  V       First element to compare
+ *  @param  R       Second element to compare
+ */
+extern void compare_HDLOG_iv(FILE *fp, int testNo, char* name, HDLOG_iter_values V, HDLOG_iter_values R);
 
 /*! \brief Assert boolean statement
  *

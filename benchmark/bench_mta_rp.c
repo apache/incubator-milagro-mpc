@@ -18,11 +18,11 @@ under the License.
 */
 
 /*
-   Benchmark ZKP of knowledge of factoring.
+   Benchmark MTA Range Proof.
  */
 
 #include "bench.h"
-#include "amcl/mta.h"
+#include "amcl/mta_zkp.h"
 
 #define MIN_TIME 5.0
 #define MIN_ITERS 10
@@ -57,13 +57,14 @@ int main()
     double elapsed;
 
     PAILLIER_private_key priv_key;
-    PAILLIER_public_key pub_key;
-    COMMITMENTS_BC_priv_modulus priv_mod;
-    COMMITMENTS_BC_pub_modulus pub_mod;
+    PAILLIER_public_key  pub_key;
+
+    BIT_COMMITMENT_priv priv_mod;
+    BIT_COMMITMENT_pub  pub_mod;
 
     MTA_RP_commitment co;
-    MTA_RP_commitment_rv rv;
-    MTA_RP_proof proof;
+    MTA_RP_rv         rv;
+    MTA_RP_proof      proof;
 
     char c[2*FS_2048];
     octet C = {0, sizeof(c), c};
@@ -92,6 +93,13 @@ int main()
     char oct[FS_2048 + HFS_2048];
     octet OCT = {0, sizeof(oct), oct};
 
+    // Leave these blank (but not empty!)
+    char id[32] = {0};
+    octet ID = {sizeof(id), sizeof(id), id};
+
+    char ad[32] = {0};
+    octet AD = {sizeof(ad), sizeof(ad), ad};
+
     // Load paillier key
     OCT_fromHex(&P, P_hex);
     OCT_fromHex(&Q, Q_hex);
@@ -102,8 +110,8 @@ int main()
     OCT_fromHex(&Q,     QT_hex);
     OCT_fromHex(&ALPHA, ALPHA_hex);
     OCT_fromHex(&B0,    B0_hex);
-    COMMITMENTS_BC_setup(NULL, &priv_mod, &P, &Q, &ALPHA, &B0);
-    COMMITMENTS_BC_export_public_modulus(&pub_mod, &priv_mod);
+    BIT_COMMITMENT_setup(NULL, &priv_mod, &P, &Q, &ALPHA, &B0);
+    BIT_COMMITMENT_priv_to_pub(&pub_mod, &priv_mod);
 
     // Load Paillier encryption values
     OCT_fromHex(&M, M_hex);
@@ -133,7 +141,7 @@ int main()
     start = clock();
     do
     {
-        MTA_RP_commit(NULL, &priv_key, &pub_mod, &M, &co, &rv);
+        MTA_RP_commit(NULL, &priv_key, &pub_mod, &M, &rv, &co);
         iterations++;
         elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
     }
@@ -147,7 +155,7 @@ int main()
     start = clock();
     do
     {
-        MTA_RP_challenge(&pub_key, &pub_mod, &C, &co, &E);
+        MTA_RP_challenge(&pub_key, &pub_mod, &C, &co, &ID, &AD, &E);
         iterations++;
         elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
     }
@@ -161,7 +169,7 @@ int main()
     start = clock();
     do
     {
-        MTA_RP_prove(&priv_key, &rv, &M, &R, &E, &proof);
+        MTA_RP_prove(&priv_key, &M, &R, &rv, &E, &proof);
         iterations++;
         elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
     }
@@ -175,7 +183,7 @@ int main()
     start = clock();
     do
     {
-        rc = MTA_RP_verify(&pub_key, &priv_mod, &C, &E, &co, &proof);
+        rc = MTA_RP_verify(&pub_key, &priv_mod, &C, &co, &E, &proof);
         iterations++;
         elapsed = (clock() - start) / (double)CLOCKS_PER_SEC;
     }

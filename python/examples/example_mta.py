@@ -63,15 +63,15 @@ if __name__ == "__main__":
     # Deterministic
     paillier_pk, paillier_sk = amcl.mpc.paillier_key_pair(None, p, q)
 
-    ca = amcl.mpc.mpc_mta_client1(rng, paillier_pk, a, r)
+    ca = amcl.mpc.mta_client1(rng, paillier_pk, a, r)
     ca1_hex = ca.hex()
     assert ca_hex == ca1_hex, f"expected {ca_hex} got {ca1_hex}"
 
-    cb, beta = amcl.mpc.mpc_mta_server(rng, paillier_pk, b, ca, z, r)
+    cb, beta = amcl.mpc.mta_server(rng, paillier_pk, b, ca, z, r)
     cb1_hex = cb.hex()
     assert cb_hex == cb1_hex, f"expected {cb_hex} got {cb1_hex}"
 
-    alpha = amcl.mpc.mpc_mta_client2(paillier_sk, cb)
+    alpha = amcl.mpc.mta_client2(paillier_sk, cb)
 
     print(f"alpha {alpha.hex()}")
     print(f"beta {beta.hex()}")
@@ -86,9 +86,9 @@ if __name__ == "__main__":
 
     # Random
     paillier_pk, paillier_sk = amcl.mpc.paillier_key_pair(rng)
-    ca = amcl.mpc.mpc_mta_client1(rng, paillier_pk, a)
-    cb, beta = amcl.mpc.mpc_mta_server(rng, paillier_pk, b, ca)
-    alpha = amcl.mpc.mpc_mta_client2(paillier_sk, cb)
+    ca = amcl.mpc.mta_client1(rng, paillier_pk, a)
+    cb, beta = amcl.mpc.mta_server(rng, paillier_pk, b, ca)
+    alpha = amcl.mpc.mta_client2(paillier_sk, cb)
 
     print(f"alpha {alpha.hex()}")
     print(f"beta {beta.hex()}")

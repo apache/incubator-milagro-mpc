@@ -85,8 +85,6 @@ char* GAMMAPT2_hex = "04fc86f69384e2b0cc3d563dc24ebb3a7ca0ac12dfa671e4cda4abdec3
 
 char* SUMGAMMAPT_hex = "04b46da316359aead5e06c983407b199465bad193dc661334aafb1d7d94bafe721e671defdf3eedef2b6f298f7cdc673a740e88dbb313f2afdb294ee6527e325c1";
 
-char* RPT_hex = "048adf50a4f51443cac2b4d488092ab49925da09e3feb57a1fc03b5b917ca6de9fdefc78277d8cb4865e3e4b17c2821017316d9b21e648e733a207aee22ec91b3c";
-
 char* SIG_R_hex = "8adf50a4f51443cac2b4d488092ab49925da09e3feb57a1fc03b5b917ca6de9f";
 
 int main()
@@ -189,17 +187,14 @@ int main()
     char alpha2golden[EGS_SECP256K1];
     octet ALPHA2GOLDEN = {0,sizeof(alpha2golden),alpha2golden};
 
-    char sum1[EGS_SECP256K1];
-    octet SUM1 = {0,sizeof(sum1),sum1};
+    char kgamma1golden[EGS_SECP256K1];
+    octet KGAMMA1GOLDEN = {0,sizeof(kgamma1golden),kgamma1golden};
 
-    char sum1golden[EGS_SECP256K1];
-    octet SUM1GOLDEN = {0,sizeof(sum1golden),sum1golden};
+    char kgamma2golden[EGS_SECP256K1];
+    octet KGAMMA2GOLDEN = {0,sizeof(kgamma2golden),kgamma2golden};
 
-    char sum2[EGS_SECP256K1];
-    octet SUM2 = {0,sizeof(sum2),sum2};
-
-    char sum2golden[EGS_SECP256K1];
-    octet SUM2GOLDEN = {0,sizeof(sum2golden),sum2golden};
+    char kgamma[2][EGS_SECP256K1];
+    octet KGAMMAI[2] = {{0, sizeof(kgamma[0]), kgamma[0]}, {0, sizeof(kgamma[1]), kgamma[1]}};
 
     char invkgamma[EGS_SECP256K1];
     octet INVKGAMMA = {0,sizeof(invkgamma),invkgamma};
@@ -207,17 +202,22 @@ int main()
     char invkgammagolden[EGS_SECP256K1];
     octet INVKGAMMAGOLDEN = {0,sizeof(invkgammagolden),invkgammagolden};
 
-    char gammapt1[2*EFS_SECP256K1+1];
-    octet GAMMAPT1 = {0,sizeof(gammapt1),gammapt1};
+    char gammapti[2][2 * EFS_SECP256K1+1];
+    octet GAMMAPTI[2] = {{0,sizeof(gammapti[0]),gammapti[0]}, {0,sizeof(gammapti[1]),gammapti[1]}};
 
-    char gammapt2[2*EFS_SECP256K1+1];
-    octet GAMMAPT2 = {0,sizeof(gammapt2),gammapt2};
+    char rti[2][EFS_SECP256K1 + 1];
+    octet RTI[2] = {{0, sizeof(rti[0]), rti[0]}, {0, sizeof(rti[1]), rti[1]}};
 
     char sig_rgolden[EGS_SECP256K1];
     octet SIG_RGOLDEN = {0,sizeof(sig_rgolden),sig_rgolden};
 
+    char rp[EFS_SECP256K1 + 1];
+    octet RP = {0, sizeof(rp), rp};
+
     char sig_r[EGS_SECP256K1];
     octet SIG_R = {0,sizeof(sig_r),sig_r};
+
+    BIG_256_56 accumulator;
 
     // Load values
     OCT_fromHex(&P1,P1_hex);
@@ -308,25 +308,25 @@ int main()
     printf("ALPHA2GOLDEN: ");
     OCT_output(&ALPHA2GOLDEN);
 
-    OCT_fromHex(&SUM1GOLDEN,SUM1_hex);
-    printf("SUM1GOLDEN: ");
-    OCT_output(&SUM1GOLDEN);
+    OCT_fromHex(&KGAMMA1GOLDEN,SUM1_hex);
+    printf("KGAMMA1GOLDEN: ");
+    OCT_output(&KGAMMA1GOLDEN);
 
-    OCT_fromHex(&SUM2GOLDEN,SUM2_hex);
-    printf("SUM2GOLDEN: ");
-    OCT_output(&SUM2GOLDEN);
+    OCT_fromHex(&KGAMMA2GOLDEN,SUM2_hex);
+    printf("KGAMMA2GOLDEN: ");
+    OCT_output(&KGAMMA2GOLDEN);
 
     OCT_fromHex(&INVKGAMMAGOLDEN,INVKGAMMA_hex);
     printf("INVKGAMMAGOLDEN: ");
     OCT_output(&INVKGAMMAGOLDEN);
 
-    OCT_fromHex(&GAMMAPT1,GAMMAPT1_hex);
+    OCT_fromHex(&GAMMAPTI[0],GAMMAPT1_hex);
     printf("GAMMAPT1: ");
-    OCT_output(&GAMMAPT1);
+    OCT_output(&GAMMAPTI[0]);
 
-    OCT_fromHex(&GAMMAPT2,GAMMAPT2_hex);
+    OCT_fromHex(&GAMMAPTI[1],GAMMAPT2_hex);
     printf("GAMMAPT2: ");
-    OCT_output(&GAMMAPT2);
+    OCT_output(&GAMMAPTI[1]);
 
     OCT_fromHex(&SIG_RGOLDEN,SIG_R_hex);
     printf("SIG_RGOLDEN: ");
@@ -337,7 +337,7 @@ int main()
     PAILLIER_KEY_PAIR(NULL, &P2, &Q2, &PUB2, &PRIV2);
 
     // ALPHA1 + BETA2 = K1 * GAMMA2
-    MPC_MTA_CLIENT1(NULL, &PUB1, &K1, &CA11, &R11);
+    MTA_CLIENT1(NULL, &PUB1, &K1, &CA11, &R11);
 
     printf("CA11: ");
     OCT_output(&CA11);
@@ -350,7 +350,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    MPC_MTA_SERVER(NULL, &PUB1, &GAMMA2, &CA11, &Z12, &R12, &CB12, &BETA2);
+    MTA_SERVER(NULL, &PUB1, &GAMMA2, &CA11, &Z12, &R12, &CB12, &BETA2);
 
     printf("CB12: ");
     OCT_output(&CB12);
@@ -374,7 +374,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    MPC_MTA_CLIENT2(&PRIV1, &CB12, &ALPHA1);
+    MTA_CLIENT2(&PRIV1, &CB12, &ALPHA1);
 
     printf("ALPHA1: ");
     OCT_output(&ALPHA1);
@@ -388,7 +388,7 @@ int main()
     }
 
     // ALPHA2 + BETA1 = K2 * GAMMA1
-    MPC_MTA_CLIENT1(NULL, &PUB2, &K2, &CA22, &R22);
+    MTA_CLIENT1(NULL, &PUB2, &K2, &CA22, &R22);
 
     printf("CA22: ");
     OCT_output(&CA22);
@@ -401,7 +401,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    MPC_MTA_SERVER(NULL,  &PUB2, &GAMMA1, &CA22, &Z21, &R21, &CB21, &BETA1);
+    MTA_SERVER(NULL,  &PUB2, &GAMMA1, &CA22, &Z21, &R21, &CB21, &BETA1);
 
     printf("CB21: ");
     OCT_output(&CB21);
@@ -425,7 +425,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    MPC_MTA_CLIENT2(&PRIV2, &CB21, &ALPHA2);
+    MTA_CLIENT2(&PRIV2, &CB21, &ALPHA2);
 
     printf("ALPHA2: ");
     OCT_output(&ALPHA2);
@@ -439,35 +439,45 @@ int main()
     }
 
     // sum = K1.GAMMA1 + alpha1  + beta1
-    MPC_SUM_MTA(&K1, &GAMMA1, &ALPHA1, &BETA1, &SUM1);
+    MTA_ACCUMULATOR_SET(accumulator, &K1, &GAMMA1);
+    MTA_ACCUMULATOR_ADD(accumulator, &ALPHA1);
+    MTA_ACCUMULATOR_ADD(accumulator, &BETA1);
+
+    BIG_256_56_toBytes(KGAMMAI[0].val, accumulator);
+    KGAMMAI[0].len = EGS_SECP256K1;
 
     printf("SUM1: ");
-    OCT_output(&SUM1);
+    OCT_output(&KGAMMAI[0]);
     printf("\n");
 
-    rc = OCT_comp(&SUM1,&SUM1GOLDEN);
+    rc = OCT_comp(&KGAMMAI[0],&KGAMMA1GOLDEN);
     if(!rc)
     {
-        fprintf(stderr, "FAILURE SUM1 != SUM1GOLDEN rc: %d\n", rc);
+        fprintf(stderr, "FAILURE SUM1 != KGAMMA1GOLDEN rc: %d\n", rc);
         exit(EXIT_FAILURE);
     }
 
     // sum = K2.GAMMA2 + alpha2  + beta2
-    MPC_SUM_MTA(&K2, &GAMMA2, &ALPHA2, &BETA2, &SUM2);
+    MTA_ACCUMULATOR_SET(accumulator, &K2, &GAMMA2);
+    MTA_ACCUMULATOR_ADD(accumulator, &ALPHA2);
+    MTA_ACCUMULATOR_ADD(accumulator, &BETA2);
+
+    BIG_256_56_toBytes(KGAMMAI[1].val, accumulator);
+    KGAMMAI[1].len = EGS_SECP256K1;
 
     printf("SUM2: ");
-    OCT_output(&SUM2);
+    OCT_output(&KGAMMAI[1]);
     printf("\n");
 
-    rc = OCT_comp(&SUM2,&SUM2GOLDEN);
+    rc = OCT_comp(&KGAMMAI[1],&KGAMMA2GOLDEN);
     if(!rc)
     {
-        fprintf(stderr, "FAILURE SUM2 != SUM2GOLDEN rc: %d\n", rc);
+        fprintf(stderr, "FAILURE SUM2 != KGAMMA2GOLDEN rc: %d\n", rc);
         exit(EXIT_FAILURE);
     }
 
     // Calculate the inverse of kgamma
-    MPC_INVKGAMMA(&SUM1, &SUM2, &INVKGAMMA);
+    MPC_INVKGAMMA(KGAMMAI, &INVKGAMMA, 2);
 
     printf("INVKGAMMA: ");
     OCT_output(&INVKGAMMA);
@@ -481,7 +491,7 @@ int main()
     }
 
     // Calculate the R signature component
-    rc = MPC_R(&INVKGAMMA, &GAMMAPT1, &GAMMAPT2, &SIG_R, NULL);
+    rc = MPC_R(&INVKGAMMA, GAMMAPTI, &SIG_R, &RP, 2);
     if (rc)
     {
         fprintf(stderr, "FAILURE MPC_R rc: %d\n", rc);
@@ -496,6 +506,29 @@ int main()
     if(!rc)
     {
         fprintf(stderr, "FAILURE SIG_R != SIG_RGOLDEN rc: %d\n", rc);
+        exit(EXIT_FAILURE);
+    }
+
+    // Verify that R was generated correctly
+    rc = MPC_ECP_GENERATE_CHECK(&RP, &K1, &RTI[0]);
+    if (rc != MPC_OK)
+    {
+        fprintf(stderr, "FAILURE MPC_ECP_GENERATE_CHECK k1. rc: %d\n", rc);
+        exit(EXIT_FAILURE);
+    }
+
+    rc = MPC_ECP_GENERATE_CHECK(&RP, &K2, &RTI[1]);
+    if (rc != MPC_OK)
+    {
+        fprintf(stderr, "FAILURE MPC_ECP_GENERATE_CHECK k2. rc: %d\n", rc);
+        exit(EXIT_FAILURE);
+    }
+
+    // For R to be generated correctly k1.R + k2.R = G
+    rc = MPC_ECP_VERIFY(RTI, NULL, 2);
+    if (rc != MPC_OK)
+    {
+        fprintf(stderr, "FAILURE MPC_ECP_VERIFY rc: %d\n", rc);
         exit(EXIT_FAILURE);
     }
 

@@ -19,7 +19,7 @@
 
 #include <string.h>
 #include "test.h"
-#include "amcl/commitments.h"
+#include "amcl/nm_commitment.h"
 
 /* NM Commitment unit tests */
 
@@ -82,11 +82,11 @@ int main(int argc, char **argv)
 
         if (!strncmp(line, last_line, strlen(last_line)))
         {
-            COMMITMENTS_NM_commit(NULL, &X_GOLDEN, &R_GOLDEN, &C);
+            NM_COMMITMENT_commit(NULL, &X_GOLDEN, &R_GOLDEN, &C);
             compare_OCT(fp, testNo, "COMMITMENT_NM_commit", &C_GOLDEN, &C);
 
-            rc = COMMITMENTS_NM_decommit(&X_GOLDEN, &R_GOLDEN, &C_GOLDEN);
-            assert_tv(fp, testNo, "COMMITMENTS_NM_DECOMMIT", rc == COMMITMENTS_OK);
+            rc = NM_COMMITMENT_decommit(&X_GOLDEN, &R_GOLDEN, &C_GOLDEN);
+            assert_tv(fp, testNo, "NM_COMMITMENT_DECOMMIT", rc == NM_COMMITMENT_OK);
 
             // Mark that at least one test vector was executed
             test_run = 1;
@@ -101,21 +101,21 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    /* Test COMMITMENTS_NM_decommit unhappy paths */
+    /* Test NM_COMMITMENT_decommit unhappy paths */
 
     // Test invalid length of decommitment
     OCT_copy(&R, &R_GOLDEN);
     R.len--;
 
-    rc = COMMITMENTS_NM_decommit(&X_GOLDEN, &R, &C_GOLDEN);
-    assert(NULL, "COMMITMENTS_NM_decommit. Invalid R length", rc == COMMITMENTS_FAIL);
+    rc = NM_COMMITMENT_decommit(&X_GOLDEN, &R, &C_GOLDEN);
+    assert(NULL, "NM_COMMITMENT_decommit. Invalid R length", rc == NM_COMMITMENT_FAIL);
 
     // Test wrong decommitment
     OCT_copy(&R, &R_GOLDEN);
     R.val[0]--;
 
-    rc = COMMITMENTS_NM_decommit(&X_GOLDEN, &R, &C_GOLDEN);
-    assert(NULL, "COMMITMENTS_NM_decommit. Invalid R", rc == COMMITMENTS_FAIL);
+    rc = NM_COMMITMENT_decommit(&X_GOLDEN, &R, &C_GOLDEN);
+    assert(NULL, "NM_COMMITMENT_decommit. Invalid R", rc == NM_COMMITMENT_FAIL);
 
     printf("SUCCESS");
     exit(EXIT_SUCCESS);

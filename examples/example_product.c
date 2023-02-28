@@ -191,6 +191,8 @@ int main()
     char sum2golden[EGS_SECP256K1];
     octet SUM2GOLDEN = {0,sizeof(sum2golden),sum2golden};
 
+    BIG_256_56 accumulator;
+
     // Load values
     OCT_fromHex(&P1,P1_hex);
     printf("P1: ");
@@ -293,7 +295,7 @@ int main()
     PAILLIER_KEY_PAIR(NULL, &P2, &Q2, &PUB2, &PRIV2);
 
     // ALPHA1 + BETA2 = A1 * B2
-    MPC_MTA_CLIENT1(NULL, &PUB1, &A1, &CA11, &R11);
+    MTA_CLIENT1(NULL, &PUB1, &A1, &CA11, &R11);
 
     printf("CA11: ");
     OCT_output(&CA11);
@@ -306,7 +308,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    MPC_MTA_SERVER(NULL, &PUB1, &B2, &CA11, &Z12, &R12, &CB12, &BETA2);
+    MTA_SERVER(NULL, &PUB1, &B2, &CA11, &Z12, &R12, &CB12, &BETA2);
 
     printf("CB12: ");
     OCT_output(&CB12);
@@ -330,7 +332,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    MPC_MTA_CLIENT2(&PRIV1, &CB12, &ALPHA1);
+    MTA_CLIENT2(&PRIV1, &CB12, &ALPHA1);
 
     printf("ALPHA1: ");
     OCT_output(&ALPHA1);
@@ -344,7 +346,7 @@ int main()
     }
 
     // ALPHA2 + BETA1 = A2 * B1
-    MPC_MTA_CLIENT1(NULL, &PUB2, &A2, &CA22, &R22);
+    MTA_CLIENT1(NULL, &PUB2, &A2, &CA22, &R22);
 
     printf("CA22: ");
     OCT_output(&CA22);
@@ -357,7 +359,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    MPC_MTA_SERVER(NULL, &PUB2, &B1, &CA22, &Z21, &R21, &CB21, &BETA1);
+    MTA_SERVER(NULL, &PUB2, &B1, &CA22, &Z21, &R21, &CB21, &BETA1);
 
     printf("CB21: ");
     OCT_output(&CB21);
@@ -382,7 +384,7 @@ int main()
     }
 
 
-    MPC_MTA_CLIENT2(&PRIV2, &CB21, &ALPHA2);
+    MTA_CLIENT2(&PRIV2, &CB21, &ALPHA2);
 
     printf("ALPHA2: ");
     OCT_output(&ALPHA2);
@@ -396,7 +398,12 @@ int main()
     }
 
     // sum = A1.B1 + alpha1  + beta1
-    MPC_SUM_MTA(&A1, &B1, &ALPHA1, &BETA1, &SUM1);
+    MTA_ACCUMULATOR_SET(accumulator, &A1, &B1);
+    MTA_ACCUMULATOR_ADD(accumulator, &ALPHA1);
+    MTA_ACCUMULATOR_ADD(accumulator, &BETA1);
+
+    BIG_256_56_toBytes(SUM1.val, accumulator);
+    SUM1.len = EGS_SECP256K1;
 
     printf("SUM1: ");
     OCT_output(&SUM1);
@@ -410,7 +417,12 @@ int main()
     }
 
     // sum = A2.B2 + alpha2  + beta2
-    MPC_SUM_MTA(&A2, &B2, &ALPHA2, &BETA2, &SUM2);
+    MTA_ACCUMULATOR_SET(accumulator, &A2, &B2);
+    MTA_ACCUMULATOR_ADD(accumulator, &ALPHA2);
+    MTA_ACCUMULATOR_ADD(accumulator, &BETA2);
+
+    BIG_256_56_toBytes(SUM2.val, accumulator);
+    SUM2.len = EGS_SECP256K1;
 
     printf("SUM2: ");
     OCT_output(&SUM2);
