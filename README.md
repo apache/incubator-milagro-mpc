@@ -19,16 +19,8 @@
 
 # Apache Milagro Multi-Party Computation Library
 
-[![Master Branch](https://img.shields.io/badge/-master:-gray.svg)](https://github.com/apache/incubator-milagro-MPC/tree/master)
-[![Master Build Status](https://app.travis-ci.com/apache/incubator-milagro-MPC.svg?branch=master)](https://app.travis-ci.com/apache/incubator-milagro-MPC) [![Master Coverage Status](https://coveralls.io/repos/github/apache/incubator-milagro-MPC/badge.svg?branch=master)](https://coveralls.io/github/apache/incubator-milagro-MPC?branch=master)
-
-[![Develop Branch](https://img.shields.io/badge/-develop:-gray.svg)](https://github.com/apache/incubator-milagro-MPC/tree/develop)
-[![Develop Build Status](https://app.travis-ci.com/apache/incubator-milagro-MPC.svg?branch=develop)](https://app.travis-ci.com/apache/incubator-milagro-MPC) [![Develop Coverage Status](https://coveralls.io/repos/github/apache/incubator-milagro-MPC/badge.svg?branch=develop)](https://coveralls.io/github/apache/incubator-milagro-MPC?branch=develop)
-
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=apache_incubator-milagro-MPC&metric=alert_status)](https://sonarcloud.io/dashboard?id=apache_incubator-milagro-MPC)
-
 * **category**:    Library
-* **copyright**:   2020 The Apache Software Foundation
+* **copyright**:   2023 The Apache Software Foundation
 * **license**:     ASL 2.0 ([Apache License Version 2.0, January 2004](http://www.apache.org/licenses/LICENSE-2.0))
 * **link**:        https://github.com/apache/incubator-milagro-MPC
 
@@ -159,7 +151,7 @@ pip3 install cffi
 Build and install the AMCL library
 
 ```sh
-git clone https://github.com/apache/incubator-milagro-crypto-c.git 
+git clone https://github.com/apache/incubator-milagro-crypto-c.git
 cd incubator-milagro-crypto-c
 mkdir build
 cd build
@@ -171,7 +163,7 @@ sudo make install
 
 ## Compiling
 
-Build and test code. 
+Build and test code.
 
 ```sh
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./
