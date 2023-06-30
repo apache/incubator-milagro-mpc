@@ -91,7 +91,7 @@ extern void SCHNORR_prove(const octet *R, const octet *E, const octet *X, octet 
  * @param P     Proof received from the prover
  * @return      SCHNORR_OK if the prove is valid or an error code
  */
-extern int SCHNORR_verify(octet *V, octet *C, const octet *E, const octet *P);
+extern int SCHNORR_verify(const octet *V, const octet *C, const octet *E, const octet *P);
 
 /* Double Schnorr's proofs API */
 
@@ -107,7 +107,7 @@ extern int SCHNORR_verify(octet *V, octet *C, const octet *E, const octet *P);
  * @param C     Public commitment value. An ECP in compressed form
  * @return      SCHNORR_INVALID_ECP if R is not a valid ECP, SCHNORR_OK otherwise
  */
-extern int SCHNORR_D_commit(csprng *RNG, octet *R, octet *A, octet *B, octet *C);
+extern int SCHNORR_D_commit(csprng *RNG, const octet *R, octet *A, octet *B, octet *C);
 
 /*! \brief Generate the challenge for the proof
  *
@@ -146,7 +146,7 @@ extern void SCHNORR_D_prove(const octet *A, const octet *B, const octet *E, cons
  * @param U     Second component of the proof received
  * @return      SCHNORR_OK if the prove is valid or an error code
  */
-extern int SCHNORR_D_verify(octet *R, octet *V, octet *C, const octet *E, const octet *T, const octet *U);
+extern int SCHNORR_D_verify(const octet *R, const octet *V, const octet *C, const octet *E, const octet *T, const octet *U);
 
 #ifdef __cplusplus
 }

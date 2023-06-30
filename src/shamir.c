@@ -22,9 +22,9 @@ under the License.
 #include "amcl/shamir.h"
 
 // Polynomial interpolation coefficients
-static void SSS_lagrange_coefficients(int k, octet* X, BIG_256_56* lc, BIG_256_56 q)
+static void SSS_lagrange_coefficients(int k, const octet* X, BIG_256_56* lc, const BIG_256_56 q)
 {
-    int i, j;
+    int i;
 
     BIG_256_56 x2[k];
 
@@ -78,7 +78,7 @@ static void SSS_lagrange_coefficients(int k, octet* X, BIG_256_56* lc, BIG_256_5
         // cneg = -x_i mod r
         BIG_256_56_sub(cneg, q, x2[i]);
 
-        for(j = 0; j < k; j++)
+        for(int j = 0; j < k; j++)
         {
             if (i == j) continue;
 
@@ -95,10 +95,8 @@ static void SSS_lagrange_coefficients(int k, octet* X, BIG_256_56* lc, BIG_256_5
     }
 }
 
-static void SSS_sample_polynomial(int k, csprng *RNG, BIG_256_56 *poly, BIG_256_56 q, octet *S)
+static void SSS_sample_polynomial(int k, csprng *RNG, BIG_256_56 *poly, const BIG_256_56 q, octet *S)
 {
-    int i;
-
     // Read or generate secret
     if (S->len == 0)
     {
@@ -112,17 +110,16 @@ static void SSS_sample_polynomial(int k, csprng *RNG, BIG_256_56 *poly, BIG_256_
     }
 
     // Generate rest of polynomial: f(x) = (a_0) + a_1x + a_2x^2 ... a_{k-1}x^{k-1}
-    for(i = 1; i < k; i++)
+    for(int i = 1; i < k; i++)
     {
         BIG_256_56_randomnum(poly[i], q, RNG);
     }
 }
 
-static void SSS_eval_shares(int k, int n, BIG_256_56 *poly, BIG_256_56 q, SSS_shares *shares)
+static void SSS_eval_shares(int k, int n, BIG_256_56 *poly, const BIG_256_56 q, SSS_shares *shares)
 {
-    int i, j;
-
-    BIG_256_56 x, y;
+    BIG_256_56 x;
+    BIG_256_56 y;
     DBIG_256_56 w;
 
     /* Calculate shares for x = [1, .., n]
@@ -131,12 +128,12 @@ static void SSS_eval_shares(int k, int n, BIG_256_56 *poly, BIG_256_56 q, SSS_sh
     */
     BIG_256_56_zero(x);
 
-    for(j = 0; j < n; j++)
+    for(int j = 0; j < n; j++)
     {
         BIG_256_56_inc(x, 1);
         BIG_256_56_zero(y);
 
-        for(i = k-1; i >= 0; i--)
+        for(int i = k-1; i >= 0; i--)
         {
             BIG_256_56_mul(w, y, x);
             BIG_256_56_dmod(y, w, q);
@@ -159,16 +156,14 @@ static void SSS_eval_shares(int k, int n, BIG_256_56 *poly, BIG_256_56 q, SSS_sh
 }
 
 // Use lagrange coefficents to compute s = a_0. Output is NOT normed
-static void SSS_interpolate(int k, SSS_shares *shares, BIG_256_56 *coefs, BIG_256_56 q, BIG_256_56 secret)
+static void SSS_interpolate(int k, const SSS_shares *shares, BIG_256_56 *coefs, const BIG_256_56 q, BIG_256_56 secret)
 {
-    int i;
-
     BIG_256_56  w;
     DBIG_256_56 dw;
 
     BIG_256_56_zero(secret);
 
-    for(i = 0; i < k; i++)
+    for(int i = 0; i < k; i++)
     {
         BIG_256_56_fromBytes(w, shares->Y[i].val);
 
@@ -195,8 +190,6 @@ void SSS_make_shares(int k, int n, csprng *RNG, SSS_shares *shares, octet* S)
     BIG_256_56 poly[k];
 #endif
 
-    int i;
-
     BIG_256_56 q;
     BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
 
@@ -204,13 +197,13 @@ void SSS_make_shares(int k, int n, csprng *RNG, SSS_shares *shares, octet* S)
     SSS_eval_shares(k, n, poly, q, shares);
 
     // Clean memory
-    for (i = 0; i < k; i++)
+    for (int i = 0; i < k; i++)
     {
         BIG_256_56_zero(poly[i]);
     }
 }
 
-void SSS_recover_secret(int k, SSS_shares *shares, octet* S)
+void SSS_recover_secret(int k, const SSS_shares *shares, octet* S)
 {
 # ifndef C99
     BIG_256_56 coefs[128];
@@ -234,10 +227,8 @@ void SSS_recover_secret(int k, SSS_shares *shares, octet* S)
     BIG_256_56_zero(secret);
 }
 
-void SSS_shamir_to_additive(int k, octet *X_j, octet *Y_j, octet *X, octet *S)
+void SSS_shamir_to_additive(int k, const octet *X_j, const octet *Y_j, const octet *X, octet *S)
 {
-    int i;
-
     BIG_256_56 x_j;
     BIG_256_56 q;
 
@@ -258,7 +249,7 @@ void SSS_shamir_to_additive(int k, octet *X_j, octet *Y_j, octet *X, octet *S)
     // x_j = -x_j mod q
     BIG_256_56_sub(x_j, q, x_j);
 
-    for (i = 0; i < k-1; i++)
+    for (int i = 0; i < k-1; i++)
     {
         // n = prod(x_i)
         BIG_256_56_fromBytesLen(w, X[i].val, X[i].len);
@@ -323,13 +314,16 @@ void VSS_make_shares(int k, int n, csprng *RNG, SSS_shares *shares, octet *C, oc
     }
 }
 
-int VSS_verify_shares(int k, octet *X_j, octet * Y_j, octet *C)
+int VSS_verify_shares(int k, const octet *X_j, const octet * Y_j, const octet *C)
 {
-    int i, rc;
+    int rc;
 
-    ECP_SECP256K1 G, V;
+    ECP_SECP256K1 G;
+    ECP_SECP256K1 V;
 
-    BIG_256_56  x, xn, q;
+    BIG_256_56  x;
+    BIG_256_56 xn;
+    BIG_256_56 q;
     DBIG_256_56 w;
 
     BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
@@ -343,7 +337,7 @@ int VSS_verify_shares(int k, octet *X_j, octet * Y_j, octet *C)
     }
     BIG_256_56_one(xn);
 
-    for (i = 1; i < k; i++)
+    for (int i = 1; i < k; i++)
     {
         rc = ECP_SECP256K1_fromOctet(&G, C+i);
         if (rc != 1)

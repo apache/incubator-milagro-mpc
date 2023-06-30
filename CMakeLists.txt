@@ -46,14 +46,10 @@ option(BUILD_DOXYGEN "Build Doxygen" ON)
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(BUILD_TESTS "Build tests" ON)
 option(BUILD_EXAMPLES "Build examples" ON)
-option(BUILD_BENCHMARK "Build benchmark" ON)
-cmake_dependent_option(BUILD_PYTHON "Build Python" ON "BUILD_SHARED_LIBS" ON)
 log(BUILD_DOXYGEN)
 log(BUILD_SHARED_LIBS)
 log(BUILD_TESTS)
 log(BUILD_EXAMPLES)
-log(BUILD_BENCHMARK)
-log(BUILD_PYTHON)
 
 # Allow the developer to select if Dynamic or Static libraries are built
 # Set the default LIB_TYPE variable to STATIC
@@ -78,23 +74,23 @@ log(CMAKE_BUILD_TYPE)
 if(CMAKE_COMPILER_IS_GNUCC)
     execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
                     OUTPUT_VARIABLE GCC_VERSION)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Wno-strict-prototypes -Wunused-value -Wcast-align -Wunused-variable -Wundef -Wformat-security -Wno-pointer-sign -Wno-unknown-pragmas")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Wno-strict-prototypes -Wunused-value -Wcast-align -Wunused-variable -Wundef -Wformat-security")
 
     if (GCC_VERSION VERSION_GREATER 4.8 OR GCC_VERSION VERSION_EQUAL 4.8)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wshadow")
-        set(CMAKE_C_FLAGS_ASAN    "-O0 -g3 -fsanitize=address")
+        set(CMAKE_C_FLAGS_ASAN    "-O0 -g3 -fsanitize=address -fsanitize=undefined -fno-sanitize-recover -fno-strict-overflow")
     else (GCC_VERSION VERSION_GREATER 4.8 OR GCC_VERSION VERSION_EQUAL 4.8)
         message(STATUS "GCC 4.8 required to run address sanitizer - please upgrade your installation")
     endif(GCC_VERSION VERSION_GREATER 4.8 OR GCC_VERSION VERSION_EQUAL 4.8)
 
     IF (BUILD_SHARED_LIBS)
-        set(CMAKE_C_FLAGS_RELEASE     "-O2")
-        set(CMAKE_C_FLAGS_DEBUG       "-O0 -g3 -D DEBUG")
-        set(CMAKE_C_FLAGS_COVERAGE    "-O0 -g3 --coverage")
+        set(CMAKE_C_FLAGS_RELEASE     "-O2 -fno-strict-overflow")
+        set(CMAKE_C_FLAGS_DEBUG       "-O0 -g3 -fno-strict-overflow -D DEBUG")
+        set(CMAKE_C_FLAGS_COVERAGE    "-O0 -g3 -fno-strict-overflow --coverage")
     else(BUILD_SHARED_LIBS)
-        set(CMAKE_C_FLAGS_RELEASE     "-static -O2")
-        set(CMAKE_C_FLAGS_DEBUG       "-static -O0 -g3 -D DEBUG")
-        set(CMAKE_C_FLAGS_COVERAGE    "-static -O0 -g3 --coverage")
+        set(CMAKE_C_FLAGS_RELEASE     "-static -O2 -fno-strict-overflow")
+        set(CMAKE_C_FLAGS_DEBUG       "-static -O0 -g3 -fno-strict-overflow -D DEBUG")
+        set(CMAKE_C_FLAGS_COVERAGE    "-static -O0 -g3 -fno-strict-overflow --coverage")
     endif(BUILD_SHARED_LIBS)
 
 endif(CMAKE_COMPILER_IS_GNUCC)
@@ -124,27 +120,6 @@ if(BUILD_TESTS)
   add_subdirectory(test)
 endif()
 
-if(BUILD_BENCHMARK)
-  message(STATUS "Build benchmark")
-  add_subdirectory(benchmark)
-endif()
-
-# FIXME! Disabling python wrappers until they are updated
-#
-# if(BUILD_PYTHON)
-#   message(STATUS "Build Python wrappers")
-#   add_subdirectory(python)
-# endif()
-
-# Build Documentation
-if (BUILD_DOXYGEN)
-  find_package(Doxygen QUIET)
-  if(DOXYGEN_FOUND)
-    add_subdirectory (doxygen)
-  else(DOXYGEN_FOUND)
-    message(STATUS "Doxygen not found. Documentation will not be built.")
-  endif(DOXYGEN_FOUND)
-endif (BUILD_DOXYGEN)
 
 # uninstall target
 configure_file(

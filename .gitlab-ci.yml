@@ -3,21 +3,20 @@ stages:
   - coverage
 
 test:
-  stage: test
-  tags:
-  - shell
-  script:
-  - echo "Build and test docker image"
-  - docker build -t $CI_PROJECT_NAME .
-  - docker run --cap-add SYS_PTRACE --rm $CI_PROJECT_NAME 
+ stage: test
+ tags:
+   - features-amd64
+ script:
+   - echo "Build and test docker image"
+   - docker build --no-cache -t libmpc .
+   - docker run --cap-add SYS_PTRACE --rm libmpc
 
 coverage:
-  stage: coverage
-  tags:
-  - shell
-  script:
-  - echo "Generate coverage figures"
-  - docker build -t $CI_PROJECT_NAME .
-  - docker run --rm $CI_PROJECT_NAME ./scripts/coverage.sh 
-  coverage: '/lines......: (\d+.\d+%)/'
+ stage: coverage
+ tags:
+   - features-amd64
+ script:
+   - echo "Generate coverage figures"
+   - docker run --rm libmpc ./scripts/coverage.sh
+ coverage: '/lines......: (\d+.\d+%)/'
 

@@ -40,9 +40,7 @@ void HASH_UTILS_hash_copy(hash256 *dst, const hash256 *src)
 // utility function to hash an octet
 void HASH_UTILS_hash_oct(hash256 *sha, const octet *O)
 {
-    int i;
-
-    for (i = 0; i < O->len; i++)
+    for (int i = 0; i < O->len; i++)
     {
         HASH256_process(sha, O->val[i]);
     }
@@ -58,9 +56,8 @@ void HASH_UTILS_hash_i2osp4(hash256 *sha, const int i)
 
 // Sample mod n using MGF1 using SHA256 and sampling double the
 // amount of necesary random data to make bias negligible
-void HASH_UTILS_sample_mod_FF(hash256 *sha, BIG_1024_58 *n, BIG_1024_58 *x)
+void HASH_UTILS_sample_mod_FF(const hash256 *sha, BIG_1024_58 *n, BIG_1024_58 *x)
 {
-    int i;
     hash256 shai;
 
     char w[2 * FS_2048];
@@ -68,7 +65,7 @@ void HASH_UTILS_sample_mod_FF(hash256 *sha, BIG_1024_58 *n, BIG_1024_58 *x)
 
     BIG_1024_58 dws[2 * FFLEN_2048];
 
-    for (i = 0; i < HASH_UTILS_FF_CHUNKS; i++)
+    for (int i = 0; i < HASH_UTILS_FF_CHUNKS; i++)
     {
         // Compute partial hash of SEED || I2OSP(i, 4)
         HASH_UTILS_hash_copy(&shai, sha);
@@ -84,7 +81,7 @@ void HASH_UTILS_sample_mod_FF(hash256 *sha, BIG_1024_58 *n, BIG_1024_58 *x)
     FF_2048_dmod(x, dws, n, FFLEN_2048);
 }
 
-void HASH_UTILS_rejection_sample_mod_BIG(hash256 *sha, BIG_256_56 q, BIG_256_56 x)
+void HASH_UTILS_rejection_sample_mod_BIG(const hash256 *sha, const BIG_256_56 q, BIG_256_56 x)
 {
     hash256 shai;
 

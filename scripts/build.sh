@@ -9,21 +9,21 @@
 
 # NOTES:
 
-CURRENTDIR=${PWD}
+set -Cue -o pipefail
+
+PROJECT_HOME="$(cd "$(dirname "${0}")/.." && pwd)"
+cd "$PROJECT_HOME"
 
 declare -a arr=("Release" "Debug" "Coverage" "ASan")
 
 for i in "${arr[@]}"
 do
-  echo "$i"
-  cd $CURRENTDIR
-  rm -rf target/$i
-  mkdir -p target/$i
-  cd target/$i
-  cmake -D CMAKE_BUILD_TYPE=$i ../..
-  make
-  if [ $i = Coverage ]
-  then
-      make test ARGS=-j8
-  fi
+    (
+	echo "$i"
+	rm -rf target/$i
+	mkdir -p target/$i
+	cd target/$i
+	cmake -D CMAKE_BUILD_TYPE=$i ../..
+	make
+    )
 done

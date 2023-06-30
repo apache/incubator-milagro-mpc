@@ -63,7 +63,8 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    int i, rc;
+    int i;
+    int rc;
     int test_run = 0;
 
     FILE *fp;

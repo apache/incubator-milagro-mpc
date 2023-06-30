@@ -65,7 +65,7 @@ void SSS_make_shares(int k, int n, csprng *RNG, SSS_shares *shares, octet* S);
  * @param  shares k Secret Shares (x, y) collected for secret recovery
  * @param  S      Recovered Secret
  */
-void SSS_recover_secret(int k, SSS_shares *shares, octet* S);
+void SSS_recover_secret(int k, const SSS_shares *shares, octet* S);
 
 /** @brief Convert a Shamir Secet share to an additive share for a (k, k) secret sharing
  *
@@ -75,7 +75,7 @@ void SSS_recover_secret(int k, SSS_shares *shares, octet* S);
  * @param X      X components of the shares of the other participants
  * @param S      Additive share for the equivalent (k, k) additive sharing.
  */
-void SSS_shamir_to_additive(int k, octet *X_j, octet *Y_j, octet *X, octet *S);
+void SSS_shamir_to_additive(int k, const octet *X_j, const octet *Y_j, const octet *X, octet *S);
 
 /**	@brief Use the Verifiable Secret Sharing to distribute a secret modulo the SECP256K1 curve order
  *
@@ -96,7 +96,7 @@ void VSS_make_shares(int k, int n, csprng *RNG, SSS_shares *shares, octet *C, oc
  * @param C      Checks for the shares
  * @return       VSS_OK or an error code
  */
-int VSS_verify_shares(int k, octet *X_j, octet * Y_j, octet *C);
+int VSS_verify_shares(int k, const octet *X_j, const octet * Y_j, const octet *C);
 
 #ifdef __cplusplus
 }

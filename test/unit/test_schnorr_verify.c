@@ -84,7 +84,7 @@ int main(int argc, char **argv)
         if (!strncmp(line, last_line, strlen(last_line)))
         {
             rc = SCHNORR_verify(&V, &C, &E, &P);
-            sprintf(err_msg, "SCHNORR_verify. rc %d", rc);
+            snprintf(err_msg, sizeof(err_msg), "SCHNORR_verify. rc %d", rc);
             assert_tv(fp, testNo, err_msg, rc == SCHNORR_OK);
 
             // Mark that at least one test vector was executed
@@ -105,15 +105,15 @@ int main(int argc, char **argv)
     octet ZERO = {0, sizeof(zero), zero};
 
     rc = SCHNORR_verify(&ZERO, &C, &E, &P);
-    sprintf(err_msg, "SCHNORR_verify invalid V. rc %d", rc);
+    snprintf(err_msg, sizeof(err_msg), "SCHNORR_verify invalid V. rc %d", rc);
     assert(NULL, err_msg, rc == SCHNORR_INVALID_ECP);
 
     rc = SCHNORR_verify(&V, &ZERO, &E, &P);
-    sprintf(err_msg, "SCHNORR_verify invalid C. rc %d", rc);
+    snprintf(err_msg, sizeof(err_msg), "SCHNORR_verify invalid C. rc %d", rc);
     assert(NULL, err_msg, rc == SCHNORR_INVALID_ECP);
 
     rc = SCHNORR_verify(&V, &C, &E, &ZERO);
-    sprintf(err_msg, "SCHNORR_verify invalid proof. rc %d", rc);
+    snprintf(err_msg, sizeof(err_msg), "SCHNORR_verify invalid proof. rc %d", rc);
     assert(NULL, err_msg, rc == SCHNORR_FAIL);
 
     printf("SUCCESS\n");
