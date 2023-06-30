@@ -4,12 +4,10 @@
 **/*~
 **/*bak
 log.txt
-model
 
 build
 target
 incubator-milagro-crypto-c
-vagrant
 coverage
 examples/scratch.c
 

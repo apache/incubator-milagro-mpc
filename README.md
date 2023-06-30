@@ -22,7 +22,7 @@
 [![Master Branch](https://img.shields.io/badge/-master:-gray.svg)](https://github.com/apache/incubator-milagro-MPC/tree/master)
 
 * **category**:    Library
-* **copyright**:   2020 The Apache Software Foundation
+* **copyright**:   2023 The Apache Software Foundation
 * **license**:     ASL 2.0 ([Apache License Version 2.0, January 2004](http://www.apache.org/licenses/LICENSE-2.0))
 * **link**:        https://github.com/apache/incubator-milagro-MPC
 
