@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 
     char ad[ADLEN];
     octet AD = {0, sizeof(ad), ad};
-    octet *AD_ptr = NULL;
+    const octet *AD_ptr = NULL;
     const char *ADline = "AD = ";
 
     char c[SFS_SECP256K1+1];

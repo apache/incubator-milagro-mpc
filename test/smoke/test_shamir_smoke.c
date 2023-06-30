@@ -26,7 +26,8 @@
 
 int main()
 {
-    int i, rc;
+    int i;
+    int rc;
 
     int n=4;
     int k=3;
@@ -103,7 +104,9 @@ int main()
         OTHERS[i].val = others[i];
     }
 
-    BIG_256_56 acc, share, q;
+    BIG_256_56 acc;
+    BIG_256_56 share;
+    BIG_256_56 q;
 
     BIG_256_56_rcopy(q, CURVE_Order_SECP256K1);
     BIG_256_56_zero(acc);

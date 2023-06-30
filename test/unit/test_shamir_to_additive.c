@@ -36,7 +36,7 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    int i, j;
+    int i;
     int test_run = 0;
 
     octet *oct_ptr;
@@ -113,7 +113,7 @@ int main(int argc, char **argv)
             {
                 // Load other participant shares
                 oct_ptr = OTHERS;
-                for (j = 0; j < k; j++)
+                for (int j = 0; j < k; j++)
                 {
                     if (j == i) continue;
 

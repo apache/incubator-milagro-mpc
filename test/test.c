@@ -30,7 +30,7 @@ under the License.
 
 void read_OCTET(FILE *fp, octet *OCT, char *string)
 {
-    int len = strlen(string);
+    int len = (int)strlen(string);
     char buff[len];
     memcpy(buff, string, len);
     char *end = strchr(buff, ',');
@@ -47,8 +47,8 @@ void read_OCTET(FILE *fp, octet *OCT, char *string)
 
 void read_OCTET_ARRAY(FILE *fp, octet *OCT_ARRAY, char *string, int n)
 {
-    int i;
-    char *next, *end;
+    char *next;
+    char *end;
 
     if (string[0] != '[')
     {
@@ -60,7 +60,7 @@ void read_OCTET_ARRAY(FILE *fp, octet *OCT_ARRAY, char *string, int n)
 
     next = string+1;
 
-    for (i = 0; i < n-1; i++)
+    for (int i = 0; i < n-1; i++)
     {
         end = strchr(next, ',');
         if (end == NULL)
@@ -93,9 +93,9 @@ void read_OCTET_ARRAY(FILE *fp, octet *OCT_ARRAY, char *string, int n)
 
 void read_BIG_256_56(FILE *fp, BIG_256_56 x, char *string)
 {
-    int len = strlen(string);
+    int len = (int)strlen(string);
     char oct[len/2];
-    octet OCT = {0, sizeof(oct), oct};
+    octet OCT = {0, (int)sizeof(oct), oct};
 
     read_OCTET(fp, &OCT, string);
     BIG_256_56_fromBytesLen(x, OCT.val, OCT.len);
@@ -103,9 +103,9 @@ void read_BIG_256_56(FILE *fp, BIG_256_56 x, char *string)
 
 void read_FF_2048(FILE *fp, BIG_1024_58 *x, char *string, int n)
 {
-    int len = strlen(string);
+    int len = (int)strlen(string);
     char oct[len / 2];
-    octet OCT = {0, sizeof(oct), oct};
+    octet OCT = {0, (int)sizeof(oct), oct};
 
     read_OCTET(fp, &OCT, string);
     FF_2048_fromOctet(x, &OCT, n);
@@ -113,9 +113,9 @@ void read_FF_2048(FILE *fp, BIG_1024_58 *x, char *string, int n)
 
 void read_FF_4096(FILE *fp, BIG_512_60 *x, char *string, int n)
 {
-    int len = strlen(string);
+    int len = (int)strlen(string);
     char oct[len / 2];
-    octet OCT = {0, sizeof(oct), oct};
+    octet OCT = {0, (int)sizeof(oct), oct};
 
     read_OCTET(fp, &OCT, string);
     FF_4096_fromOctet(x, &OCT, n);
@@ -123,9 +123,9 @@ void read_FF_4096(FILE *fp, BIG_512_60 *x, char *string, int n)
 
 void read_ECP_SECP256K1(FILE *fp, ECP_SECP256K1 *P, char *string)
 {
-    int len = strlen(string);
+    int len = (int)strlen(string);
     char oct[len /2];
-    octet OCT = {0, sizeof(oct), oct};
+    octet OCT = {0, (int)sizeof(oct), oct};
 
     read_OCTET(fp, &OCT, string);
 
@@ -154,7 +154,7 @@ void read_HDLOG_iv(FILE *fp, HDLOG_iter_values V, char *string)
     }
 }
 
-void scan_int(int *v, char *line, const char *prefix)
+void scan_int(int *v, const char *line, const char *prefix)
 {
     if (!strncmp(line, prefix, strlen(prefix)))
     {
@@ -265,7 +265,7 @@ void scan_HDLOG_iv(FILE *fp, HDLOG_iter_values V, char *line, const char *prefix
 
 /* Assertion utilities */
 
-void compare_OCT(FILE* fp, int testNo, char *name, octet *X, octet *Y)
+void compare_OCT(FILE* fp, int testNo, char *name, const octet *X, const octet *Y)
 {
     if (!OCT_comp(X, Y))
     {
@@ -294,7 +294,7 @@ void compare_OCT(FILE* fp, int testNo, char *name, octet *X, octet *Y)
     }
 }
 
-void compare_BIG_256_56(FILE* fp, int testNo, char* name, BIG_256_56 x, BIG_256_56 y)
+void compare_BIG_256_56(FILE* fp, int testNo, char* name, const BIG_256_56 x, const BIG_256_56 y)
 {
     if(BIG_256_56_comp(x, y))
     {
@@ -387,9 +387,7 @@ void compare_ECP_SECP256K1(FILE *fp, int testNo, char *name, ECP_SECP256K1 *P, E
 
 void compare_HDLOG_iv(FILE *fp, int testNo, char* name, HDLOG_iter_values V, HDLOG_iter_values R)
 {
-    int i;
-
-    for (i = 0; i < HDLOG_PROOF_ITERS; i++)
+    for (int i = 0; i < HDLOG_PROOF_ITERS; i++)
     {
         if (FF_2048_comp(V[i], R[i], FFLEN_2048))
         {
@@ -430,7 +428,7 @@ void assert(FILE *fp, char *msg, int statement)
 void assert_tv(FILE *fp, int testNo, char* name, int statement)
 {
     char msg[32 + strlen(name)];
-    sprintf(msg, "%s. Test %d", name, testNo);
+    snprintf(msg, sizeof(msg), "%s. Test %d", name, testNo);
 
     assert(fp, msg, statement);
 }

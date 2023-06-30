@@ -71,7 +71,7 @@ extern void HASH_UTILS_hash_i2osp4(hash256 *sha, const int i);
  *  @param  n           Modulo for the reduction. FF_2048 element.
  *  @param  x           Sampled FF_2048 element
  */
-extern void HASH_UTILS_sample_mod_FF(hash256 *sha, BIG_1024_58 *n, BIG_1024_58 *x);
+extern void HASH_UTILS_sample_mod_FF(const hash256 *sha, BIG_1024_58 *n, BIG_1024_58 *x);
 
 /** \brief Sample a pseudorandom FP_256 from a given hash function
  *
@@ -83,7 +83,7 @@ extern void HASH_UTILS_sample_mod_FF(hash256 *sha, BIG_1024_58 *n, BIG_1024_58 *
  *  @param  q           Modulo for the reduction. FP_256 element.
  *  @param  x           Sampled FP_256 element
  */
-extern void HASH_UTILS_rejection_sample_mod_BIG(hash256 *sha, BIG_256_56 q, BIG_256_56 x);
+extern void HASH_UTILS_rejection_sample_mod_BIG(const hash256 *sha, const BIG_256_56 q, BIG_256_56 x);
 
 #ifdef __cplusplus
 }

@@ -58,7 +58,7 @@ typedef struct
  *  @param  P           The first factor of the modulus
  *  @param  Q           The second factor of the modulus
  */
-void MODULUS_fromOctets(MODULUS_priv *m, octet *P, octet *Q);
+void MODULUS_fromOctets(MODULUS_priv *m, const octet *P, const octet *Q);
 
 /** \brief Write a modulus to octets
  *

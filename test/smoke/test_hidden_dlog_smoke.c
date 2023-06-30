@@ -32,7 +32,7 @@ char *B1hex = "199540bcefff1aa1af7d665e5fb401a57a0962004fd0f6c4e7ec1543daf9a57c4
 
 int main()
 {
-    int i, rc;
+    int rc;
 
     char p[HFS_2048];
     octet P = {0, sizeof(p), p};
@@ -116,7 +116,7 @@ int main()
 
     HDLOG_iter_values_kill(r);
 
-    for (i = 0; i < HDLOG_PROOF_ITERS; i++)
+    for (int i = 0; i < HDLOG_PROOF_ITERS; i++)
     {
         if (!FF_2048_iszilch(r[i], FFLEN_2048))
         {

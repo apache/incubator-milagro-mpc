@@ -18,7 +18,6 @@ under the License.
 */
 
 #include "amcl/hidden_dlog.h"
-#include "amcl/hash_utils.h"
 
 /* Definitions for ZKPoK of a DLOG in a hidden order group */
 
@@ -27,7 +26,7 @@ under the License.
 #define C_WINDOW 4
 #define C_SIZE 1 << C_WINDOW
 
-// Widnow and table size for non CT precomputation
+// Window and table size for non CT precomputation
 // using basic interleaving
 #define N_WINDOW 5
 #define N_SIZE 1 << (N_WINDOW - 1)
@@ -141,6 +140,63 @@ void HDLOG_challenge(BIG_1024_58 *N, BIG_1024_58 *B0, BIG_1024_58 *B1, HDLOG_ite
     OCT_jbytes(E, w, HDLOG_CHALLENGE_SIZE);
 }
 
+int HDLOG_challenge_CG21(BIG_1024_58 *N, BIG_1024_58 *B0, BIG_1024_58 *B1, HDLOG_iter_values RHO, const HDLOG_SSID *ssid,
+                         octet *E, int n)
+{
+    hash256 sha;
+    char o[SFS_SECP256K1 + 1];
+    octet G_oct = {0, sizeof(o), o};
+
+    char qq[EGS_SECP256K1];
+    octet q_oct = {0, sizeof(qq), qq};
+
+
+    char w[FS_2048];
+    octet W = {0, sizeof(w), w};
+
+    HASH256_init(&sha);
+
+    // Bind the public parameters
+    FF_2048_toOctet(&W, N, FFLEN_2048);
+    HASH_UTILS_hash_oct(&sha, &W);
+
+    FF_2048_toOctet(&W, B0, FFLEN_2048);
+    HASH_UTILS_hash_oct(&sha, &W);
+
+    FF_2048_toOctet(&W, B1, FFLEN_2048);
+    HASH_UTILS_hash_oct(&sha, &W);
+
+    HASH_UTILS_hash_oct(&sha, ssid->rid);
+    HASH_UTILS_hash_oct(&sha, ssid->rho);
+
+    CG21_get_G(&G_oct);
+    CG21_get_q(&q_oct);
+
+    HASH_UTILS_hash_oct(&sha, &G_oct);
+    HASH_UTILS_hash_oct(&sha, &q_oct);
+
+    // sort partial X[i] based on j_packed and process them into sha
+    int rc = CG21_hash_set_X(&sha, ssid->X_set_packed, ssid->j_set_packed, n, EFS_SECP256K1 + 1);
+    if (rc!=CG21_OK){
+        return rc;
+    }
+
+    // Bind to commitment
+    for (int i = 0; i < HDLOG_PROOF_ITERS; i++)
+    {
+        FF_2048_toOctet(&W, RHO[i], FFLEN_2048);
+        HASH_UTILS_hash_oct(&sha, &W);
+    }
+
+    HASH256_hash(&sha, w);
+
+    OCT_clear(E);
+    OCT_jbytes(E, w, HDLOG_CHALLENGE_SIZE);
+
+    return HDLOG_OK;
+}
+
+
 void HDLOG_prove(BIG_1024_58 *ord, BIG_1024_58 *alpha, HDLOG_iter_values R, octet *E, HDLOG_iter_values T)
 {
     int i;
@@ -171,10 +227,12 @@ void HDLOG_prove(BIG_1024_58 *ord, BIG_1024_58 *alpha, HDLOG_iter_values R, octe
             T++;
         }
     }
+
+    FF_2048_zero(alphaneg, FFLEN_2048);
 }
 
 
-int HDLOG_verify(BIG_1024_58 *N, BIG_1024_58 *B0, BIG_1024_58 *B1, HDLOG_iter_values RHO, octet *E, HDLOG_iter_values T)
+int HDLOG_verify(BIG_1024_58 *N, BIG_1024_58 *B0, BIG_1024_58 *B1, HDLOG_iter_values RHO, const octet *E, HDLOG_iter_values T)
 {
     int i;
     int mask;

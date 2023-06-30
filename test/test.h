@@ -101,7 +101,7 @@ extern void read_HDLOG_iv(FILE *fp, HDLOG_iter_values V, char *string);
  *  @param  line    TV line
  *  @param  prefix  Line prefix for the integer to read
  */
-extern void scan_int(int *v, char *line, const char *prefix);
+extern void scan_int(int *v, const char *line, const char *prefix);
 
 /*! \brief Read octet if the line has the correct prefix
  *
@@ -181,7 +181,7 @@ extern void scan_HDLOG_iv(FILE *fp, HDLOG_iter_values V, char *line, const char 
  *  @param  X       First octet to compare
  *  @param  Y       Second octet to compare
  */
-extern void compare_OCT(FILE *fp, int testNo, char *name, octet *X, octet *Y);
+extern void compare_OCT(FILE *fp, int testNo, char *name, const octet *X, const octet *Y);
 
 /*! \brief Compare two big_256_56 elements
  *
@@ -193,7 +193,7 @@ extern void compare_OCT(FILE *fp, int testNo, char *name, octet *X, octet *Y);
  *  @param  x       First element to compare
  *  @param  y       Second element to compare
  */
-extern void compare_BIG_256_56(FILE *fp, int testNo, char* name, BIG_256_56 x, BIG_256_56 y);
+extern void compare_BIG_256_56(FILE *fp, int testNo, char* name, const BIG_256_56 x, const BIG_256_56 y);
 
 /*! \brief Compare two ff_2048 elements
  *

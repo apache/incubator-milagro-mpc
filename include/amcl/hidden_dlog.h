@@ -26,21 +26,36 @@ under the License.
 #ifndef HDLOG
 #define HDLOG
 
-#include "amcl/amcl.h"
-#include "amcl/modulus.h"
+#include "amcl/shamir.h"
+#include "amcl/cg21/cg21_utilities.h"
+
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#define HDLOG_OK             0    /**< Success */
-#define HDLOG_FAIL           101  /**< Invalid Proof */
-#define HDLOG_INVALID_VALUES 102  /**< Invalid encoding for the iterations values */
-
-#define HDLOG_PROOF_ITERS 128                         /**< Iterations necessary for the Proof */
+#define HDLOG_OK                0        /**< Success */
+#define HDLOG_FAIL              3130801  /**< Invalid Proof */
+#define HDLOG_INVALID_VALUES    3130802  /**< Invalid encoding for the iterations values */
+#define HDLOG_PROOF_ITERS       128                         /**< Iterations necessary for the Proof */
 #define HDLOG_CHALLENGE_SIZE HDLOG_PROOF_ITERS / 8    /**< Length of the challenge necessary for the chosen Proof iterations */
 #define HDLOG_VALUES_SIZE HDLOG_PROOF_ITERS * FS_2048 /**< Length of the values encoding */
+
+typedef struct
+{
+    octet *sid;             // session ID
+    octet *rid;             // xor of partial rids,                filled in KeyGen
+    octet *rho;             // xor of partial rhos,                filled in Aux.
+    octet *X_set_packed;   // packed set of partial ECDSA PKs,     filled in KeyGen
+    octet *j_set_packed;   // players' IDs,                        filled in KeyGen
+    octet *q;               // curve order,                        filled in KeyGen
+    octet *g;               // curve generator,                    filled in KeyGen
+    octet *N_set_packed;   // packed set of Ped. and Pail. PKs,    filled in Aux.
+    octet *s_set_packed;   // packed set of Pedersen s params,     filled in Aux.
+    octet *t_set_packed;   // packed set of Pedersen t params,     filled in Aux.
+
+} HDLOG_SSID;        // system-wide unique session ID
 
 /*! \brief Holds the values for each iteration of the protocol */
 typedef BIG_1024_58 HDLOG_iter_values[HDLOG_PROOF_ITERS][FFLEN_2048];
@@ -54,7 +69,7 @@ typedef BIG_1024_58 HDLOG_iter_values[HDLOG_PROOF_ITERS][FFLEN_2048];
  * @param R     Random value used in the commitment. If RNG is NULL this is read
  * @param RHO   Commitment of the ZKP
  */
-extern void HDLOG_commit(csprng *RNG, MODULUS_priv *m, BIG_1024_58 *ord, BIG_1024_58 *B0, HDLOG_iter_values R, HDLOG_iter_values RHO);
+extern void  HDLOG_commit(csprng *RNG, MODULUS_priv *m, BIG_1024_58 *ord, BIG_1024_58 *B0, HDLOG_iter_values R, HDLOG_iter_values RHO);
 
 /*! \brief Generate a challenge
  *
@@ -67,6 +82,18 @@ extern void HDLOG_commit(csprng *RNG, MODULUS_priv *m, BIG_1024_58 *ord, BIG_102
  * @param E     Generated challenge for the ZKP
  */
 extern void HDLOG_challenge(BIG_1024_58 *N, BIG_1024_58 *B0, BIG_1024_58 *B1, HDLOG_iter_values RHO, const octet *ID, const octet *AD, octet *E);
+
+/*! \brief Generate a challenge
+ *
+ * @param N     Public Modulus
+ * @param B0    Base of the DLOG
+ * @param B1    Public Value of the DLOG
+ * @param RHO   Commitment of the ZKP
+ * @param ssid  System-wide session ID
+ * @param E     Generated challenge for the ZKP
+ * @param n     Number of the octets packed in a package
+ */
+extern int HDLOG_challenge_CG21(BIG_1024_58 *N, BIG_1024_58 *B0, BIG_1024_58 *B1, HDLOG_iter_values RHO, const HDLOG_SSID *ssid, octet *E, int n);
 
 /*! \brief Prove knowledge of the DLOG
  *
@@ -89,7 +116,7 @@ extern void HDLOG_prove(BIG_1024_58 *ord, BIG_1024_58 *alpha, HDLOG_iter_values 
  *
  * @return      Returns HDLOG_OK if the proof is valid or an error code
  */
-extern int HDLOG_verify(BIG_1024_58 *N, BIG_1024_58 *B0, BIG_1024_58 *B1, HDLOG_iter_values RHO, octet *E, HDLOG_iter_values T);
+extern int HDLOG_verify(BIG_1024_58 *N, BIG_1024_58 *B0, BIG_1024_58 *B1, HDLOG_iter_values RHO, const octet *E, HDLOG_iter_values T);
 
 /*! \brief Encode v into an octet
  *

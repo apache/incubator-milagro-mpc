@@ -88,7 +88,7 @@ int main(int argc, char **argv)
         if (!strncmp(line, last_line, strlen(last_line)))
         {
             rc = SCHNORR_D_commit(NULL, &R, &A, &B, &C);
-            sprintf(err_msg, "FAILURE SCHNORR_D_commit. rc %d", rc);
+            snprintf(err_msg, sizeof(err_msg), "FAILURE SCHNORR_D_commit. rc %d", rc);
             assert_tv(fp, testNo, err_msg, rc == SCHNORR_OK);
 
             compare_OCT(fp, testNo, "SCHNORR_D_commit", &C, &C_GOLDEN);
@@ -108,7 +108,7 @@ int main(int argc, char **argv)
 
     // Test invalid R
     rc = SCHNORR_D_commit(NULL, &A, &A, &B, &C);
-    sprintf(err_msg, "FAILURE SCHNORR_D_commit invalid R. rc %d", rc);
+    snprintf(err_msg, sizeof(err_msg), "FAILURE SCHNORR_D_commit invalid R. rc %d", rc);
     assert_tv(fp, testNo, err_msg, rc == SCHNORR_INVALID_ECP);
 
     printf("SUCCESS\n");

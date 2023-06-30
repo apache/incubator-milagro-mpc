@@ -133,7 +133,7 @@ void SCHNORR_prove(const octet *R, const octet *E, const octet *X, octet *P)
     BIG_256_56_dzero(d);
 }
 
-int SCHNORR_verify(octet *V, octet*C, const octet *E, const octet *P)
+int SCHNORR_verify(const octet *V, const octet*C, const octet *E, const octet *P)
 {
     int rc;
 
@@ -173,7 +173,7 @@ int SCHNORR_verify(octet *V, octet*C, const octet *E, const octet *P)
     return SCHNORR_OK;
 }
 
-int SCHNORR_D_commit(csprng *RNG, octet *R, octet *A, octet *B, octet *C)
+int SCHNORR_D_commit(csprng *RNG, const octet *R, octet *A, octet *B, octet *C)
 {
     BIG_256_56 a;
     BIG_256_56 b;
@@ -297,7 +297,7 @@ void SCHNORR_D_prove(const octet *A, const octet *B, const octet *E, const octet
     BIG_256_56_dzero(d);
 }
 
-int SCHNORR_D_verify(octet *R, octet *V, octet *C, const octet *E, const octet *T, const octet *U)
+int SCHNORR_D_verify(const octet *R, const octet *V, const octet *C, const octet *E, const octet *T, const octet *U)
 {
     ECP_SECP256K1 G;
     ECP_SECP256K1 ECPR;

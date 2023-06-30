@@ -1,10 +1,13 @@
-.DS_Store
 **/*~
 **/*bak
 log.txt
+**/.DS_Store
 
 build
 target
 incubator-milagro-crypto-c
 coverage
 examples/scratch.c
+cmake-build-debug
+
+.idea

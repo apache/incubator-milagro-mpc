@@ -28,7 +28,7 @@ void MODULUS_kill(MODULUS_priv *m)
     FF_2048_zero(m->invpq, HFLEN_2048);
 }
 
-void MODULUS_fromOctets(MODULUS_priv *m, octet *P, octet *Q)
+void MODULUS_fromOctets(MODULUS_priv *m, const octet *P, const octet *Q)
 {
     FF_2048_fromOctet(m->p, P, HFLEN_2048);
     FF_2048_fromOctet(m->q, Q, HFLEN_2048);
