@@ -31,7 +31,7 @@ under the License.
 #define CG21_PI_PRM_INVALID_FORMAT          3130308     /**< An octet value has an invalid format */
 
 #define CG21_PAILLIER_PROOF_SIZE  CG21_PAILLIER_PROOF_ITERS * FS_2048 /**< Length of components of the Proof in bytes */
-#define CG21_PAILLIER_PROOF_ITERS           80                        /**< Iterations necessary for the Proof of Paillier N */
+#define CG21_PAILLIER_PROOF_ITERS           128                        /**< Iterations necessary for the Proof of Paillier N */
 
 #include "amcl/amcl.h"
 #include "amcl/modulus.h"

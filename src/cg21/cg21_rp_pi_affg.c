@@ -111,24 +111,28 @@ int Piaffg_Sample_and_Commit(csprng *RNG, PAILLIER_private_key *paillier_priv, P
     // Generate gamma in [0, .., Nt * q^3]
     // See Remark 1 at the top for more information
     CG21_FF_2048_amul(gamma_mod, q3, HFLEN_2048, pedersen_pub->N, FFLEN_2048);   //Nt*q^3
+    FF_2048_norm(gamma_mod, FFLEN_2048 + HFLEN_2048);
     FF_2048_random(secrets->gamma, RNG, FFLEN_2048 + HFLEN_2048);           //gamma: a (1024+2048)-bit number
     FF_2048_mod(secrets->gamma, gamma_mod, FFLEN_2048 + HFLEN_2048);            //gamma: (3*256+2048-bit) number
 
     // Generate delta in [0, .., Nt * q^3]
     // See Remark 1 at the top for more information
     CG21_FF_2048_amul(delta_mod, q3, HFLEN_2048, pedersen_pub->N, FFLEN_2048);   //Nt*q^3
+    FF_2048_norm(delta_mod, FFLEN_2048 + HFLEN_2048);
     FF_2048_random(secrets->delta, RNG, FFLEN_2048 + HFLEN_2048);           //delta: a (1024+2048)-bit number
     FF_2048_mod(secrets->delta, delta_mod, FFLEN_2048 + HFLEN_2048);            //delta: (3*256+2048-bit) number
 
     // Generate m in [0, .., Nt * q]
     // See Remark 1 at the top for more information
     CG21_FF_2048_amul(m_mod, q, HFLEN_2048, pedersen_pub->N, FFLEN_2048);
+    FF_2048_norm(m_mod, FFLEN_2048 + HFLEN_2048);
     FF_2048_random(secrets->m, RNG, FFLEN_2048 + HFLEN_2048);         //m: a (1024+2048)-bit number
     FF_2048_mod(secrets->m, m_mod, FFLEN_2048 + HFLEN_2048);             //m: (256+2048-bit) number
 
     // Generate mu in [0, .., Nt * q]
     // See Remark 1 at the top for more information
     CG21_FF_2048_amul(mu_mod, q, HFLEN_2048, pedersen_pub->N, FFLEN_2048);
+    FF_2048_norm(mu_mod, FFLEN_2048 + HFLEN_2048);
     FF_2048_random(secrets->mu, RNG, FFLEN_2048 + HFLEN_2048);         //mu: a (1024+2048)-bit number
     FF_2048_mod(secrets->mu, mu_mod, FFLEN_2048 + HFLEN_2048);             //mu: (256+2048)-bit number
 
@@ -207,7 +211,7 @@ int Piaffg_Sample_and_Commit(csprng *RNG, PAILLIER_private_key *paillier_priv, P
     FF_4096_norm(PUB.n2, FFLEN_4096);
 
     // Computes By
-    FF_2048_toOctet(&ry_oct, secrets->ry, 2*FFLEN_2048);
+    FF_2048_toOctet(&ry_oct, secrets->ry, FFLEN_2048);
     OCT_pad(&ry_oct, FS_4096);
 
     PAILLIER_ENCRYPT(NULL, &PUB, &beta_oct, &CT_oct,&ry_oct);
@@ -415,7 +419,7 @@ void Piaffg_Prove(PAILLIER_public_key *prover_paillier_pub, PAILLIER_public_key 
     FF_2048_fromOctet(n, &OCT, FFLEN_2048);
 
     FF_2048_copy(ws, dws, FFLEN_2048);
-    FF_2048_dmod(ws, ws, n, FFLEN_2048);
+    FF_2048_mod(ws, n, FFLEN_2048);
 
     FF_2048_ct_pow(ws, ws, e, n, FFLEN_2048, HFLEN_2048);   // ws <- rho_y^e
 

@@ -19,7 +19,7 @@ under the License.
 
 #include "amcl/cg21/cg21.h"
 
-static void CG21_GENERATE_CHALLENGE(const octet *X, int i, octet rid, const CG21_KEYGEN_SID *sid, octet *E){
+static void CG21_GENERATE_CHALLENGE(const octet *X, int i, octet rid, const CG21_KEYGEN_SID *sid, octet *E, octet *A){
 
     hash256 sha;
 
@@ -42,7 +42,7 @@ static void CG21_GENERATE_CHALLENGE(const octet *X, int i, octet rid, const CG21
     HASH_UTILS_hash_oct(&sha, sid->uid);
 
     HASH_UTILS_hash_oct(&sha, X);
-
+    HASH_UTILS_hash_oct(&sha, A);
     HASH_UTILS_hash_i2osp4(&sha, i);
     HASH_UTILS_hash_i2osp4(&sha, sizeof(i));
 
@@ -281,7 +281,7 @@ int CG21_KEY_GENERATE_ROUND3_2_2(const CG21_KEYGEN_ROUND1_STORE_PRIV *myPriv,
     r3Out->i = myPriv->i;
 
     // generate challenge e for Schnorr proof
-    CG21_GENERATE_CHALLENGE(r2->X,myPriv->i,*r3->xor_rid,sid, &E);
+    CG21_GENERATE_CHALLENGE(r2->X,myPriv->i,*r3->xor_rid,sid, &E, r2->A);
 
     // Schnorr prove for having access to partial x
     SCHNORR_prove(myPriv->tau, &E, myPriv->x, r3Out->ui_proof.psi);
@@ -346,7 +346,7 @@ int CG21_KEY_GENERATE_ROUND3_2_3(const CG21_KEYGEN_ROUND1_STORE_PRIV *myPriv,
     ECP_SECP256K1_toOctet(&X, &G, true);
 
     // generate challenge e for Schnorr proof
-    CG21_GENERATE_CHALLENGE(&X, myPriv->i, *r3->xor_rid, sid, &E);
+    CG21_GENERATE_CHALLENGE(&X, myPriv->i, *r3->xor_rid, sid, &E, pub->A2);
 
     // Schnorr proof for the knowledge of sum-of-the-shares
     SCHNORR_prove(myPriv->tau2, &E, r3->xi.Y, r3Output->xi_proof.psi);
@@ -376,7 +376,7 @@ int CG21_KEY_GENERATE_OUTPUT_1_1(const CG21_KEYGEN_ROUND3_OUTPUT *r3Out,
     octet E = {0, sizeof(e2), e2};
 
     // generate challenge e
-    CG21_GENERATE_CHALLENGE((r3->X),r3->i,*r3Store->xor_rid, sid, &E);
+    CG21_GENERATE_CHALLENGE((r3->X),r3->i,*r3Store->xor_rid, sid, &E, r3->A);
 
     // verify Schnorr proof for partial secret, x_i, using the challenge e
     int rc = SCHNORR_verify(r3->X, r3->A, &E, r3Out->ui_proof.psi);
@@ -443,7 +443,7 @@ int CG21_KEY_GENERATE_OUTPUT_1_2(CG21_KEYGEN_OUTPUT *output,
     // store all the other players (sum_of_share)*G to be used in key re-sharing protocol
     OCT_joctet(output->pk_ss_sum_pack, &Xi_);
 
-    CG21_GENERATE_CHALLENGE(&Xi_, r3Out->i, *r3Store->xor_rid, sid, &E);
+    CG21_GENERATE_CHALLENGE(&Xi_, r3Out->i, *r3Store->xor_rid, sid, &E, r1Pub->A2);
 
     int rc2 = SCHNORR_verify(&Xi_, r1Pub->A2, &E, r3Out->xi_proof.psi);
 
