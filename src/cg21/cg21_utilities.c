@@ -467,7 +467,7 @@ void CG21_GET_CURVE_ORDER(BIG_1024_58 *q){
     BIG_256_56_toBytes(q_oct.val, q_);
     q_oct.len = EGS_SECP256K1;
 
-    char q_hex[64];
+    char q_hex[2*MODBYTES_256_56+1];
     OCT_toHex(&q_oct, q_hex);
 
     char oct2[2 * FS_2048];

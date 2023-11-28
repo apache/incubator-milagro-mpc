@@ -94,11 +94,13 @@ int PiEnc_Sample_randoms_and_commit(csprng *RNG, PAILLIER_private_key *priv_key,
 
     // Generate gamma in [0, .., Nt * q^3]
     CG21_FF_2048_amul(gamma_mod, q3, HFLEN_2048, pub_com->N, FFLEN_2048);   //Nt*q^3
+    FF_2048_norm(gamma_mod, FFLEN_2048 + HFLEN_2048);
     FF_2048_random(secrets->gamma, RNG, FFLEN_2048 + HFLEN_2048);           //gamma_mod: a (1024+2048)-bit number
     FF_2048_mod(secrets->gamma, gamma_mod, FFLEN_2048 + HFLEN_2048);            //gamma_mod: in [0, .., 3*256+2048]
 
     // Generate mu in [0, .., Nt * q]
     CG21_FF_2048_amul(mu_mod, q, HFLEN_2048, pub_com->N, FFLEN_2048);
+    FF_2048_norm(mu_mod, FFLEN_2048 + HFLEN_2048);
     FF_2048_random(secrets->mu, RNG, FFLEN_2048 + HFLEN_2048);         //mu_mod: a (1024+2048)-bit number
     FF_2048_mod(secrets->mu, mu_mod, FFLEN_2048 + HFLEN_2048);             //mu_mod: in [0, .., 256+2048]
 

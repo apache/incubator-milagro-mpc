@@ -209,10 +209,10 @@ int PiAffp_Sample_and_Commit(csprng *RNG, PAILLIER_private_key *paillier_priv, P
     FF_4096_norm(PUB.n2, FFLEN_4096);
 
     // Computes Bx and By
-    FF_2048_toOctet(&rx_oct, secrets->rx, 2*FFLEN_2048);
-    OCT_pad(&rx_oct, FS_4096);
+    FF_2048_toOctet(&rx_oct, secrets->rx, FFLEN_2048);
+    FF_2048_toOctet(&ry_oct, secrets->ry, FFLEN_2048);
 
-    FF_2048_toOctet(&ry_oct, secrets->ry, 2*FFLEN_2048);
+    OCT_pad(&rx_oct, FS_4096);
     OCT_pad(&ry_oct, FS_4096);
 
     PAILLIER_ENCRYPT(NULL, &PUB, &alpha_oct, &CT_oct,&rx_oct); // Bx = Enc(alpha; rx)
@@ -411,7 +411,7 @@ void PiAffp_Prove(PAILLIER_public_key *prover_paillier_pub, PAILLIER_public_key 
     FF_4096_toOctet(&OCT, prover_paillier_pub->n, HFLEN_4096);
     FF_2048_fromOctet(n, &OCT, FFLEN_2048);
 
-    FF_2048_dmod(ws, ws, n, FFLEN_2048);
+    FF_2048_mod(ws, n, FFLEN_2048);
     FF_2048_ct_pow(ws, ws, e, n, FFLEN_2048, HFLEN_2048);   // ws <- rho_x^e
 
     FF_2048_zero(dws, 2*FFLEN_2048);
@@ -425,7 +425,7 @@ void PiAffp_Prove(PAILLIER_public_key *prover_paillier_pub, PAILLIER_public_key 
     FF_4096_toOctet(&OCT, prover_paillier_pub->n, HFLEN_4096);
     FF_2048_fromOctet(n, &OCT, FFLEN_2048);
 
-    FF_2048_dmod(ws, ws, n, FFLEN_2048);
+    FF_2048_mod(ws, n, FFLEN_2048);
     FF_2048_ct_pow(ws, ws, e, n, FFLEN_2048, HFLEN_2048);
 
     FF_2048_mul(dws, secrets->ry, ws, FFLEN_2048);

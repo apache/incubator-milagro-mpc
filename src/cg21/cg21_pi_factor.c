@@ -164,7 +164,7 @@ void CG21_PI_FACTOR_COMMIT(csprng *RNG, CG21_PiFACTOR_SECRETS *r1priv, CG21_PiFA
     BIG_1024_58 t[FFLEN_2048];
     BIG_1024_58 Q[FFLEN_2048];
     BIG_1024_58 t1[FFLEN_2048];
-    BIG_1024_58 t2[2*FFLEN_2048];
+    BIG_1024_58 t2[FFLEN_2048+HFLEN_2048];
     BIG_1024_58 t3[FFLEN_2048 + HFLEN_2048];
     BIG_1024_58 t4[3*FFLEN_2048];
     BIG_1024_58 t5[2*FFLEN_2048 + HFLEN_2048];
@@ -224,6 +224,7 @@ void CG21_PI_FACTOR_COMMIT(csprng *RNG, CG21_PiFACTOR_SECRETS *r1priv, CG21_PiFA
 
     // Generate mu in [0, .., Pedersen_N * q]
     CG21_FF_2048_amul(t2, q, HFLEN_2048, pub_com->N, FFLEN_2048);
+    FF_2048_norm(t2, FFLEN_2048 + HFLEN_2048);
     FF_2048_random(mu, RNG, FFLEN_2048 + HFLEN_2048);
     FF_2048_mod(mu, t2, FFLEN_2048 + HFLEN_2048);
     FF_2048_toOctet(r1priv->mu,mu,FFLEN_2048 + HFLEN_2048);
@@ -235,18 +236,21 @@ void CG21_PI_FACTOR_COMMIT(csprng *RNG, CG21_PiFACTOR_SECRETS *r1priv, CG21_PiFA
 
     // Generate sigma in [0, .., Paillier_N * Pedersen_N * q]
     CG21_FF_2048_amul(t4, q, HFLEN_2048, n2, 2*FFLEN_2048);
+    FF_2048_norm(t4, 2*FFLEN_2048 + HFLEN_2048);
     FF_2048_random(sigma, RNG, 2*FFLEN_2048 + HFLEN_2048);
     FF_2048_mod(sigma, t4, 2*FFLEN_2048 + HFLEN_2048);
     FF_2048_toOctet(r1pub->sigma,sigma,2*FFLEN_2048 + HFLEN_2048);
 
     // Generate r in [0, .., Paillier_N * Pedersen_N * q^3]
     CG21_FF_2048_amul(t4, q3, HFLEN_2048, n2, 2*FFLEN_2048);
+    FF_2048_norm(t4, 2*FFLEN_2048 + HFLEN_2048);
     FF_2048_random(r, RNG, 2*FFLEN_2048 + HFLEN_2048);
     FF_2048_mod(r, t4, 2*FFLEN_2048 + HFLEN_2048);
     FF_2048_toOctet(r1priv->r,r,2*FFLEN_2048 + HFLEN_2048);
 
     // Generate x in [0, .., Pedersen_N * q^3]
     CG21_FF_2048_amul(t2, q3, HFLEN_2048, pub_com->N, FFLEN_2048);
+    FF_2048_norm(t2, FFLEN_2048 + HFLEN_2048);
     FF_2048_random(x, RNG, FFLEN_2048 + HFLEN_2048);
     FF_2048_mod(x, t2, FFLEN_2048 + HFLEN_2048);
     FF_2048_toOctet(r1priv->x,x,FFLEN_2048 + HFLEN_2048);
@@ -393,8 +397,8 @@ void CG21_PI_FACTOR_PROVE(const CG21_PiFACTOR_SECRETS *r1priv, const CG21_PiFACT
     OCT_pad(&OCT, FS_2048+HFS_2048);
     FF_2048_fromOctet(t5, &OCT, FFLEN_2048+HFLEN_2048);
 
-    CG21_FF_2048_amul(t7, e_, HFLEN_2048, qF, FFLEN_2048); // t7 = e*p
-    FF_2048_add(t8, t7, t5, FFLEN_2048+HFLEN_2048);                // t3 = e*p + alpha
+    CG21_FF_2048_amul(t7, e_, HFLEN_2048, qF, FFLEN_2048); // t7 = e*q
+    FF_2048_add(t8, t7, t5, FFLEN_2048+HFLEN_2048);                // t3 = e*q + beta
     FF_2048_norm(t8, FFLEN_2048+HFLEN_2048);
     FF_2048_toOctet(proof->z2,t8,FFLEN_2048+HFLEN_2048);
 

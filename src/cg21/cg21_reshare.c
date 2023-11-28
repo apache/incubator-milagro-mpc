@@ -626,7 +626,8 @@ void CG21_KEY_RESHARE_SUM_SHARES(const SSS_shares *share, CG21_RESHARE_ROUND4_ST
     }
 }
 
-static int CG21_KEY_RESHARE_GEN_CHALLENGE(int myID, int n, const octet *X, CG21_SSID *ssid, const octet *rho, octet *out){
+static int CG21_KEY_RESHARE_GEN_CHALLENGE(int myID, int n, const octet *X, CG21_SSID *ssid,
+                                          const octet *rho, octet *out, octet *A){
     hash256 sha;
     BIG_256_56 q;
     BIG_256_56 e;
@@ -636,7 +637,7 @@ static int CG21_KEY_RESHARE_GEN_CHALLENGE(int myID, int n, const octet *X, CG21_
     HASH256_init(&sha);
 
     HASH_UTILS_hash_oct(&sha, X);
-
+    HASH_UTILS_hash_oct(&sha, A);
     //Process i||len(i) into sha
     HASH_UTILS_hash_i2osp4(&sha, myID);
     HASH_UTILS_hash_i2osp4(&sha, CG21_calculateBitLength (myID));
@@ -687,7 +688,7 @@ static int key_reshare_prove_helper(const CG21_RESHARE_ROUND4_STORE *r3Store, CG
     BIG_256_56_zero(accum);
 
     // compute challenge
-    int rc = CG21_KEY_RESHARE_GEN_CHALLENGE(myID, n, &X, ssid, rho, &E);
+    int rc = CG21_KEY_RESHARE_GEN_CHALLENGE(myID, n, &X, ssid, rho, &E, A);
     if (rc!=CG21_OK){
         return rc;
     }
@@ -776,7 +777,7 @@ static int key_reshare_verify_helper(const CG21_RESHARE_ROUND4_OUTPUT *input, CG
 
     char e2[SGS_SECP256K1];
     octet E = {0, sizeof(e2), e2};
-    rc = CG21_KEY_RESHARE_GEN_CHALLENGE(hisID, setting.n1, &Xi_, ssid, r3Store->rho, &E);
+    rc = CG21_KEY_RESHARE_GEN_CHALLENGE(hisID, setting.n1, &Xi_, ssid, r3Store->rho, &E, input->proof.A);
 
     if (rc!=CG21_OK){
         return rc;
